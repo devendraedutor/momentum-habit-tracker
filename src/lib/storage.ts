@@ -48,11 +48,19 @@ export function loadHabitsFromStorage(): Habit[] {
         if (DUMMY_HABIT_NAMES.includes(h.name) && Object.keys(h.history || {}).length > 10) return false;
         return true;
       })
-      .map((h: Habit) => ({
-        ...h,
-        type: (h.type === 'BREAK' || (h.name && h.name.toLowerCase() === 'porn watching') ? 'BREAK' : 'BUILD') as 'BUILD' | 'BREAK',
-        archived: Boolean(h.archived),
-      }));
+      .map((h: Habit) => {
+        const historyDates = Object.keys(h.history || {}).sort();
+        const earliestHistory = historyDates.length > 0 ? historyDates[0] : undefined;
+        const createdDate = h.createdAt ? h.createdAt.split('T')[0] : undefined;
+        const resolvedStartDate = h.startDate || earliestHistory || createdDate || new Date().toISOString().split('T')[0];
+
+        return {
+          ...h,
+          startDate: resolvedStartDate,
+          type: (h.type === 'BREAK' || (h.name && h.name.toLowerCase() === 'porn watching') ? 'BREAK' : 'BUILD') as 'BUILD' | 'BREAK',
+          archived: Boolean(h.archived),
+        };
+      });
 
     return userHabits;
   } catch (err) {
@@ -146,11 +154,16 @@ export function reconcileJumboDate(
   activeHabits: Habit[],
   existingJumboDates: string[]
 ): { updatedJumboDates: string[]; isJumboNow: boolean; wasAwarded: boolean } {
-  if (activeHabits.length === 0) {
-    return { updatedJumboDates: existingJumboDates, isJumboNow: false, wasAwarded: false };
+  // Only habits that were started on or before dateStr count towards that day's Jumbo Point
+  const applicableHabits = activeHabits.filter((h) => !h.archived && (!h.startDate || h.startDate <= dateStr));
+
+  // Must have at least 3 active habits on this date to be eligible for Jumbo Points
+  if (applicableHabits.length < 3) {
+    const updatedJumboDates = existingJumboDates.filter((d) => d !== dateStr);
+    return { updatedJumboDates, isJumboNow: false, wasAwarded: false };
   }
 
-  const allDone = activeHabits.every((h) => h.history[dateStr] === 'done');
+  const allDone = applicableHabits.every((h) => h.history[dateStr] === 'done');
   const alreadyHad = existingJumboDates.includes(dateStr);
 
   let updatedJumboDates = [...existingJumboDates];

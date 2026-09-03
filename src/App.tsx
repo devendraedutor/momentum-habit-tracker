@@ -17,6 +17,9 @@ import { CornerHubModal } from './components/CornerHubModal';
 import { HabitFormModal } from './components/HabitFormModal';
 import { HabitDetailModal } from './components/HabitDetailModal';
 import { MilestoneAscensionModal } from './components/MilestoneAscensionModal';
+import { JumboUnlockModal } from './components/JumboUnlockModal';
+import { HabitDirectoryModal } from './components/HabitDirectoryModal';
+import { SettingsModal } from './components/SettingsModal';
 import confetti from 'canvas-confetti';
 
 export function App() {
@@ -27,13 +30,16 @@ export function App() {
   // Active logging date (defaults to today, switchable for testing multi-day histories)
   const [activeDateStr, setActiveDateStr] = useState<string>(() => getTodayString());
 
-  // Hub, Detail, & Ascension Modal states
+  // Hub, Detail, Directory & Settings Modal states
   const [isHubOpen, setIsHubOpen] = useState(false);
+  const [isDirectoryOpen, setIsDirectoryOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHabitFormOpen, setIsHabitFormOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDetailHabit, setSelectedDetailHabit] = useState<Habit | null>(null);
   const [ascendHabit, setAscendHabit] = useState<Habit | null>(null);
+  const [isJumboUnlockModalOpen, setIsJumboUnlockModalOpen] = useState(false);
 
   // Chart state for Hub
   const [selectedChartHabitId, setSelectedChartHabitId] = useState<string | 'all'>('all');
@@ -209,7 +215,7 @@ export function App() {
   }, []);
 
   // Save / Update Habit
-  const handleSaveHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'history'> & { id?: string }) => {
+  const handleSaveHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'history'> & { id?: string; startDate?: string }) => {
     if (habitData.id) {
       // Update existing habit
       setHabits((prev) =>
@@ -224,6 +230,7 @@ export function App() {
                 color: habitData.color,
                 type: habitData.type || h.type || 'BUILD',
                 targetGoalDays: habitData.targetGoalDays || 21,
+                startDate: habitData.startDate || h.startDate || getTodayString(),
               }
             : h
         )
@@ -239,11 +246,23 @@ export function App() {
         color: habitData.color,
         type: habitData.type || 'BUILD',
         targetGoalDays: habitData.targetGoalDays || 21,
-        createdAt: getTodayString(),
+        startDate: habitData.startDate || getTodayString(),
+        createdAt: habitData.startDate || getTodayString(),
         archived: false,
         history: {},
       };
       setHabits((prev) => [newHabit, ...prev]);
+
+      const currentActiveCount = habits.filter((h) => !h.archived).length;
+      if (currentActiveCount + 1 >= 3) {
+        const hasSeenIntro = localStorage.getItem('momentum_jumbo_intro_seen');
+        if (!hasSeenIntro) {
+          localStorage.setItem('momentum_jumbo_intro_seen', 'true');
+          setTimeout(() => {
+            setIsJumboUnlockModalOpen(true);
+          }, 350);
+        }
+      }
 
       if (settings.soundEffects) {
         sound.playMilestone();
@@ -306,7 +325,8 @@ export function App() {
           setEditingHabit(null);
           setIsHabitFormOpen(true);
         }}
-        onOpenHub={() => setIsHubOpen(true)}
+        onOpenDirectory={() => setIsDirectoryOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Main Reel Card Deck Showcase */}
@@ -325,7 +345,7 @@ export function App() {
             setSelectedDetailHabit(habit);
             setIsDetailModalOpen(true);
           }}
-          onOpenHub={() => setIsHubOpen(true)}
+          onOpenHub={() => setIsDirectoryOpen(true)}
           onAscendHabit={(h) => setAscendHabit(h)}
           jumboPointsCount={jumboDates.length}
           floorAtZero={settings.floorAtZero}
@@ -371,7 +391,7 @@ export function App() {
 
       {/* Habit Create / Edit Modal (Key ensures fresh form state every time) */}
       <HabitFormModal
-        key={editingHabit ? `edit-${editingHabit.id}` : 'new-habit'}
+        key={editingHabit ? `edit-${editingHabit.id}` : `new-habit-${activeDateStr}`}
         isOpen={isHabitFormOpen}
         onClose={() => {
           setIsHabitFormOpen(false);
@@ -379,6 +399,7 @@ export function App() {
         }}
         onSave={handleSaveHabit}
         initialHabit={editingHabit}
+        defaultStartDate={activeDateStr}
       />
 
       {/* Single Habit Detail View */}
@@ -408,6 +429,48 @@ export function App() {
         isOpen={!!ascendHabit}
         onClose={() => setAscendHabit(null)}
         onAscend={handleAscendHabit}
+      />
+
+      {/* Gamified Jumbo Points 3-Habit Unlock Ceremony Modal */}
+      <JumboUnlockModal
+        isOpen={isJumboUnlockModalOpen}
+        onClose={() => setIsJumboUnlockModalOpen(false)}
+        activeHabitsCount={habits.filter((h) => !h.archived).length}
+      />
+
+      {/* Dedicated Habit Directory & Management Modal (No Settings / Analytics clutter) */}
+      <HabitDirectoryModal
+        isOpen={isDirectoryOpen}
+        onClose={() => setIsDirectoryOpen(false)}
+        habits={habits}
+        onOpenNewHabit={() => {
+          setEditingHabit(null);
+          setIsHabitFormOpen(true);
+        }}
+        onEditHabit={(h) => {
+          setEditingHabit(h);
+          setIsHabitFormOpen(true);
+        }}
+        onDeleteHabit={handleDeleteHabit}
+        onSelectHabitProfile={(h) => {
+          setSelectedDetailHabit(h);
+          setIsDetailModalOpen(true);
+        }}
+        floorAtZero={settings.floorAtZero}
+      />
+
+      {/* System Settings, Backups & Data Erasure Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        habits={habits}
+        settings={settings}
+        jumboDates={jumboDates}
+        onUpdateSettings={setSettings}
+        onRestoreHabits={setHabits}
+        onRestoreJumboDates={setJumboDates}
+        onClearHistoryOnly={handleClearHistoryOnly}
+        onFactoryReset={handleFactoryReset}
       />
     </div>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Habit, HabitType } from '../types/habit';
 import { AVAILABLE_ICONS, DynamicIcon } from './DynamicIcon';
 import { loadCategoriesFromStorage, saveCategoriesToStorage } from '../lib/storage';
+import { getTodayString, formatDisplayDate } from '../lib/momentum';
 import {
   X,
   Sparkles,
@@ -13,13 +14,15 @@ import {
   ShieldAlert,
   Sprout,
   ChevronDown,
+  Calendar,
 } from 'lucide-react';
 
 interface HabitFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (habit: Omit<Habit, 'id' | 'createdAt' | 'history'> & { id?: string }) => void;
+  onSave: (habit: Omit<Habit, 'id' | 'createdAt' | 'history'> & { id?: string; startDate?: string }) => void;
   initialHabit?: Habit | null;
+  defaultStartDate?: string;
 }
 
 const PRESET_COLORS = [
@@ -48,6 +51,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   onClose,
   onSave,
   initialHabit,
+  defaultStartDate,
 }) => {
   const [habitType, setHabitType] = useState<HabitType>('BUILD');
   const [name, setName] = useState('');
@@ -62,6 +66,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   const [targetGoalDays, setTargetGoalDays] = useState<number>(21);
   const [isCustomTarget, setIsCustomTarget] = useState(false);
   const [customTargetInput, setCustomTargetInput] = useState('');
+  const [startDate, setStartDate] = useState<string>(() => defaultStartDate || getTodayString());
 
   useEffect(() => {
     const loaded = loadCategoriesFromStorage();
@@ -75,6 +80,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       setSelectedCategory(initialHabit.category);
       setIcon(initialHabit.icon);
       setColor(initialHabit.color);
+      setStartDate(initialHabit.startDate || initialHabit.createdAt?.split('T')[0] || defaultStartDate || getTodayString());
       const target = initialHabit.targetGoalDays || 21;
       setTargetGoalDays(target);
       if (!TARGET_PRESETS.includes(target)) {
@@ -93,10 +99,11 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       setIcon('Flame');
       setColor('#10b981');
       setTargetGoalDays(21);
+      setStartDate(defaultStartDate || getTodayString());
       setIsCustomTarget(false);
       setCustomTargetInput('');
     }
-  }, [initialHabit, isOpen]);
+  }, [initialHabit, isOpen, defaultStartDate]);
 
   if (!isOpen) return null;
 
@@ -150,6 +157,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       category: selectedCategory,
       icon,
       color,
+      startDate: startDate || getTodayString(),
       targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : 21,
     });
     onClose();
@@ -165,6 +173,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       category: selectedCategory,
       icon,
       color,
+      startDate: startDate || getTodayString(),
       targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : 21,
     });
     onClose();
@@ -322,6 +331,42 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   }`}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Start Tracking Date */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                <span>Start Tracking From</span>
+              </label>
+              <span className="text-[10px] text-slate-400 font-mono">
+                Not queued before this date
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white text-xs font-mono font-bold"
+              />
+              <button
+                type="button"
+                onClick={() => setStartDate(getTodayString())}
+                className={`px-3.5 py-2.5 rounded-2xl text-xs font-mono font-bold border transition-all cursor-pointer ${
+                  startDate === getTodayString()
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-500 shadow-xs font-black'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Today
+              </button>
+            </div>
+            {/* Live start date confirmation badge */}
+            <div className="mt-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-[11px] font-mono flex items-center gap-1.5">
+              <span>🗓️ Active in queue from: <strong>{formatDisplayDate(startDate || getTodayString(), true)}</strong></span>
             </div>
           </div>
 

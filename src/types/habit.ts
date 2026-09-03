@@ -23,6 +23,7 @@ export interface Habit {
   milestonesCompleted?: number; // Number of conquered milestones (e.g. 0, 1, 2...)
   previousTargets?: number[]; // History of conquered targets e.g. [7, 14]
   bonusXP?: number; // Accumulated milestone clear bonus XP
+  startDate?: string; // Date (YYYY-MM-DD) from which tracking begins
   createdAt: string;
   archived?: boolean;
   history: Record<string, CheckInStatus>;
