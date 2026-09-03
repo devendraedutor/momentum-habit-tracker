@@ -552,23 +552,10 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     </div>
                   </div>
 
-                  {/* Fast One-Tap Check-In Actions (Dynamic for Build vs Break) */}
+                  {/* Fast One-Tap Check-In Actions (Left: Missed/Failed, Right: Done/Controlled) */}
                   <div className="mt-4 relative z-10">
                     <div className="grid grid-cols-2 gap-3">
-                      {/* Success Button */}
-                      <button
-                        onClick={() => handleCheckInCard('done')}
-                        className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-800 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border border-emerald-500/30 font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[72px]"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center mb-1">
-                          {isBreak ? <Shield className="w-5 h-5 stroke-[2.5]" /> : <Check className="w-5 h-5 stroke-[3]" />}
-                        </div>
-                        <span className="text-sm sm:text-base">
-                          {isBreak ? 'Controlled (+1 XP)' : 'Done (+1 XP)'}
-                        </span>
-                      </button>
-
-                      {/* Failure Button */}
+                      {/* Left: Failure Button */}
                       <button
                         onClick={() => handleCheckInCard('missed')}
                         className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 hover:bg-rose-500/20 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[72px]"
@@ -578,6 +565,19 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                         </div>
                         <span className="text-sm sm:text-base">
                           {isBreak ? 'Failed (-1 XP)' : 'Missed (-1 XP)'}
+                        </span>
+                      </button>
+
+                      {/* Right: Success Button */}
+                      <button
+                        onClick={() => handleCheckInCard('done')}
+                        className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-800 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border border-emerald-500/30 font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[72px]"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center mb-1">
+                          {isBreak ? <Shield className="w-5 h-5 stroke-[2.5]" /> : <Check className="w-5 h-5 stroke-[3]" />}
+                        </div>
+                        <span className="text-sm sm:text-base">
+                          {isBreak ? 'Controlled (+1 XP)' : 'Done (+1 XP)'}
                         </span>
                       </button>
                     </div>

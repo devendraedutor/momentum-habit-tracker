@@ -253,11 +253,18 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false): HabitSta
   const last7Days = trajectory.slice(-7);
   const weeklyVelocity = last7Days.reduce((acc, curr) => acc + curr.delta, 0);
 
-  // Target Days calculation (calculated relative to current tier start streak)
+  // Target Days calculation (handles both continuous ascension and restarted streaks)
   const targetGoalDays = habit.targetGoalDays || 21;
   const tierStartStreak = habit.tierStartStreak || 0;
-  // If currentStreak is 0 (e.g. broken streak), progress is 0. Otherwise progress is streak earned within this tier.
-  const currentGoalStreak = currentStreak > 0 ? Math.max(0, currentStreak - tierStartStreak) : 0;
+  let currentGoalStreak = 0;
+  if (currentStreak === 0) {
+    currentGoalStreak = 0;
+  } else if (tierStartStreak > 0 && currentStreak >= tierStartStreak) {
+    currentGoalStreak = currentStreak - tierStartStreak;
+  } else {
+    // If streak was broken and restarted below tierStartStreak, progress counts up with current active streak
+    currentGoalStreak = currentStreak;
+  }
   const goalDaysRemaining = Math.max(0, targetGoalDays - currentGoalStreak);
   const goalProgressPercent = Math.min(100, Math.round((currentGoalStreak / targetGoalDays) * 100));
   const goalAchieved = currentGoalStreak >= targetGoalDays && currentStreak > 0;
