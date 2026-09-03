@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html.dark body {
+    background-color: #0b1120;
+    color: #f8fafc;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 9999px;
+  }
+  html.dark ::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.5);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.8);
+  }
+}
+
+@layer utilities {
+  .app-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  }
+
+  html.dark .app-card {
+    background-color: #162032;
+    border: 1px solid #283548;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  .app-card-hover {
+    transition: all 0.2s ease-in-out;
+  }
+  .app-card-hover:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+  html.dark .app-card-hover:hover {
+    border-color: #3b495f;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+    transform: translateY(-1px);
+  }
+
+  /* Reel Card Transitions */
+  .reel-enter-up {
+    animation: reelSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .reel-exit-up {
+    animation: reelFadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .reel-enter-down {
+    animation: reelSlideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .reel-exit-down {
+    animation: reelFadeDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes reelSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes reelFadeUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.96);
+  }
+}
+
+@keyframes reelSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes reelFadeDown {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+}
