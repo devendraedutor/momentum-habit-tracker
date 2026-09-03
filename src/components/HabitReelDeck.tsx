@@ -13,9 +13,9 @@ import {
   ChevronRight,
   Zap,
   Shield,
-  Star,
-  Flag,
   Crown,
+  Gem,
+  Flag,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -29,6 +29,7 @@ interface HabitReelDeckProps {
   onOpenDetail: (habit: Habit) => void;
   onOpenHub: () => void;
   onAscendHabit?: (habit: Habit) => void;
+  jumboPointsCount?: number;
   floorAtZero?: boolean;
 }
 
@@ -40,6 +41,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   onOpenNewHabit,
   onOpenDetail,
   onAscendHabit,
+  jumboPointsCount = 0,
   floorAtZero = false,
 }) => {
   const activeHabits = useMemo(() => habits.filter((h) => !h.archived), [habits]);
@@ -189,13 +191,11 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         <div className="w-full animate-scale-in">
           <div className="app-card rounded-3xl p-5 sm:p-6 shadow-2xl border-slate-200 dark:border-slate-800 relative overflow-hidden">
             {/* Ambient Background Glow */}
-            <div className={`absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700 ${
-              isPerfectDay ? 'bg-amber-400' : 'bg-emerald-500'
-            }`} />
+            <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl pointer-events-none opacity-20 bg-emerald-500 transition-all duration-700" />
 
             {/* Gamified Score Arena Header with Circular Gauge */}
-            <div className="relative z-10 flex flex-col items-center pb-5 border-b border-slate-200 dark:border-slate-800/80">
-              {/* Radial Progress Ring */}
+            <div className="relative z-10 flex flex-col items-center pb-4 border-b border-slate-200 dark:border-slate-800/80">
+              {/* Radial Progress Ring (Emerald Mint Task Completion) */}
               <div className="relative w-28 h-28 flex items-center justify-center my-1">
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 96 96">
                   {/* Background Track */}
@@ -207,12 +207,12 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     strokeWidth="6"
                     fill="transparent"
                   />
-                  {/* Dynamic Progress Track */}
+                  {/* Dynamic Progress Track (Emerald) */}
                   <circle
                     cx="48"
                     cy="48"
                     r={radius}
-                    stroke={isPerfectDay ? '#f59e0b' : '#10b981'}
+                    stroke="#10b981"
                     strokeWidth="6"
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
@@ -222,26 +222,25 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                   />
                 </svg>
 
-                {/* Score & Icon Inside Ring */}
+                {/* Clean Task Completion Display Inside Ring */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                   {isPerfectDay ? (
                     <>
-                      <Star className="w-5 h-5 fill-amber-400 text-amber-500 animate-pulse mb-0.5" />
-                      <div className="text-xl font-black font-mono text-amber-500 leading-none">
+                      <div className="text-3xl font-black font-mono text-emerald-500 dark:text-emerald-400 leading-none">
                         {completedCount}/{totalHabitsCount}
                       </div>
-                      <span className="text-[8px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 mt-0.5">
-                        PERFECT
+                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mt-1">
+                        ALL DONE
                       </span>
                     </>
                   ) : (
                     <>
-                      <div className="text-2xl font-black font-mono text-slate-900 dark:text-white leading-none">
+                      <div className="text-3xl font-black font-mono text-slate-900 dark:text-white leading-none">
                         <span className="text-emerald-500">{completedCount}</span>
-                        <span className="text-slate-400 text-base font-normal">/</span>
+                        <span className="text-slate-400 text-xl font-normal">/</span>
                         <span className="text-slate-400">{totalHabitsCount}</span>
                       </div>
-                      <span className="text-[10px] font-bold font-mono text-slate-400 mt-1">
+                      <span className="text-[9px] font-bold font-mono text-slate-400 mt-1 uppercase tracking-wider">
                         {percent}% DONE
                       </span>
                     </>
@@ -249,15 +248,13 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                 </div>
               </div>
 
-              {/* Status Banner */}
-              {isPerfectDay ? (
-                <div className="mt-2.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-amber-500/20 border border-amber-500/40 text-amber-800 dark:text-amber-300 text-xs font-black font-mono flex items-center gap-1.5 shadow-xs animate-bounce">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
-                  <span>🌟 +1 JUMBO POINT UNLOCKED!</span>
-                </div>
-              ) : (
-                <div className="mt-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-xs font-mono font-bold flex items-center gap-1.5">
-                  <span>{totalHabitsCount - completedCount} more needed for Jumbo Point (100%)</span>
+              {/* Dynamic Jumbo Point Achievement Banner (Render ONLY on 100% Perfect Cleared Days) */}
+              {isPerfectDay && (
+                <div className="mt-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-400/40 text-amber-900 dark:text-amber-200 text-xs font-black font-mono flex items-center gap-2 shadow-xs animate-bounce">
+                  <Gem className="w-4 h-4 fill-amber-400 text-amber-500" />
+                  <span>+1 Jumbo Point Credited</span>
+                  <span className="w-1 h-1 rounded-full bg-amber-400/60" />
+                  <span className="text-amber-700 dark:text-amber-300 font-bold">Total: {jumboPointsCount}</span>
                 </div>
               )}
             </div>
@@ -274,7 +271,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                 const isGoalConquered = goalStreak >= targetDays && isDone;
                 const progressPercent = Math.min(100, Math.round((goalStreak / targetDays) * 100));
                 const daysRemaining = Math.max(0, targetDays - goalStreak);
-                const isNearGoal = !isGoalConquered && progressPercent >= 80 && isDone;
+                const isNearGoal = !isGoalConquered && isDone && progressPercent >= 70 && daysRemaining > 0;
 
                 return (
                   <div
@@ -317,7 +314,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                           )}
                         </div>
 
-                        {/* Streak & Target Goal Indicators */}
+                        {/* Secondary Info Row: Streak + Lifetime XP + Near Goal Alert */}
                         <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
                           {/* Flame Streak Indicator */}
                           <span className="flex items-center gap-1 text-amber-500" title={`Current Streak: ${stats.currentStreak} days`}>
@@ -327,50 +324,83 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
                           <span className="text-slate-300 dark:text-slate-700">•</span>
 
-                          {/* Dynamic Milestone Tag / Interactive Ascension CTA */}
-                          {isGoalConquered ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onAscendHabit) onAscendHabit(h);
-                              }}
-                              className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-slate-950 font-black text-[10px] uppercase font-mono tracking-wider flex items-center gap-1 shadow-md shadow-amber-500/30 hover:scale-105 active:scale-95 transition-all animate-bounce cursor-pointer border border-amber-300"
-                              title="Milestone Conquered! Click to level up and claim rewards"
-                            >
-                              <Zap className="w-3 h-3 fill-slate-950 stroke-none" />
-                              <span>Ascend Target ⚡</span>
-                            </button>
-                          ) : isNearGoal ? (
-                            <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono">
-                              <Flag className="w-3 h-3 text-cyan-500" />
-                              <span>{daysRemaining === 1 ? '1 day to goal' : `${daysRemaining}d to goal`}</span>
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-cyan-600 dark:text-cyan-400" title={`Target Goal: ${goalStreak} of ${targetDays} days`}>
-                              <Target className="w-3.5 h-3.5 text-cyan-500" />
-                              <span>{goalStreak}/{targetDays}d</span>
-                            </span>
+                          {/* Lifetime XP Badge */}
+                          <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium" title={`Lifetime XP: ${stats.currentScore} XP`}>
+                            <Zap className="w-3 h-3 text-amber-500" />
+                            <span>{stats.currentScore} XP</span>
+                          </span>
+
+                          {/* Engaging Near Goal Indicator */}
+                          {isNearGoal && (
+                            <>
+                              <span className="text-slate-300 dark:text-slate-700">•</span>
+                              <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono animate-pulse" title={`${daysRemaining} days left to conquer target goal!`}>
+                                <Flag className="w-3 h-3 text-cyan-500" />
+                                <span>{daysRemaining === 1 ? '1 day to goal!' : `${daysRemaining}d to goal!`}</span>
+                              </span>
+                            </>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: Contextual Cumulative XP Pill (✓ 14 XP / ✕ 12 XP) */}
-                    <div className="flex items-center flex-shrink-0">
-                      <div
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black font-mono flex items-center gap-1.5 shadow-xs transition-all duration-200 ${
+                    {/* Right: Milestone Cluster (Level Up CTA + Target Ratio + Tactile Check-In Switch) */}
+                    <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
+                      {/* Level Up CTA Button (Appears BEFORE target goal without displacing it) */}
+                      {isGoalConquered && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onAscendHabit) onAscendHabit(h);
+                          }}
+                          className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-700 dark:text-amber-300 border border-amber-400/40 text-xs font-black font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse"
+                          title="Milestone Conquered! Click to level up and claim rewards"
+                        >
+                          <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                          <span>Level Up ⚡</span>
+                        </button>
+                      )}
+
+                      {/* The Target Ratio / Milestone Chase (Anchored in place) */}
+                      <div className="flex flex-col items-end text-right min-w-[48px]">
+                        <div className="flex items-baseline gap-0.5 justify-end">
+                          <span className={`font-black text-sm font-mono tracking-tight ${
+                            isDone
+                              ? 'text-slate-900 dark:text-white'
+                              : 'text-slate-400 dark:text-slate-500'
+                          }`}>
+                            {isDone ? goalStreak : 0}
+                          </span>
+                          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 font-mono">
+                            /{targetDays}d
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-mono font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tighter">
+                          target
+                        </span>
+                      </div>
+
+                      {/* Tactile Daily Check-In Micro-Switch (Always in the rightmost slot) */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCheckIn(h.id, isDone ? 'missed' : 'done', activeDateStr);
+                        }}
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-150 active:scale-90 shadow-xs cursor-pointer ${
                           isDone
-                            ? 'bg-emerald-500 text-slate-950 shadow-emerald-500/20 shadow-md font-extrabold'
-                            : 'bg-rose-500 text-white shadow-rose-500/20 shadow-md font-extrabold'
+                            ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:border-emerald-500/50'
+                            : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border-rose-500/30 hover:border-rose-500/50'
                         }`}
+                        title={isDone ? 'Marked Done. Click to toggle to Missed.' : 'Marked Missed. Click to toggle to Done.'}
                       >
                         {isDone ? (
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          <Check className="w-4 h-4 stroke-[2.5]" />
                         ) : (
-                          <X className="w-3.5 h-3.5 stroke-[3]" />
+                          <X className="w-4 h-4 stroke-[2.5]" />
                         )}
-                        <span>{stats.currentScore} XP</span>
-                      </div>
+                      </button>
                     </div>
 
                     {/* Ultra-Thin (3px) Seamless Bottom Progress Rail */}
@@ -380,8 +410,8 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                           isGoalConquered
                             ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-emerald-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]'
                             : isDone
-                            ? 'bg-gradient-to-r from-emerald-500 to-cyan-400 shadow-[0_0_6px_rgba(16,185,129,0.5)]'
-                            : 'bg-slate-300 dark:bg-slate-700'
+                            ? 'bg-gradient-to-r from-emerald-400 to-teal-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]'
+                            : 'bg-slate-200 dark:bg-slate-800'
                         }`}
                         style={{
                           width: `${isDone ? progressPercent : 0}%`,

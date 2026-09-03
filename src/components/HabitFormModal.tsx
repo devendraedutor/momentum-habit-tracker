@@ -2,7 +2,18 @@ import React, { useState, useEffect } from 'react';
 import type { Habit, HabitType } from '../types/habit';
 import { AVAILABLE_ICONS, DynamicIcon } from './DynamicIcon';
 import { loadCategoriesFromStorage, saveCategoriesToStorage } from '../lib/storage';
-import { X, Sparkles, Check, Target, Plus, Trash2, CopyPlus, ShieldAlert, Sprout } from 'lucide-react';
+import {
+  X,
+  Sparkles,
+  Check,
+  Target,
+  Plus,
+  Trash2,
+  CopyPlus,
+  ShieldAlert,
+  Sprout,
+  ChevronDown,
+} from 'lucide-react';
 
 interface HabitFormModalProps {
   isOpen: boolean;
@@ -13,14 +24,24 @@ interface HabitFormModalProps {
 
 const PRESET_COLORS = [
   { name: 'Emerald', hex: '#10b981' },
+  { name: 'Teal', hex: '#14b8a6' },
   { name: 'Cyan', hex: '#06b6d4' },
-  { name: 'Violet', hex: '#8b5cf6' },
-  { name: 'Amber', hex: '#f59e0b' },
-  { name: 'Rose', hex: '#f43f5e' },
-  { name: 'Indigo', hex: '#6366f1' },
   { name: 'Sky', hex: '#0284c7' },
+  { name: 'Blue', hex: '#3b82f6' },
+  { name: 'Indigo', hex: '#6366f1' },
+  { name: 'Violet', hex: '#8b5cf6' },
+  { name: 'Purple', hex: '#a855f7' },
+  { name: 'Fuchsia', hex: '#d946ef' },
   { name: 'Pink', hex: '#ec4899' },
+  { name: 'Rose', hex: '#f43f5e' },
+  { name: 'Red', hex: '#ef4444' },
+  { name: 'Orange', hex: '#f97316' },
+  { name: 'Amber', hex: '#f59e0b' },
+  { name: 'Yellow', hex: '#eab308' },
+  { name: 'Lime', hex: '#84cc16' },
 ];
+
+const TARGET_PRESETS = [7, 14, 21, 30, 66];
 
 export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   isOpen,
@@ -31,6 +52,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   const [habitType, setHabitType] = useState<HabitType>('BUILD');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [showDescription, setShowDescription] = useState(false);
   const [categories, setCategories] = useState<string[]>(() => loadCategoriesFromStorage());
   const [selectedCategory, setSelectedCategory] = useState('Productivity');
   const [newCatInput, setNewCatInput] = useState('');
@@ -38,6 +60,8 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   const [icon, setIcon] = useState('Flame');
   const [color, setColor] = useState('#10b981');
   const [targetGoalDays, setTargetGoalDays] = useState<number>(21);
+  const [isCustomTarget, setIsCustomTarget] = useState(false);
+  const [customTargetInput, setCustomTargetInput] = useState('');
 
   useEffect(() => {
     const loaded = loadCategoriesFromStorage();
@@ -47,18 +71,30 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       setHabitType(initialHabit.type || 'BUILD');
       setName(initialHabit.name);
       setDescription(initialHabit.description || '');
+      setShowDescription(Boolean(initialHabit.description));
       setSelectedCategory(initialHabit.category);
       setIcon(initialHabit.icon);
       setColor(initialHabit.color);
-      setTargetGoalDays(initialHabit.targetGoalDays || 21);
+      const target = initialHabit.targetGoalDays || 21;
+      setTargetGoalDays(target);
+      if (!TARGET_PRESETS.includes(target)) {
+        setIsCustomTarget(true);
+        setCustomTargetInput(String(target));
+      } else {
+        setIsCustomTarget(false);
+        setCustomTargetInput('');
+      }
     } else {
       setHabitType('BUILD');
       setName('');
       setDescription('');
+      setShowDescription(false);
       setSelectedCategory(loaded[0] || 'Productivity');
       setIcon('Flame');
       setColor('#10b981');
       setTargetGoalDays(21);
+      setIsCustomTarget(false);
+      setCustomTargetInput('');
     }
   }, [initialHabit, isOpen]);
 
@@ -87,6 +123,21 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
     }
   };
 
+  const handleSelectPresetTarget = (days: number) => {
+    setTargetGoalDays(days);
+    setIsCustomTarget(false);
+    setCustomTargetInput('');
+  };
+
+  const handleCustomTargetChange = (val: string) => {
+    setCustomTargetInput(val);
+    setIsCustomTarget(true);
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num > 0) {
+      setTargetGoalDays(num);
+    }
+  };
+
   const handleSaveExisting = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -107,7 +158,6 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   const handleSaveAsNew = () => {
     if (!name.trim()) return;
 
-    // Explicitly omit id to guarantee a new habit is created
     onSave({
       name: name.trim(),
       description: description.trim() || undefined,
@@ -149,7 +199,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
         </div>
 
         <form onSubmit={handleSaveExisting} className="mt-4 space-y-4">
-          {/* Habit Paradigm Selector: Build vs Break */}
+          {/* Habit Goal Paradigm Selector: Build vs Break with Single Clean Icons */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
               Habit Goal Paradigm <span className="text-emerald-500">*</span>
@@ -168,7 +218,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                 }`}
               >
                 <Sprout className="w-4 h-4" />
-                <span>🌱 Build Habit</span>
+                <span>Build Habit</span>
               </button>
 
               <button
@@ -184,27 +234,8 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                 }`}
               >
                 <ShieldAlert className="w-4 h-4" />
-                <span>🛑 Break Habit</span>
+                <span>Break Habit</span>
               </button>
-            </div>
-
-            {/* Dynamic Helper Copy */}
-            <div className={`mt-2 p-2.5 rounded-xl text-xs font-medium border flex items-center gap-2 ${
-              habitType === 'BUILD'
-                ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20'
-                : 'bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/20'
-            }`}>
-              {habitType === 'BUILD' ? (
-                <>
-                  <Sprout className="w-4 h-4 flex-shrink-0 text-emerald-500" />
-                  <span>Earn <strong>+1 XP</strong> and grow streaks by doing this positive habit every day. (e.g. Reading, Workout, Meditation)</span>
-                </>
-              ) : (
-                <>
-                  <ShieldAlert className="w-4 h-4 flex-shrink-0 text-rose-500" />
-                  <span>Earn <strong>+1 XP</strong> and grow clean streaks by controlling yourself and abstaining from this habit. (e.g. Porn Watching, Smoking, Junk Food)</span>
-                </>
-              )}
             </div>
           </div>
 
@@ -218,51 +249,78 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={habitType === 'BREAK' ? 'e.g. Porn Watching, Smoking, Junk Food...' : 'e.g. Morning Walk, Read 20 Pages, Meditation...'}
-              className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm"
+              placeholder={habitType === 'BREAK' ? 'e.g. Smoking, Junk Food, Late Screen Time...' : 'e.g. Morning Walk, Read 20 Pages, Meditation...'}
+              className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm font-medium"
             />
           </div>
 
-          {/* Description */}
+          {/* Collapsible Description / Motivation */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-              Description / Motivation (Optional)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={habitType === 'BREAK' ? 'Why you want to eliminate this habit and stay clean...' : 'Why this habit matters to your growth...'}
-              rows={2}
-              className="w-full px-4 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white text-sm resize-none"
-            />
-          </div>
+            <button
+              type="button"
+              onClick={() => setShowDescription(!showDescription)}
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer py-1"
+            >
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showDescription ? 'rotate-180 text-cyan-500' : ''}`} />
+              <span>{showDescription ? 'Hide Description / Motivation' : '+ Add Description / Motivation (Optional)'}</span>
+            </button>
 
-          {/* Streamlined Target Goal Days */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-              Target Goal Days <span className="text-cyan-500 font-mono">({habitType === 'BREAK' ? 'Clean Streak' : 'Strict Streak'})</span>
-            </label>
-            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
-              <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-500">
-                <Target className="w-5 h-5" />
+            {showDescription && (
+              <div className="mt-2 animate-fade-in">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder={habitType === 'BREAK' ? 'Why you want to eliminate this habit and stay clean...' : 'Why this habit matters to your daily growth...'}
+                  rows={2}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white text-xs resize-none"
+                  autoFocus
+                />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    max="365"
-                    value={targetGoalDays}
-                    onChange={(e) => setTargetGoalDays(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-20 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold text-center text-slate-900 dark:text-white text-base focus:ring-2 focus:ring-cyan-500 outline-none"
-                  />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    consecutive {habitType === 'BREAK' ? 'clean days' : 'days'} goal
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  {habitType === 'BREAK' ? 'Clean streak resets to 0 if failed.' : 'Streak resets to 0 if missed.'}
-                </p>
+            )}
+          </div>
+
+          {/* Redesigned Clean Target Goal Days Selector */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Target className="w-3.5 h-3.5 text-cyan-500" />
+                <span>Target Goal Days</span>
+              </label>
+              <span className="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
+                {targetGoalDays} Days Goal
+              </span>
+            </div>
+
+            {/* Smart Preset Chips & Custom Input */}
+            <div className="grid grid-cols-6 gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+              {TARGET_PRESETS.map((days) => (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => handleSelectPresetTarget(days)}
+                  className={`py-2 rounded-xl font-mono text-xs font-bold transition-all text-center cursor-pointer ${
+                    !isCustomTarget && targetGoalDays === days
+                      ? 'bg-cyan-500 text-slate-950 shadow-sm font-black'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
+                  }`}
+                >
+                  {days}d
+                </button>
+              ))}
+
+              {/* Custom Input Chip */}
+              <div className="relative">
+                <input
+                  type="number"
+                  placeholder="Custom"
+                  value={customTargetInput}
+                  onChange={(e) => handleCustomTargetChange(e.target.value)}
+                  className={`w-full py-2 px-1 rounded-xl font-mono text-xs font-bold text-center border transition-all outline-none ${
+                    isCustomTarget
+                      ? 'bg-cyan-500 text-slate-950 border-cyan-500 font-black placeholder:text-slate-950/70'
+                      : 'bg-transparent text-slate-600 dark:text-slate-400 border-transparent placeholder:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
+                  }`}
+                />
               </div>
             </div>
           </div>
@@ -325,7 +383,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   onClick={() => setSelectedCategory(cat)}
                   className={`group px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border ${
                     selectedCategory === cat
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-transparent shadow-xs'
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950 border-transparent shadow-xs font-bold'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
                   }`}
                 >
@@ -346,44 +404,53 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
           </div>
 
           {/* Color & Icon Selection */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* 16 Colors Grid */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                Accent Color
-              </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Accent Color
+                </label>
+                <span className="text-[10px] font-mono text-slate-400">{PRESET_COLORS.length} Colors</span>
+              </div>
+              <div className="grid grid-cols-8 sm:grid-cols-4 gap-1.5 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
                 {PRESET_COLORS.map((c) => (
                   <button
                     key={c.hex}
                     type="button"
                     onClick={() => setColor(c.hex)}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform hover:scale-105 cursor-pointer relative"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-all hover:scale-110 cursor-pointer relative shadow-xs"
                     style={{ backgroundColor: c.hex }}
+                    title={c.name}
                   >
-                    {color === c.hex && <Check className="w-4 h-4 text-white stroke-[3]" />}
+                    {color === c.hex && <Check className="w-3.5 h-3.5 text-white stroke-[3] drop-shadow-md" />}
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* 32 Icons Grid */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                Icon
-              </label>
-              <div className="grid grid-cols-4 gap-2 max-h-[88px] overflow-y-auto pr-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Icon
+                </label>
+                <span className="text-[10px] font-mono text-slate-400">{AVAILABLE_ICONS.length} Icons</span>
+              </div>
+              <div className="grid grid-cols-8 sm:grid-cols-4 gap-1.5 max-h-[108px] overflow-y-auto p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 pr-1">
                 {AVAILABLE_ICONS.map((ic) => (
                   <button
                     key={ic.name}
                     type="button"
                     onClick={() => setIcon(ic.name)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
                       icon === ic.name
-                        ? 'border-emerald-500 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-400'
+                        ? 'border-emerald-500 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                     title={ic.label}
                   >
-                    <DynamicIcon name={ic.name} className="w-4 h-4" />
+                    <DynamicIcon name={ic.name} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 ))}
               </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Habit } from '../types/habit';
-import { Zap, Moon, Sun, Plus, Layers, Star } from 'lucide-react';
+import { Zap, Moon, Sun, Plus, Layers, Gem } from 'lucide-react';
 
 interface NavbarProps {
   habits: Habit[];
@@ -46,13 +46,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Minimalist, Gamified, Icon-Driven Header Controls */}
         <div className="flex items-center gap-2 sm:gap-2.5">
-          {/* 1. Gamified Jumbo Point Badge */}
+          {/* 1. Gamified Jumbo Point Badge (Prestige Currency Capsule) */}
           <div
             onClick={onOpenHub}
             className="group relative px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 flex items-center gap-1.5 cursor-pointer shadow-xs hover:border-amber-400 transition-all font-mono active:scale-95"
-            title={`Jumbo Points: ${jumboPointsCount} (Earned on 100% Perfect Days)`}
+            title={`Total Jumbo Points: ${jumboPointsCount} (Conquered Perfect Days)`}
           >
-            <Star className="w-4 h-4 fill-amber-400 text-amber-500 group-hover:rotate-12 transition-transform duration-300" />
+            <Gem className="w-4 h-4 fill-amber-400 text-amber-500 group-hover:scale-110 transition-transform duration-300" />
             <span className="text-xs font-black font-mono">
               {jumboPointsCount}
             </span>

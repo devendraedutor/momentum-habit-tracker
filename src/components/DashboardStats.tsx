@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import type { Habit } from '../types/habit';
 import { calculateHabitStats, getTodayString } from '../lib/momentum';
-import { Flame, Award, Zap, TrendingUp, TrendingDown, Star } from 'lucide-react';
+import { Flame, Award, Zap, TrendingUp, TrendingDown, Gem } from 'lucide-react';
 
 interface DashboardStatsProps {
   habits: Habit[];
@@ -95,14 +95,14 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
         </div>
       </div>
 
-      {/* 2. Jumbo Points (🌟 100% Perfect Days) */}
+      {/* 2. Jumbo Points (💎 100% Perfect Days) */}
       <div className="app-card rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between bg-gradient-to-br from-amber-500/5 via-transparent to-yellow-500/5 border-amber-500/20">
         <div className="flex items-center justify-between">
           <span className="text-[10px] sm:text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
             Jumbo Points
           </span>
           <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-500">
-            <Star className="w-3.5 h-3.5 fill-amber-400" />
+            <Gem className="w-3.5 h-3.5 fill-amber-400" />
           </div>
         </div>
         <div className="mt-2 flex items-baseline gap-1">
@@ -112,7 +112,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
           <span className="text-[10px] text-amber-600/80 dark:text-amber-400/80 font-bold font-mono">PTS</span>
         </div>
         <div className="mt-1 text-[11px] text-amber-600 dark:text-amber-400 font-mono font-medium">
-          🌟 100% Perfect Days
+          💎 100% Perfect Days
         </div>
       </div>
 

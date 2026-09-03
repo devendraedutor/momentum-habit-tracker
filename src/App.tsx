@@ -327,6 +327,7 @@ export function App() {
           }}
           onOpenHub={() => setIsHubOpen(true)}
           onAscendHabit={(h) => setAscendHabit(h)}
+          jumboPointsCount={jumboDates.length}
           floorAtZero={settings.floorAtZero}
         />
       </main>
