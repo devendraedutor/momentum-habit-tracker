@@ -54,7 +54,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   onAscendHabit,
   onCheckIn,
 }) => {
-  const currentStatus = h.history[activeDateStr];
+  const currentStatus = h.history?.[activeDateStr];
   const isBreak = h.type === 'BREAK';
   const isDone = currentStatus === 'done';
   const stats = calculateHabitStats(h, floorAtZero);
@@ -299,7 +299,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
   // Total daily progress for active date
   const totalHabitsCount = activeHabits.length;
-  const completedCount = activeHabits.filter((h) => h.history[activeDateStr] === 'done').length;
+  const completedCount = activeHabits.filter((h) => h.history?.[activeDateStr] === 'done').length;
   const isAllDone = totalHabitsCount > 0 && unloggedHabits.length === 0;
   const isPerfectDay = completedCount === totalHabitsCount && totalHabitsCount > 0;
   const percent = totalHabitsCount > 0 ? Math.round((completedCount / totalHabitsCount) * 100) : 0;

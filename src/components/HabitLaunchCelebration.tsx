@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Sparkles, Check } from 'lucide-react';
 import { DynamicIcon } from './DynamicIcon';
 
@@ -15,12 +15,15 @@ export const HabitLaunchCelebration: React.FC<HabitLaunchCelebrationProps> = ({
   habitColor,
   onComplete,
 }) => {
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onComplete();
+      onCompleteRef.current();
     }, 1400);
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, []);
 
   // Generate 16 radial starburst sparks
   const sparks = Array.from({ length: 16 }).map((_, i) => {

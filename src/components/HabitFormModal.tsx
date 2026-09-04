@@ -223,7 +223,6 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       startDate: startDate || getTodayString(),
       targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : 21,
     });
-    onClose();
   };
 
   const handleSaveAsNew = () => {
@@ -242,7 +241,6 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       startDate: startDate || getTodayString(),
       targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : 21,
     });
-    onClose();
   };
 
   const progressPercentage = currentStep === 1 ? 33.33 : currentStep === 2 ? 66.66 : 100;
