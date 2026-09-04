@@ -25,10 +25,8 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
   onClose,
   onAscend,
 }) => {
-  if (!isOpen || !habit) return null;
-
-  const currentTarget = habit.targetGoalDays || 21;
-  const currentTier = habit.currentTier || 1;
+  const currentTarget = habit?.targetGoalDays || 21;
+  const currentTier = habit?.currentTier || 1;
   const nextTier = currentTier + 1;
   const bonusRewardXP = 5;
 
@@ -41,6 +39,8 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
   const [selectedTarget, setSelectedTarget] = useState<number>(currentTarget || 7);
   const [customDays, setCustomDays] = useState<string>('');
   const [isCustom, setIsCustom] = useState(false);
+
+  if (!isOpen || !habit) return null;
 
   const handleSelectPreset = (days: number) => {
     setSelectedTarget(days);

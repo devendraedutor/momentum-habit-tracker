@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Habit, UserSettings } from '../types/habit';
+import type { Tester } from '../config/testers';
 import { exportBackupData, importBackupData } from '../lib/storage';
 import {
   X,
@@ -15,6 +16,7 @@ import {
   Moon,
   RotateCcw,
   Trash2,
+  LogOut,
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -22,6 +24,8 @@ interface SettingsModalProps {
   onClose: () => void;
   habits: Habit[];
   settings: UserSettings;
+  tester?: Tester | null;
+  onLogout?: () => void;
   jumboDates?: string[];
   onUpdateSettings: (settings: UserSettings) => void;
   onRestoreHabits: (habits: Habit[]) => void;
@@ -35,6 +39,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   habits,
   settings,
+  tester,
+  onLogout,
   jumboDates = [],
   onUpdateSettings,
   onRestoreHabits,
@@ -115,6 +121,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+          {/* Section 0: Active Tester Profile */}
+          {tester && (
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-cyan-500/20 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-slate-900 dark:bg-slate-950 text-amber-400 flex items-center justify-center font-bold text-sm shadow-xs">
+                  ⚡
+                </div>
+                <div>
+                  <div className="text-xs font-black text-slate-900 dark:text-white font-mono flex items-center gap-1.5">
+                    <span>{tester.name}</span>
+                    <span className="text-[10px] text-cyan-600 dark:text-cyan-400 uppercase font-sans font-bold bg-cyan-500/10 px-1.5 py-0.2 rounded-md">
+                      Active Tester
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                    Storage: <code className="text-cyan-600 dark:text-cyan-400">{tester.id}__*</code>
+                  </div>
+                </div>
+              </div>
+
+              {onLogout && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onLogout();
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Exit Session</span>
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Section 1: System Preferences */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 font-mono">

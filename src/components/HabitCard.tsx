@@ -69,7 +69,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
   return (
     <div
-      className={`app-card app-card-hover rounded-2xl p-5 flex flex-col justify-between ${
+      className={`w-full app-card app-card-hover rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all ${
         todayStatus === 'done'
           ? 'ring-1 ring-emerald-500/50 bg-emerald-50/20 dark:bg-slate-800'
           : todayStatus === 'missed'
@@ -78,28 +78,28 @@ export const HabitCard: React.FC<HabitCardProps> = ({
       }`}
     >
       <div>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-xs flex-shrink-0 bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-white shadow-xs flex-shrink-0 bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700"
               style={{
                 color: habit.color,
               }}
             >
               <DynamicIcon name={habit.icon} className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 truncate max-w-[120px]">
                   {habit.category}
                 </span>
-                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 whitespace-nowrap">
                   <Target className="w-3 h-3 text-slate-400" /> Goal: {targetDays}d
                 </span>
               </div>
               <h3
                 onClick={() => onOpenDetail(habit)}
-                className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors line-clamp-1"
+                className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 mt-1 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors truncate"
                 title={habit.name}
               >
                 {habit.name}

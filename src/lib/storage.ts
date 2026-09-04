@@ -1,16 +1,12 @@
 import type { Habit, UserSettings, ExportData } from '../types/habit';
-
-const HABITS_STORAGE_KEY = 'momentum_habits_v1';
-const SETTINGS_STORAGE_KEY = 'momentum_settings_v1';
-const CATEGORIES_STORAGE_KEY = 'momentum_categories_v1';
-const JUMBO_DATES_STORAGE_KEY = 'momentum_jumbo_dates_v1';
+import { getActiveSessionUserId } from '../config/testers';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   soundEffects: true,
   confetti: true,
   floorAtZero: false,
   autoMarkMissedPastDays: false,
-  theme: 'dark',
+  theme: 'light',
 };
 
 export const DEFAULT_CATEGORIES: string[] = [
@@ -29,12 +25,32 @@ const DUMMY_HABIT_NAMES = [
 ];
 
 /**
- * Load user habits strictly from storage without hardcoded overrides.
+ * Resolves namespaced localStorage key for the given domain and active tester.
  */
-export function loadHabitsFromStorage(): Habit[] {
+export function getStorageKey(domain: 'habits' | 'settings' | 'categories' | 'jumbo_wallet' | 'checkins', userId?: string): string {
+  const activeUser = userId || getActiveSessionUserId() || 'guest';
+  return `${activeUser}__${domain}`;
+}
+
+/**
+ * Load user habits strictly from namespaced storage.
+ */
+export function loadHabitsFromStorage(userId?: string): Habit[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(HABITS_STORAGE_KEY);
+    const key = getStorageKey('habits', userId);
+    let raw = localStorage.getItem(key);
+    
+    // Check legacy key for migration if namespaced key is empty
+    if (!raw) {
+      const legacyRaw = localStorage.getItem('momentum_habits_v1');
+      if (legacyRaw) {
+        raw = legacyRaw;
+        // Seed the namespaced key with existing legacy habits
+        localStorage.setItem(key, legacyRaw);
+      }
+    }
+
     if (!raw) return [];
     
     const parsed = JSON.parse(raw);
@@ -69,19 +85,21 @@ export function loadHabitsFromStorage(): Habit[] {
   }
 }
 
-export function saveHabitsToStorage(habits: Habit[]): void {
+export function saveHabitsToStorage(habits: Habit[], userId?: string): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(HABITS_STORAGE_KEY, JSON.stringify(habits));
+    const key = getStorageKey('habits', userId);
+    localStorage.setItem(key, JSON.stringify(habits));
   } catch (err) {
     console.error('Failed to save habits to storage:', err);
   }
 }
 
-export function loadCategoriesFromStorage(): string[] {
+export function loadCategoriesFromStorage(userId?: string): string[] {
   if (typeof window === 'undefined') return DEFAULT_CATEGORIES;
   try {
-    const raw = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+    const key = getStorageKey('categories', userId);
+    const raw = localStorage.getItem(key);
     if (!raw) return DEFAULT_CATEGORIES;
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_CATEGORIES;
@@ -90,19 +108,28 @@ export function loadCategoriesFromStorage(): string[] {
   }
 }
 
-export function saveCategoriesToStorage(categories: string[]): void {
+export function saveCategoriesToStorage(categories: string[], userId?: string): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
+    const key = getStorageKey('categories', userId);
+    localStorage.setItem(key, JSON.stringify(categories));
   } catch (err) {
     console.error('Failed to save categories:', err);
   }
 }
 
-export function loadSettingsFromStorage(): UserSettings {
+export function loadSettingsFromStorage(userId?: string): UserSettings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   try {
-    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    const key = getStorageKey('settings', userId);
+    let raw = localStorage.getItem(key);
+    if (!raw) {
+      const legacyRaw = localStorage.getItem('momentum_settings_v1');
+      if (legacyRaw) {
+        raw = legacyRaw;
+        localStorage.setItem(key, legacyRaw);
+      }
+    }
     if (!raw) return DEFAULT_SETTINGS;
     return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
   } catch {
@@ -110,10 +137,11 @@ export function loadSettingsFromStorage(): UserSettings {
   }
 }
 
-export function saveSettingsToStorage(settings: UserSettings): void {
+export function saveSettingsToStorage(settings: UserSettings, userId?: string): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    const key = getStorageKey('settings', userId);
+    localStorage.setItem(key, JSON.stringify(settings));
   } catch (err) {
     console.error('Failed to save settings:', err);
   }
@@ -122,10 +150,18 @@ export function saveSettingsToStorage(settings: UserSettings): void {
 /**
  * Load list of dates where a Jumbo Point was awarded (100% habit completion).
  */
-export function loadJumboDatesFromStorage(): string[] {
+export function loadJumboDatesFromStorage(userId?: string): string[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(JUMBO_DATES_STORAGE_KEY);
+    const key = getStorageKey('jumbo_wallet', userId);
+    let raw = localStorage.getItem(key);
+    if (!raw) {
+      const legacyRaw = localStorage.getItem('momentum_jumbo_wallet');
+      if (legacyRaw) {
+        raw = legacyRaw;
+        localStorage.setItem(key, legacyRaw);
+      }
+    }
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -134,10 +170,11 @@ export function loadJumboDatesFromStorage(): string[] {
   }
 }
 
-export function saveJumboDatesToStorage(dates: string[]): void {
+export function saveJumboDatesToStorage(dates: string[], userId?: string): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(JUMBO_DATES_STORAGE_KEY, JSON.stringify(dates));
+    const key = getStorageKey('jumbo_wallet', userId);
+    localStorage.setItem(key, JSON.stringify(dates));
   } catch (err) {
     console.error('Failed to save jumbo dates:', err);
   }
@@ -145,19 +182,14 @@ export function saveJumboDatesToStorage(dates: string[]): void {
 
 /**
  * Reconciles Jumbo Points for a given date based on current active habits.
- * - If all active habits on dateStr are 'done' (count >= 1), award 1 Jumbo Point for dateStr.
- * - If any active habit on dateStr is 'missed' or 'none', remove dateStr from jumbo dates.
- * - Jumbo Points for past dates are preserved even if habits are deleted in the future.
  */
 export function reconcileJumboDate(
   dateStr: string,
   activeHabits: Habit[],
   existingJumboDates: string[]
 ): { updatedJumboDates: string[]; isJumboNow: boolean; wasAwarded: boolean } {
-  // Only habits that were started on or before dateStr count towards that day's Jumbo Point
   const applicableHabits = activeHabits.filter((h) => !h.archived && (!h.startDate || h.startDate <= dateStr));
 
-  // Must have at least 3 active habits on this date to be eligible for Jumbo Points
   if (applicableHabits.length < 3) {
     const updatedJumboDates = existingJumboDates.filter((d) => d !== dateStr);
     return { updatedJumboDates, isJumboNow: false, wasAwarded: false };
@@ -183,7 +215,8 @@ export function reconcileJumboDate(
   };
 }
 
-export function exportBackupData(habits: Habit[], settings: UserSettings, jumboDates: string[] = []): string {
+export function exportBackupData(habits: Habit[], settings: UserSettings, jumboDates: string[] = [], userId?: string): string {
+  const activeUser = userId || getActiveSessionUserId() || 'user';
   const exportData: ExportData = {
     version: 1,
     exportedAt: new Date().toISOString(),
@@ -198,7 +231,7 @@ export function exportBackupData(habits: Habit[], settings: UserSettings, jumboD
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `flux_habits_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `flux_${activeUser}_backup_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -207,8 +240,8 @@ export function exportBackupData(habits: Habit[], settings: UserSettings, jumboD
   return jsonStr;
 }
 
-export function generateDemoHabits(): Habit[] {
-  return loadHabitsFromStorage();
+export function generateDemoHabits(userId?: string): Habit[] {
+  return loadHabitsFromStorage(userId);
 }
 
 export function importBackupData(jsonString: string): ExportData | null {
@@ -222,4 +255,17 @@ export function importBackupData(jsonString: string): ExportData | null {
     console.error('Failed to parse import backup:', err);
     return null;
   }
+}
+
+/**
+ * Clears all namespaced data for a specific user.
+ */
+export function clearUserStorage(userId?: string): void {
+  if (typeof window === 'undefined') return;
+  const activeUser = userId || getActiveSessionUserId() || 'guest';
+  localStorage.removeItem(`${activeUser}__habits`);
+  localStorage.removeItem(`${activeUser}__settings`);
+  localStorage.removeItem(`${activeUser}__jumbo_wallet`);
+  localStorage.removeItem(`${activeUser}__categories`);
+  localStorage.removeItem(`${activeUser}__checkins`);
 }

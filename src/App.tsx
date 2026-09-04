@@ -9,6 +9,12 @@ import {
   saveJumboDatesToStorage,
   reconcileJumboDate,
 } from './lib/storage';
+import {
+  getTesterById,
+  getActiveSessionUserId,
+  clearActiveSession,
+  type Tester,
+} from './config/testers';
 import { sound } from './lib/audio';
 import { getTodayString, calculateHabitStats } from './lib/momentum';
 import { Navbar } from './components/Navbar';
@@ -20,12 +26,24 @@ import { MilestoneAscensionModal } from './components/MilestoneAscensionModal';
 import { JumboUnlockModal } from './components/JumboUnlockModal';
 import { HabitDirectoryModal } from './components/HabitDirectoryModal';
 import { SettingsModal } from './components/SettingsModal';
+import { AuthGateModal } from './components/AuthGateModal';
 import confetti from 'canvas-confetti';
 
 export function App() {
-  const [habits, setHabits] = useState<Habit[]>(() => loadHabitsFromStorage());
-  const [settings, setSettings] = useState<UserSettings>(() => loadSettingsFromStorage());
-  const [jumboDates, setJumboDates] = useState<string[]>(() => loadJumboDatesFromStorage());
+  // Active Tester Session State
+  const [activeTester, setActiveTester] = useState<Tester | null>(() =>
+    getTesterById(getActiveSessionUserId())
+  );
+
+  const [habits, setHabits] = useState<Habit[]>(() =>
+    loadHabitsFromStorage(activeTester?.id)
+  );
+  const [settings, setSettings] = useState<UserSettings>(() =>
+    loadSettingsFromStorage(activeTester?.id)
+  );
+  const [jumboDates, setJumboDates] = useState<string[]>(() =>
+    loadJumboDatesFromStorage(activeTester?.id)
+  );
 
   // Active logging date (defaults to today, switchable for testing multi-day histories)
   const [activeDateStr, setActiveDateStr] = useState<string>(() => getTodayString());
@@ -45,6 +63,30 @@ export function App() {
   const [selectedChartHabitId, setSelectedChartHabitId] = useState<string | 'all'>('all');
   const [timeRange, setTimeRange] = useState<ChartTimeRange>('30d');
 
+  // Login handler when passkey is validated in AuthGateModal
+  const handleLogin = useCallback((tester: Tester) => {
+    setActiveTester(tester);
+    setHabits(loadHabitsFromStorage(tester.id));
+    setSettings(loadSettingsFromStorage(tester.id));
+    setJumboDates(loadJumboDatesFromStorage(tester.id));
+    if (settings.soundEffects) {
+      sound.playMilestone();
+    }
+  }, [settings.soundEffects]);
+
+  // Logout / Switch Profile handler
+  const handleLogout = useCallback(() => {
+    clearActiveSession();
+    setActiveTester(null);
+    setIsHubOpen(false);
+    setIsDirectoryOpen(false);
+    setIsSettingsOpen(false);
+    setIsHabitFormOpen(false);
+    setIsDetailModalOpen(false);
+    setEditingHabit(null);
+    setSelectedDetailHabit(null);
+  }, []);
+
   // Theme synchronization
   useEffect(() => {
     const root = document.documentElement;
@@ -55,18 +97,24 @@ export function App() {
     }
   }, [settings.theme]);
 
-  // Save to localStorage whenever habits, settings, or jumboDates change
+  // Save to namespaced localStorage whenever habits, settings, or jumboDates change
   useEffect(() => {
-    saveHabitsToStorage(habits);
-  }, [habits]);
+    if (activeTester) {
+      saveHabitsToStorage(habits, activeTester.id);
+    }
+  }, [habits, activeTester]);
 
   useEffect(() => {
-    saveSettingsToStorage(settings);
-  }, [settings]);
+    if (activeTester) {
+      saveSettingsToStorage(settings, activeTester.id);
+    }
+  }, [settings, activeTester]);
 
   useEffect(() => {
-    saveJumboDatesToStorage(jumboDates);
-  }, [jumboDates]);
+    if (activeTester) {
+      saveJumboDatesToStorage(jumboDates, activeTester.id);
+    }
+  }, [jumboDates, activeTester]);
 
   // Sync active detail habit if updated
   useEffect(() => {
@@ -445,17 +493,26 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+      {/* Closed Beta Access Gate Modal */}
+      <AuthGateModal
+        key={activeTester ? `session-${activeTester.id}` : 'auth-gate-logged-out'}
+        isOpen={!activeTester}
+        onSuccess={handleLogin}
+      />
+
       {/* Top Navigation with glowing Jumbo Points Counter */}
       <Navbar
         habits={habits}
         jumboPointsCount={jumboDates.length}
+        tester={activeTester}
         onOpenNewHabit={() => openHabitForm(null)}
         onOpenDirectory={openDirectory}
         onOpenSettings={openSettings}
+        onLogout={handleLogout}
       />
 
       {/* Main Reel Card Deck Showcase */}
-      <main className="flex-1 flex flex-col justify-center items-center py-4 sm:py-8">
+      <main className="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-center items-center py-3 sm:py-6 px-2 sm:px-4">
         <HabitReelDeck
           habits={habits}
           activeDateStr={activeDateStr}
@@ -482,6 +539,8 @@ export function App() {
         onClose={closeHub}
         habits={habits}
         settings={settings}
+        tester={activeTester}
+        onLogout={handleLogout}
         jumboPointsCount={jumboDates.length}
         onUpdateSettings={setSettings}
         onOpenNewHabit={() => openHabitForm(null)}
@@ -557,6 +616,8 @@ export function App() {
         onClose={closeSettings}
         habits={habits}
         settings={settings}
+        tester={activeTester}
+        onLogout={handleLogout}
         jumboDates={jumboDates}
         onUpdateSettings={setSettings}
         onRestoreHabits={setHabits}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Habit, UserSettings, ChartTimeRange } from '../types/habit';
+import type { Tester } from '../config/testers';
 import { DashboardStats } from './DashboardStats';
 import { MomentumChart } from './MomentumChart';
 import { ConsistencyHeatmap } from './ConsistencyHeatmap';
@@ -29,6 +30,7 @@ import {
   Flame,
   ChevronRight,
   Layers,
+  LogOut,
 } from 'lucide-react';
 
 interface CornerHubModalProps {
@@ -36,6 +38,8 @@ interface CornerHubModalProps {
   onClose: () => void;
   habits: Habit[];
   settings: UserSettings;
+  tester?: Tester | null;
+  onLogout?: () => void;
   onUpdateSettings: (settings: UserSettings) => void;
   onOpenNewHabit: () => void;
   onEditHabit: (habit: Habit) => void;
@@ -58,6 +62,8 @@ export const CornerHubModal: React.FC<CornerHubModalProps> = ({
   onClose,
   habits,
   settings,
+  tester,
+  onLogout,
   onUpdateSettings,
   onOpenNewHabit,
   onEditHabit,
@@ -128,16 +134,39 @@ export const CornerHubModal: React.FC<CornerHubModalProps> = ({
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Hub & Analytics</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">Hub & Analytics</h2>
+                {tester && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 font-mono">
+                    <span className="text-amber-500">⚡</span>
+                    <span>{tester.name}</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {tester && onLogout && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onLogout();
+                }}
+                className="p-2 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold"
+                title="Exit Session"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Exit Session</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -399,6 +428,39 @@ export const CornerHubModal: React.FC<CornerHubModalProps> = ({
           {/* 3. Settings & Selective Reset Tab */}
           {activeTab === 'settings' && (
             <div className="space-y-4 animate-fade-in">
+              {/* Tester Profile Card */}
+              {tester && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-cyan-500/20 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-slate-900 dark:bg-slate-950 text-amber-400 flex items-center justify-center font-bold text-sm shadow-xs">
+                      ⚡
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-slate-900 dark:text-white font-mono flex items-center gap-1.5">
+                        <span>{tester.name}</span>
+                        <span className="text-[10px] text-cyan-600 dark:text-cyan-400 uppercase font-sans font-bold bg-cyan-500/10 px-1.5 py-0.2 rounded-md">Beta Tester</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                        ID: {tester.id} • Namespaced Storage Active
+                      </div>
+                    </div>
+                  </div>
+
+                  {onLogout && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onLogout();
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500 text-rose-600 dark:text-rose-400 hover:text-white text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Exit Session</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-2.5">
                 {/* Theme toggle */}
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
