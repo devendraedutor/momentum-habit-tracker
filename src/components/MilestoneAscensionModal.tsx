@@ -154,58 +154,26 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
           </label>
 
           {/* Presets Grid */}
-          <div className="grid grid-cols-4 gap-1.5 mb-2.5">
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(preset1)}
-              className={`p-2 rounded-xl border font-mono text-center transition-all cursor-pointer ${
-                !isCustom && selectedTarget === preset1
-                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md font-black ring-2 ring-amber-500/30'
-                  : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-bold'
-              }`}
-            >
-              <div className="text-[9px] opacity-80">Tier Goal</div>
-              <div className="text-xs font-black">{preset1}d</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(preset2)}
-              className={`p-2 rounded-xl border font-mono text-center transition-all cursor-pointer ${
-                !isCustom && selectedTarget === preset2
-                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md font-black ring-2 ring-amber-500/30'
-                  : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-bold'
-              }`}
-            >
-              <div className="text-[9px] opacity-80">Tier Goal</div>
-              <div className="text-xs font-black">{preset2}d</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(preset3)}
-              className={`p-2 rounded-xl border font-mono text-center transition-all cursor-pointer ${
-                !isCustom && selectedTarget === preset3
-                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md font-black ring-2 ring-amber-500/30'
-                  : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-bold'
-              }`}
-            >
-              <div className="text-[9px] opacity-80">Tier Goal</div>
-              <div className="text-xs font-black">{preset3}d</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectPreset(preset4)}
-              className={`p-2 rounded-xl border font-mono text-center transition-all cursor-pointer ${
-                !isCustom && selectedTarget === preset4
-                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md font-black ring-2 ring-amber-500/30'
-                  : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 font-bold'
-              }`}
-            >
-              <div className="text-[9px] opacity-80">Tier Goal</div>
-              <div className="text-xs font-black">{preset4}d</div>
-            </button>
+          <div className="grid grid-cols-4 gap-2 mb-2.5">
+            {[preset1, preset2, preset3, preset4].map((days) => {
+              const isSelected = !isCustom && selectedTarget === days;
+              return (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => handleSelectPreset(days)}
+                  className={`py-3 px-2 rounded-2xl border font-mono text-center transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md font-black ring-2 ring-amber-500/40 scale-[1.02]'
+                      : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 font-bold hover:scale-[1.01]'
+                  }`}
+                >
+                  <div className="text-sm sm:text-base font-black tracking-tight">
+                    {days} <span className="text-xs font-bold opacity-80">D</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Custom Days Input */}
@@ -218,7 +186,7 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
                 setIsCustom(true);
                 handleCustomChange(e.target.value);
               }}
-              className={`w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border text-xs font-mono transition-all text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none ${
+              className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border text-xs font-mono transition-all text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none ${
                 isCustom
                   ? 'border-cyan-500 ring-2 ring-cyan-500/20'
                   : 'border-slate-200 dark:border-slate-700'
@@ -227,13 +195,17 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* Celebratory Action Button */}
         <button
           onClick={handleConfirm}
-          className="w-full mt-2 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+          className="w-full mt-2 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer group relative overflow-hidden"
         >
-          <span>Confirm & Collect Reward 🚀</span>
-          <ArrowRight className="w-4 h-4 stroke-[3]" />
+          {/* Subtle sheen highlight animation across button */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-bar-sheen pointer-events-none" />
+          
+          <Sparkles className="w-4 h-4 fill-slate-950 text-slate-950 transition-transform group-hover:rotate-12" />
+          <span className="tracking-wide">Confirm & Collect Reward</span>
+          <ArrowRight className="w-4 h-4 stroke-[3] group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
     </div>

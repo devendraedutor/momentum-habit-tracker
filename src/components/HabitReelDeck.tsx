@@ -200,7 +200,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
               {isDone ? animatedStreak : 0}
             </span>
             <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 font-mono">
-              /{targetDays}d
+              /{targetDays} D
             </span>
           </div>
           <span className="text-[9px] font-mono font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tighter">

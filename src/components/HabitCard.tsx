@@ -94,7 +94,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                   {habit.category}
                 </span>
                 <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 whitespace-nowrap">
-                  <Target className="w-3 h-3 text-slate-400" /> Goal: {targetDays}d
+                  <Target className="w-3 h-3 text-slate-400" /> Goal: {targetDays} D
                 </span>
               </div>
               <h3

@@ -441,7 +441,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                     {stats.currentGoalStreak}
                   </span>
                   <span className="text-xs font-bold text-slate-400 dark:text-slate-400 ml-0.5">
-                    /{targetDays}d
+                    /{targetDays} D
                   </span>
                 </div>
               </div>

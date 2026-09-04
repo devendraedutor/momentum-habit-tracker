@@ -265,7 +265,7 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                     <div className="py-2 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1.5 shadow-2xs">
                       <Target className="w-4 h-4 text-cyan-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
-                        {stats.currentGoalStreak}/{targetDays}d
+                        {stats.currentGoalStreak}/{targetDays} D
                       </span>
                     </div>
                   </div>
