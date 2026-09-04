@@ -30,7 +30,6 @@ interface HabitReelDeckProps {
   onBatchSave: (updates: Record<string, CheckInStatus>, dateStr: string) => void;
   onOpenNewHabit: () => void;
   onOpenDetail: (habit: Habit) => void;
-  onOpenHub: () => void;
   onAscendHabit?: (habit: Habit) => void;
   jumboPointsCount?: number;
   floorAtZero?: boolean;

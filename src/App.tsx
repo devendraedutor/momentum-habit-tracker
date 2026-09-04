@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Habit, UserSettings, ChartTimeRange, CheckInStatus } from './types/habit';
+import type { Habit, UserSettings, CheckInStatus } from './types/habit';
 import {
   loadHabitsFromStorage,
   saveHabitsToStorage,
@@ -50,7 +50,6 @@ export function App() {
   const [activeDateStr, setActiveDateStr] = useState<string>(() => getTodayString());
 
   // Hub, Detail, Directory & Settings Modal states
-  const [isHubOpen, setIsHubOpen] = useState(false);
   const [isDirectoryOpen, setIsDirectoryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHabitFormOpen, setIsHabitFormOpen] = useState(false);
@@ -59,15 +58,12 @@ export function App() {
   const [selectedDetailHabit, setSelectedDetailHabit] = useState<Habit | null>(null);
   const [ascendHabit, setAscendHabit] = useState<Habit | null>(null);
   const [isJumboUnlockModalOpen, setIsJumboUnlockModalOpen] = useState(false);
+  const [pendingJumboUnlock, setPendingJumboUnlock] = useState(false);
   const [habitCreatedCelebration, setHabitCreatedCelebration] = useState<{
     habitName: string;
     habitIcon: string;
     habitColor: string;
   } | null>(null);
-
-  // Chart state for Hub
-  const [selectedChartHabitId, setSelectedChartHabitId] = useState<string | 'all'>('all');
-  const [timeRange, setTimeRange] = useState<ChartTimeRange>('30d');
 
   // Login handler when passkey is validated in AuthGateModal
   const handleLogin = useCallback((tester: Tester) => {
@@ -84,7 +80,6 @@ export function App() {
   const handleLogout = useCallback(() => {
     clearActiveSession();
     setActiveTester(null);
-    setIsHubOpen(false);
     setIsDirectoryOpen(false);
     setIsSettingsOpen(false);
     setIsHabitFormOpen(false);
@@ -151,7 +146,6 @@ export function App() {
       setIsSettingsOpen(false);
       setIsHabitFormOpen(false);
       setEditingHabit(null);
-      setIsHubOpen(false);
       setAscendHabit(null);
       setIsJumboUnlockModalOpen(false);
 
@@ -224,27 +218,13 @@ export function App() {
     }
   }, []);
 
-  const openHub = useCallback(() => {
-    setIsHubOpen(true);
-    window.history.pushState({ activeDate: activeDateStr, modal: 'hub' }, '');
-  }, [activeDateStr]);
-
   const handleSelectHabitFromDirectory = useCallback(
     (habit: Habit) => {
-      setSelectedChartHabitId(habit.id);
       setIsDirectoryOpen(false);
-      setIsHubOpen(true);
-      window.history.replaceState({ activeDate: activeDateStr, modal: 'hub', habitId: habit.id }, '');
+      openDetailModal(habit);
     },
-    [activeDateStr]
+    [openDetailModal]
   );
-
-  const closeHub = useCallback(() => {
-    setIsHubOpen(false);
-    if (window.history.state?.modal === 'hub') {
-      window.history.back();
-    }
-  }, []);
 
   const openAscendModal = useCallback(
     (habit: Habit) => {
@@ -384,22 +364,6 @@ export function App() {
     if (settings.soundEffects) sound.playUndo();
   }, [settings]);
 
-  // 2. Clear today's / active date check-ins only
-  const handleResetActiveDateCheckIns = useCallback(() => {
-    setHabits((prev) =>
-      prev.map((h) => {
-        const newHistory = { ...h.history };
-        delete newHistory[activeDateStr];
-        return {
-          ...h,
-          history: newHistory,
-        };
-      })
-    );
-    setJumboDates((prev) => prev.filter((d) => d !== activeDateStr));
-    if (settings.soundEffects) sound.playUndo();
-  }, [activeDateStr, settings]);
-
   // 3. Factory Reset (clears everything)
   const handleFactoryReset = useCallback(() => {
     setHabits([]);
@@ -451,9 +415,7 @@ export function App() {
         const hasSeenIntro = localStorage.getItem('momentum_jumbo_intro_seen');
         if (!hasSeenIntro) {
           localStorage.setItem('momentum_jumbo_intro_seen', 'true');
-          setTimeout(() => {
-            setIsJumboUnlockModalOpen(true);
-          }, 350);
+          setPendingJumboUnlock(true);
         }
       }
 
@@ -481,9 +443,6 @@ export function App() {
     setHabits((prev) => prev.filter((h) => h.id !== habitId));
     if (selectedDetailHabit?.id === habitId) {
       closeDetailModal();
-    }
-    if (selectedChartHabitId === habitId) {
-      setSelectedChartHabitId('all');
     }
   };
 
@@ -544,7 +503,6 @@ export function App() {
           onBatchSave={handleBatchSave}
           onOpenNewHabit={() => openHabitForm(null)}
           onOpenDetail={openDetailModal}
-          onOpenHub={openHub}
           onAscendHabit={openAscendModal}
           jumboPointsCount={jumboDates.length}
           floorAtZero={settings.floorAtZero}
@@ -624,13 +582,21 @@ export function App() {
         onFactoryReset={handleFactoryReset}
       />
 
-      {/* Distinct 400ms Habit Launch Shockwave & Energy Burst Celebration */}
+      {/* Distinct Habit Launch Shockwave & Energy Burst Celebration */}
       {habitCreatedCelebration && (
         <HabitLaunchCelebration
           habitName={habitCreatedCelebration.habitName}
           habitIcon={habitCreatedCelebration.habitIcon}
           habitColor={habitCreatedCelebration.habitColor}
-          onComplete={() => setHabitCreatedCelebration(null)}
+          onComplete={() => {
+            setHabitCreatedCelebration(null);
+            if (pendingJumboUnlock) {
+              setPendingJumboUnlock(false);
+              setTimeout(() => {
+                setIsJumboUnlockModalOpen(true);
+              }, 250);
+            }
+          }}
         />
       )}
     </div>
