@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { Habit, CheckInStatus } from '../types/habit';
 import { calculateHabitStats, formatDisplayDate, getTodayString } from '../lib/momentum';
 import { DynamicIcon } from './DynamicIcon';
@@ -64,13 +65,10 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   const daysRemaining = Math.max(0, targetDays - goalStreak);
   const isNearGoal = !isGoalConquered && isDone && (goalStreak / targetDays) >= 0.7 && daysRemaining > 0;
 
-  // 1. Mount with Previous State:
-  // On initial render, set the visual streak state to `goalStreak - 1` if completed on this active date so fill animates
   const [animatedStreak, setAnimatedStreak] = useState<number>(() => {
     return isDone && goalStreak > 0 ? goalStreak - 1 : (isDone ? goalStreak : 0);
   });
 
-  // 2. Trigger the Fill After Screen Mount:
   React.useEffect(() => {
     if (!isDone) {
       setAnimatedStreak(0);
@@ -99,9 +97,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
       }`}
       title={`Click to view insights and modify check-in for ${h.name}`}
     >
-      {/* Left: Distinctive Icon Frame & Habit Name */}
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-        {/* Icon Frame: Rounded with Leaf for Build, Shielded for Break */}
         <div
           className={`w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-xs relative transition-transform group-hover:scale-105 rounded-2xl bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 ${
             isBreak
@@ -129,9 +125,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
             )}
           </div>
 
-          {/* Secondary Info Row: Streak + Lifetime XP + Near Goal Alert */}
           <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
-            {/* Flame Streak Indicator */}
             <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Current Streak: ${stats.currentStreak} days`}>
               <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
               <span>{stats.currentStreak}</span>
@@ -139,13 +133,11 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
 
             <span className="text-slate-300 dark:text-slate-600">•</span>
 
-            {/* Lifetime Score Badge */}
             <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium" title={`Lifetime Score: ${stats.currentScore}`}>
               <Zap className="w-3.5 h-3.5 text-amber-500" />
               <span>{stats.currentScore}</span>
             </span>
 
-            {/* Engaging Near Goal Indicator */}
             {isNearGoal && (
               <>
                 <span className="text-slate-300 dark:text-slate-600">•</span>
@@ -159,9 +151,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
         </div>
       </div>
 
-      {/* Right: Milestone Cluster (Level Up CTA + Target Ratio + Tactile Check-In Switch) */}
       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        {/* Level Up CTA Button */}
         {isGoalConquered && (
           <button
             type="button"
@@ -177,7 +167,6 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
           </button>
         )}
 
-        {/* The Target Ratio / Milestone Chase */}
         <div className="flex flex-col items-end text-right min-w-[42px] sm:min-w-[48px]">
           <div className="flex items-baseline gap-0.5 justify-end">
             <span
@@ -204,7 +193,6 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
           </span>
         </div>
 
-        {/* Tactile Daily Check-In Micro-Switch */}
         <button
           type="button"
           onClick={(e) => {
@@ -226,7 +214,6 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
         </button>
       </div>
 
-      {/* Ultra-Thin (3.5px) Seamless Bottom Progress Rail with Live Smooth Fill Animation */}
       <div className="absolute bottom-0 left-0 right-0 h-[3.5px] bg-slate-200/50 dark:bg-slate-800 overflow-hidden">
         <div
           className={`h-full relative ${
@@ -245,6 +232,217 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
           {isGoalConquered && (
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-bar-sheen" />
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface HabitCardContentProps {
+  habit: Habit;
+  activeDateStr: string;
+  floorAtZero: boolean;
+  isInteractive?: boolean;
+  isCharging?: boolean;
+  isDeckLocked?: boolean;
+  chargePhase?: 'idle' | 'charging' | 'incremented';
+  onCheckIn?: (status: CheckInStatus) => void;
+  onOpenDetail?: (habit: Habit) => void;
+}
+
+const HabitCardContent: React.FC<HabitCardContentProps> = ({
+  habit,
+  activeDateStr,
+  floorAtZero,
+  isInteractive = true,
+  isCharging = false,
+  isDeckLocked = false,
+  chargePhase = 'idle',
+  onCheckIn,
+  onOpenDetail,
+}) => {
+  const currentStats = calculateHabitStats(habit, floorAtZero, activeDateStr);
+  const targetGoalDays = habit.targetGoalDays || 21;
+  const initialStreak = currentStats.currentGoalStreak;
+  const targetStreak = initialStreak + 1;
+
+  const initialPercent = Math.min(100, Math.round((initialStreak / targetGoalDays) * 100));
+  const targetPercent = Math.min(100, Math.round((targetStreak / targetGoalDays) * 100));
+
+  const currentBarWidth = isCharging && (chargePhase === 'charging' || chargePhase === 'incremented')
+    ? targetPercent
+    : initialPercent;
+
+  const displayStreak = isCharging && chargePhase === 'incremented'
+    ? targetStreak
+    : initialStreak;
+
+  const isBreak = habit.type === 'BREAK';
+
+  return (
+    <div
+      className="w-full app-card rounded-3xl p-5 sm:p-7 relative overflow-hidden shadow-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-750 select-none"
+      style={{
+        borderTop: `4px solid ${habit.color || (isBreak ? '#f43f5e' : '#10b981')}`,
+      }}
+    >
+      <div
+        className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-500"
+        style={{ backgroundColor: isCharging ? '#10b981' : habit.color || (isBreak ? '#f43f5e' : '#10b981') }}
+      />
+
+      <div className="flex items-center justify-between relative z-10 mb-3">
+        <span className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border flex items-center gap-1 shadow-xs ${
+          isBreak
+            ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30 dark:bg-rose-500/20 dark:border-rose-500/40'
+            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 dark:bg-emerald-500/20 dark:border-emerald-500/40'
+        }`}>
+          {isBreak ? <Shield className="w-3 h-3 text-rose-500" /> : <Sprout className="w-3 h-3 text-emerald-500" />}
+          <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
+        </span>
+
+        {isInteractive && onOpenDetail && (
+          <button
+            onClick={() => onOpenDetail(habit)}
+            disabled={isDeckLocked}
+            className="p-2 rounded-xl text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 transition-all active:scale-90 cursor-pointer shadow-xs disabled:opacity-50"
+            title={`View Analytics & History for ${habit.name}`}
+            aria-label="View Analytics"
+          >
+            <BarChart3 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-col items-center text-center my-2 sm:my-3 relative z-10">
+        <div
+          className={`w-18 h-18 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center text-white mb-2.5 shadow-md transition-all duration-300 ${
+            isCharging ? 'scale-110 shadow-lg shadow-emerald-500/30' : isInteractive ? 'hover:scale-105' : ''
+          }`}
+          style={{
+            backgroundColor: `${habit.color}25`,
+            border: `2px solid ${habit.color}`,
+            color: habit.color,
+          }}
+        >
+          <DynamicIcon name={habit.icon} className="w-9 h-9 sm:w-10 sm:h-10" />
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight text-center break-words max-w-full">
+          {habit.name}
+        </h1>
+
+        {habit.description && (
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 max-w-md leading-relaxed text-center">
+            {habit.description}
+          </p>
+        )}
+
+        <div className="mt-3 flex items-center gap-3.5 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-750 shadow-xs">
+          <div className="text-base sm:text-lg font-extrabold font-mono text-slate-900 dark:text-slate-100 flex items-center gap-1">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span>{currentStats.currentScore}</span>
+          </div>
+
+          <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
+
+          <div className="text-base sm:text-lg font-extrabold font-mono text-amber-500 dark:text-amber-400 flex items-center gap-1">
+            <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
+            <span>{currentStats.currentStreak}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className={`my-3.5 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border transition-all duration-300 relative z-10 ${
+        isCharging
+          ? 'border-emerald-500/50 dark:border-emerald-500/60 shadow-md shadow-emerald-500/10'
+          : 'border-slate-200 dark:border-slate-750'
+      }`}>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Target className={`w-4 h-4 transition-colors ${isCharging ? 'text-emerald-500 animate-pulse' : 'text-cyan-500'}`} />
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              Target Goal
+            </span>
+          </div>
+          <div className="text-xs font-mono font-bold">
+            <span className={`font-black text-sm transition-all inline-block ${
+              isCharging && chargePhase === 'incremented'
+                ? 'animate-count-pop text-emerald-600 dark:text-emerald-400'
+                : 'text-slate-900 dark:text-slate-100'
+            }`}>
+              {displayStreak}
+            </span>
+            <span className="text-slate-400 dark:text-slate-500 font-semibold"> / {targetGoalDays} D</span>
+          </div>
+        </div>
+
+        <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden relative shadow-inner">
+          <div
+            className={`h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 relative ${
+              isCharging ? 'shadow-[0_0_12px_rgba(16,185,129,0.8)]' : ''
+            }`}
+            style={{
+              width: `${currentBarWidth}%`,
+              transition: isCharging ? 'width 400ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+              willChange: 'width',
+            }}
+          >
+            {isCharging && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-bar-sheen" />
+            )}
+          </div>
+
+          {isCharging && currentBarWidth > 0 && (
+            <div
+              className="absolute top-1/2 -translate-y-1/2 -ml-1.5 w-3 h-3 rounded-full bg-emerald-300 dark:bg-emerald-200 animate-pulse-beacon pointer-events-none"
+              style={{
+                left: `${currentBarWidth}%`,
+                transition: 'left 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+                willChange: 'left',
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4 relative z-10">
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => onCheckIn && onCheckIn('missed')}
+            disabled={!isInteractive || !!isCharging || isDeckLocked}
+            className="flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:opacity-50 disabled:pointer-events-none"
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-1">
+              <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+            </div>
+            <span className="text-xs sm:text-sm font-extrabold">
+              {isBreak ? 'Failed' : 'Missed'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => onCheckIn && onCheckIn('done')}
+            disabled={!isInteractive || !!isCharging || isDeckLocked}
+            className={`flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl border font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:pointer-events-none ${
+              isCharging
+                ? 'bg-emerald-500 text-white dark:text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/30 scale-[0.98]'
+                : isDeckLocked
+                ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 opacity-60 border-emerald-500/30'
+                : 'bg-emerald-500/15 hover:bg-emerald-500 text-emerald-800 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border-emerald-500/30 dark:bg-emerald-500/25 dark:border-emerald-400/50'
+            }`}
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-500/20 dark:bg-emerald-500/30 flex items-center justify-center mb-1">
+              {isBreak ? (
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+              ) : (
+                <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
+              )}
+            </div>
+            <span className="text-xs sm:text-sm font-extrabold">
+              {isBreak ? 'Controlled' : 'Done'}
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -275,7 +473,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
     });
   }, [habits, activeDateStr]);
 
-  // Separate habits into unlogged (deck queue) and logged for active date
   const isLogged = useCallback(
     (h: Habit) => {
       const st = h.history?.[activeDateStr];
@@ -287,71 +484,110 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   const unloggedHabits = useMemo(() => activeHabits.filter((h) => !isLogged(h)), [activeHabits, isLogged]);
   const loggedHabits = useMemo(() => activeHabits.filter((h) => isLogged(h)), [activeHabits, isLogged]);
 
-  const [animState, setAnimState] = useState<'idle' | 'exit-up' | 'enter-up'>('idle');
+  const [viewModeOverride, setViewModeOverride] = useState<'deck' | 'summary' | null>(null);
+
+  const [deckIndex, setDeckIndex] = useState<number>(0);
+  const [direction, setDirection] = useState<number>(1);
+  const [animationMode, setAnimationMode] = useState<'carousel' | 'checkin'>('carousel');
+  const [isDeckLocked, setIsDeckLocked] = useState<boolean>(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  
-  // Real-time charging progress state machine: 'idle' -> 'charging' (0ms) -> 'incremented' (200ms) -> exit (450ms)
+
+  React.useEffect(() => {
+    setDeckIndex(0);
+    setViewModeOverride(null);
+    setDirection(1);
+    setAnimationMode('carousel');
+    setIsDeckLocked(false);
+  }, [activeDateStr]);
+
   const [chargingHabitId, setChargingHabitId] = useState<string | null>(null);
   const [chargePhase, setChargePhase] = useState<'idle' | 'charging' | 'incremented'>('idle');
 
-  // Total daily progress for active date
   const totalHabitsCount = activeHabits.length;
   const completedCount = activeHabits.filter((h) => h.history?.[activeDateStr] === 'done').length;
   const isAllDone = totalHabitsCount > 0 && unloggedHabits.length === 0;
   const isPerfectDay = completedCount === totalHabitsCount && totalHabitsCount > 0;
   const percent = totalHabitsCount > 0 ? Math.round((completedCount / totalHabitsCount) * 100) : 0;
 
-  // Circular gauge geometry
+  const currentView = isAllDone ? 'summary' : (viewModeOverride || 'deck');
+
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percent / 100) * circumference;
 
-  // The active card currently at the top of the unlogged deck
-  const currentCard = unloggedHabits[0];
+  const pendingCount = unloggedHabits.length;
+  const safeIndex = pendingCount > 0 ? Math.max(0, Math.min(pendingCount - 1, deckIndex)) : 0;
+  const currentCard = unloggedHabits[safeIndex];
 
-  // Direct 1-tap check-in on the active card in the queue with precision non-glitching timeline
+  // Keep deckIndex in valid range if pendingCount decreases
+  React.useEffect(() => {
+    if (deckIndex >= pendingCount && pendingCount > 0) {
+      setDeckIndex(pendingCount - 1);
+    }
+  }, [pendingCount, deckIndex]);
+
+  const hasPrev = safeIndex > 0;
+  const hasNext = safeIndex < pendingCount - 1;
+
+  const remainingUnderneath = pendingCount - 1 - safeIndex;
+  const nextCard = remainingUnderneath >= 1 ? unloggedHabits[safeIndex + 1] : null;
+  const nextNextCard = remainingUnderneath >= 2 ? unloggedHabits[safeIndex + 2] : null;
+
+  // Flow A: Carousel Browsing (Next / Back Arrows / Neutral Swipe only)
+  const handleNextCard = useCallback(() => {
+    if (!hasNext || chargingHabitId || isDeckLocked) return;
+    setAnimationMode('carousel');
+    setDirection(1);
+    setDeckIndex((prev) => Math.min(pendingCount - 1, prev + 1));
+  }, [hasNext, chargingHabitId, isDeckLocked, pendingCount]);
+
+  const handlePrevCard = useCallback(() => {
+    if (!hasPrev || chargingHabitId || isDeckLocked) return;
+    setAnimationMode('carousel');
+    setDirection(-1);
+    setDeckIndex((prev) => Math.max(0, prev - 1));
+  }, [hasPrev, chargingHabitId, isDeckLocked]);
+
+  // Flow B: Habit Check-In (Done / Controlled / Missed / Failed)
   const handleCheckInCard = useCallback(
     (status: CheckInStatus) => {
-      if (!currentCard || chargingHabitId) return;
+      if (!currentCard || chargingHabitId || isDeckLocked) return;
+
+      // 1. Lock Deck immediately
+      setIsDeckLocked(true);
+      setAnimationMode('checkin');
 
       if (status === 'done') {
-        // Step 1 (0ms): Lock card and trigger bar width animation without modifying parent state yet
         setChargingHabitId(currentCard.id);
-        
-        // Use requestAnimationFrame to ensure the initial locked width is committed before transition starts
+
+        // 2. Local Progress Fill: Animate only this specific habit's target goal bar from current to +1 over 400ms
         requestAnimationFrame(() => {
           setChargePhase('charging');
         });
 
-        // Step 2 (200ms mark): Smoothly pop and increment the ratio number
+        // 3. Number Pop: Pop this specific habit's target counter at 200ms
         const numTimer = setTimeout(() => {
           setChargePhase('incremented');
         }, 200);
 
-        // Step 3 (450ms mark): Bar fill is complete. Trigger smooth card slide-up exit
+        // 4. Celebration Exit: Once the fill completes (~450ms), animate the completed card exiting with upward fade
         const exitTimer = setTimeout(() => {
-          setAnimState('exit-up');
+          onCheckIn(currentCard.id, 'done', activeDateStr);
+          setChargingHabitId(null);
+          setChargePhase('idle');
 
-          // Step 4 (630ms mark): After exit transition finishes, commit to localStorage/state
-          const commitTimer = setTimeout(() => {
-            onCheckIn(currentCard.id, 'done', activeDateStr);
-            setChargingHabitId(null);
-            setChargePhase('idle');
+          setTimeout(() => {
+            setIsDeckLocked(false);
+          }, 350);
 
-            if (unloggedHabits.length === 1 && completedCount >= 0) {
-              confetti({
-                particleCount: 75,
-                spread: 80,
-                origin: { y: 0.58 },
-                colors: ['#10b981', '#06b6d4', '#6366f1', '#f59e0b'],
-              });
-            }
-
-            setAnimState('enter-up');
-            setTimeout(() => setAnimState('idle'), 250);
-          }, 180);
-
-          return () => clearTimeout(commitTimer);
+          if (unloggedHabits.length === 1 && completedCount >= 0) {
+            confetti({
+              particleCount: 75,
+              spread: 80,
+              origin: { y: 0.58 },
+              colors: ['#10b981', '#06b6d4', '#6366f1', '#f59e0b'],
+            });
+          }
         }, 450);
 
         return () => {
@@ -359,20 +595,16 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
           clearTimeout(exitTimer);
         };
       } else {
-        // Missed check-in: Immediate crisp slide exit
-        setAnimState('exit-up');
-
+        // Missed / Failed action
+        onCheckIn(currentCard.id, status, activeDateStr);
         setTimeout(() => {
-          onCheckIn(currentCard.id, status, activeDateStr);
-          setAnimState('enter-up');
-          setTimeout(() => setAnimState('idle'), 250);
-        }, 160);
+          setIsDeckLocked(false);
+        }, 350);
       }
     },
-    [currentCard, chargingHabitId, onCheckIn, activeDateStr, unloggedHabits.length, completedCount]
+    [currentCard, chargingHabitId, isDeckLocked, onCheckIn, activeDateStr, unloggedHabits.length, completedCount]
   );
 
-  // Date navigation helpers
   const handleShiftDate = (days: number) => {
     const [y, m, d] = activeDateStr.split('-').map(Number);
     const date = new Date(y, m - 1, d);
@@ -411,9 +643,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
   return (
     <div className="w-full max-w-md sm:max-w-lg mx-auto px-3 sm:px-6 flex flex-col items-center">
-      {/* Aesthetic Unified Date Bar */}
       <div className="w-full mb-4 flex items-center justify-between bg-white/90 dark:bg-slate-900 p-2 sm:p-2.5 rounded-2xl border border-slate-200 dark:border-slate-750 shadow-xs backdrop-blur-md">
-        {/* Left: Previous / Next Controls with Formatted Date */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => handleShiftDate(-1)}
@@ -442,7 +672,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
           </button>
         </div>
 
-        {/* Right: Jump to Today (if not on today) */}
         <div className="flex items-center gap-1.5">
           {!isToday && (
             <button
@@ -462,7 +691,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         </div>
       </div>
 
-      {/* Case 0: No habits started yet on this date */}
       {activeHabits.length === 0 ? (
         <div className="w-full app-card rounded-3xl p-8 text-center border-slate-200 dark:border-slate-750 animate-scale-in">
           <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center mx-auto mb-3 border border-cyan-500/20 shadow-sm">
@@ -487,18 +715,32 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
             Jump to Today
           </button>
         </div>
-      ) : isAllDone ? (
+      ) : currentView === 'summary' ? (
         <div className="w-full animate-scale-in">
+          {unloggedHabits.length > 0 && (
+            <div className="mb-3.5 p-3 rounded-2xl bg-gradient-to-r from-cyan-500/15 via-emerald-500/10 to-cyan-500/15 border border-cyan-500/30 flex items-center justify-between gap-2 shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                  {unloggedHabits.length} Pending Habit{unloggedHabits.length > 1 ? 's' : ''} Left
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewModeOverride('deck')}
+                className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1 shadow-sm transition-all active:scale-95 cursor-pointer"
+              >
+                <span>Return to Deck ⚡</span>
+              </button>
+            </div>
+          )}
+
           <div className="app-card rounded-3xl p-5 sm:p-6 shadow-2xl border-slate-200 dark:border-slate-750 relative overflow-hidden">
-            {/* Ambient Background Glow */}
             <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl pointer-events-none opacity-20 bg-emerald-500 transition-all duration-700" />
 
-            {/* Gamified Score Arena Header with Circular Gauge */}
             <div className="relative z-10 flex flex-col items-center pb-4 border-b border-slate-200 dark:border-slate-800">
-              {/* Radial Progress Ring (Emerald Mint Task Completion) */}
               <div className="relative w-28 h-28 flex items-center justify-center my-1">
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 96 96">
-                  {/* Background Track */}
                   <circle
                     cx="48"
                     cy="48"
@@ -507,7 +749,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     strokeWidth="6"
                     fill="transparent"
                   />
-                  {/* Dynamic Progress Track (Emerald) */}
                   <circle
                     cx="48"
                     cy="48"
@@ -522,7 +763,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                   />
                 </svg>
 
-                {/* Clean Task Completion Display Inside Ring */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                   {isPerfectDay ? (
                     <>
@@ -548,7 +788,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                 </div>
               </div>
 
-              {/* Dynamic Jumbo Point Achievement Banner (Render ONLY on 100% Perfect Cleared Days with >= 3 habits) */}
               {isPerfectDay && totalHabitsCount >= 3 && (
                 <div className="mt-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-black font-mono flex items-center gap-2 shadow-xs animate-bounce">
                   <Gem className="w-4 h-4 fill-amber-400 text-amber-500" />
@@ -559,7 +798,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
               )}
             </div>
 
-            {/* Clean Gamified Habit Rows */}
             <div className="mt-4 space-y-2 relative z-10">
               {loggedHabits.map((h, idx) => (
                 <DailySummaryHabitRow
@@ -573,55 +811,122 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                   onCheckIn={onCheckIn}
                 />
               ))}
+
+              {loggedHabits.length === 0 && (
+                <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
+                  No habits logged yet today.
+                </div>
+              )}
             </div>
           </div>
         </div>
       ) : (
-        /* Case 2: Active Card Deck Queue (1 habit card at a time for active date) */
         (() => {
-          const currentStats = currentCard ? calculateHabitStats(currentCard, floorAtZero, activeDateStr) : null;
-          const targetGoalDays = currentCard?.targetGoalDays || 21;
-          const initialStreak = currentStats ? currentStats.currentGoalStreak : 0;
-          const targetStreak = initialStreak + 1;
-
-          const initialPercent = Math.min(100, Math.round((initialStreak / targetGoalDays) * 100));
-          const targetPercent = Math.min(100, Math.round((targetStreak / targetGoalDays) * 100));
-
-          const isChargingThisCard = chargingHabitId === currentCard?.id;
-
-          // Precision timeline for Bug 1:
-          // 0ms: Locked at initialPercent (e.g. 5/7 at 71.4%)
-          // 16ms+ (charging phase): Single smooth CSS width transition from initialPercent to targetPercent
-          // 200ms (incremented phase): Counter text pops from 5 to 6
-          // 450ms: Fill completes, card slides out
-          const currentBarWidth = (isChargingThisCard && (chargePhase === 'charging' || chargePhase === 'incremented'))
-            ? targetPercent
-            : initialPercent;
-
-          const displayStreak = (isChargingThisCard && chargePhase === 'incremented')
-            ? targetStreak
-            : initialStreak;
-
-          const animClass = animState === 'exit-up' ? 'reel-exit-up' : animState === 'enter-up' ? 'reel-enter-up' : '';
-          const isBreak = currentCard?.type === 'BREAK';
+          const cardVariants: Variants = {
+            enter: (custom: { mode: 'carousel' | 'checkin'; dir: number }) => {
+              if (custom?.mode === 'checkin') {
+                return {
+                  x: 0,
+                  y: 8,
+                  scale: 0.96,
+                  rotate: 0,
+                  opacity: 0.85,
+                  zIndex: 30,
+                  transition: {
+                    type: 'spring',
+                    stiffness: 280,
+                    damping: 24,
+                    mass: 0.8,
+                  },
+                };
+              }
+              const dir = custom?.dir ?? 1;
+              return {
+                x: dir === -1 ? '115%' : 0,
+                y: dir === -1 ? -8 : 8,
+                scale: dir === -1 ? 1.02 : 0.95,
+                rotate: dir === -1 ? 10 : 0,
+                opacity: dir === -1 ? 0.3 : 0.7,
+                zIndex: 30,
+              };
+            },
+            center: {
+              x: 0,
+              y: 0,
+              scale: 1,
+              rotate: 0,
+              opacity: 1,
+              zIndex: 30,
+              transition: {
+                type: 'spring',
+                stiffness: 280,
+                damping: 24,
+                mass: 0.8,
+              },
+            },
+            exit: (custom: { mode: 'carousel' | 'checkin'; dir: number }) => {
+              if (custom?.mode === 'checkin') {
+                return {
+                  x: 0,
+                  y: -24,
+                  scale: 0.98,
+                  rotate: 0,
+                  opacity: 0,
+                  zIndex: 35,
+                  transition: {
+                    duration: 0.35,
+                    ease: 'easeOut',
+                  },
+                };
+              }
+              const dir = custom?.dir ?? 1;
+              return {
+                x: dir === 1 ? '135%' : 0,
+                y: dir === 1 ? 20 : 8,
+                scale: dir === 1 ? 0.92 : 0.95,
+                rotate: dir === 1 ? 15 : 0,
+                opacity: dir === 1 ? 0 : 0.7,
+                zIndex: 20,
+                transition: {
+                  type: 'spring',
+                  stiffness: 280,
+                  damping: 24,
+                  mass: 0.8,
+                },
+              };
+            },
+          };
 
           return (
-            <div className="w-full">
-              {/* Top Deck Status Bar */}
+            <div className="w-full flex flex-col">
               <div className="w-full flex items-center justify-between mb-2 px-1">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-                    Habit Queue
+                    Active Card Stack
                   </span>
                 </div>
 
-                <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/20 dark:border-emerald-500/40 shadow-xs">
-                  {loggedHabits.length}/{totalHabitsCount}
+                <div className="flex items-center gap-2">
+                  {loggedHabits.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setViewModeOverride('summary')}
+                      disabled={isDeckLocked}
+                      className="text-[11px] font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 px-2.5 py-0.5 rounded-lg border border-cyan-500/25 transition-all cursor-pointer flex items-center gap-1 shadow-xs disabled:opacity-50"
+                      title="Peek at logged habits summary"
+                    >
+                      <span>Summary</span>
+                      <span className="font-extrabold text-cyan-700 dark:text-cyan-300">({loggedHabits.length})</span>
+                    </button>
+                  )}
+
+                  <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/20 dark:border-emerald-500/40 shadow-xs">
+                    {safeIndex + 1}/{pendingCount}
+                  </div>
                 </div>
               </div>
 
-              {/* Progress Bar of Daily Completion */}
               <div className="w-full mb-3.5">
                 <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner">
                   <div
@@ -631,183 +936,118 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                 </div>
               </div>
 
-              {/* The Active Habit Card */}
-              {currentCard && (
-                <div
-                  className={`w-full app-card rounded-3xl p-5 sm:p-7 relative overflow-hidden transition-all duration-200 shadow-2xl ${animClass}`}
-                  style={{
-                    borderTop: `4px solid ${currentCard.color || (isBreak ? '#f43f5e' : '#10b981')}`,
-                  }}
-                >
-                  {/* Ambient Glow */}
-                  <div
-                    className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-500"
-                    style={{ backgroundColor: isChargingThisCard ? '#10b981' : currentCard.color || (isBreak ? '#f43f5e' : '#10b981') }}
-                  />
+              <div className="w-full relative flex items-center justify-center pb-3 sm:pb-4">
+                {hasPrev && (
+                  <button
+                    type="button"
+                    onClick={handlePrevCard}
+                    disabled={!!chargingHabitId || isDeckLocked}
+                    className="absolute -left-3.5 sm:-left-5 top-1/2 -translate-y-1/2 z-40 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-850/95 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md sm:shadow-lg backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 hover:scale-110 active:scale-90 transition-all cursor-pointer disabled:opacity-30 disabled:pointer-events-none group"
+                    title="Bring back previous card from right"
+                    aria-label="Previous Card"
+                  >
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] group-hover:-translate-x-0.5 transition-transform" />
+                  </button>
+                )}
 
-                  {/* Top Header: Habit Intent Pill (Left) & Icon-Only Analytics Trigger (Right) */}
-                  <div className="flex items-center justify-between relative z-10 mb-3">
-                    {/* Habit Paradigm Intent Badge */}
-                    <span className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border flex items-center gap-1 shadow-xs ${
-                      isBreak
-                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30 dark:bg-rose-500/20 dark:border-rose-500/40'
-                        : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 dark:bg-emerald-500/20 dark:border-emerald-500/40'
-                    }`}>
-                      {isBreak ? <Shield className="w-3 h-3 text-rose-500" /> : <Sprout className="w-3 h-3 text-emerald-500" />}
-                      <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
-                    </span>
-
-                    {/* Minimalist Icon-Only Analytics Trigger */}
-                    <button
-                      onClick={() => onOpenDetail(currentCard)}
-                      className="p-2 rounded-xl text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 transition-all active:scale-90 cursor-pointer shadow-xs"
-                      title={`View Analytics & History for ${currentCard.name}`}
-                      aria-label="View Analytics"
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Central Habit Title & Icon */}
-                  <div className="flex flex-col items-center text-center my-2 sm:my-3 relative z-10">
+                <div className="w-full relative min-h-[480px]">
+                  {remainingUnderneath >= 2 && nextNextCard && (
                     <div
-                      className={`w-18 h-18 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center text-white mb-2.5 shadow-md transition-all duration-300 ${
-                        isChargingThisCard ? 'scale-110 shadow-lg shadow-emerald-500/30' : 'hover:scale-105'
-                      }`}
+                      className="absolute inset-0 translate-y-4 sm:translate-y-5 scale-[0.92] z-10 rounded-3xl border border-slate-300/80 dark:border-slate-700/80 bg-slate-100/90 dark:bg-slate-850/90 shadow-md pointer-events-none transition-all duration-300 overflow-hidden"
                       style={{
-                        backgroundColor: `${currentCard.color}25`,
-                        border: `2px solid ${currentCard.color}`,
-                        color: currentCard.color,
+                        borderTop: `4px solid ${(nextNextCard.color || '#94a3b8')}50`,
+                      }}
+                    />
+                  )}
+
+                  {remainingUnderneath >= 1 && nextCard && (
+                    <motion.div
+                      key={`bg-${nextCard.id}`}
+                      className="absolute inset-0 pointer-events-none"
+                      animate={{
+                        scale: 0.96,
+                        y: 8,
+                        opacity: 0.85,
+                        zIndex: 20,
+                      }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 280,
+                        damping: 24,
+                        mass: 0.8,
                       }}
                     >
-                      <DynamicIcon name={currentCard.icon} className="w-9 h-9 sm:w-10 sm:h-10" />
-                    </div>
+                      <HabitCardContent
+                        habit={nextCard}
+                        activeDateStr={activeDateStr}
+                        floorAtZero={floorAtZero}
+                        isInteractive={false}
+                      />
+                    </motion.div>
+                  )}
 
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight text-center break-words max-w-full">
-                      {currentCard.name}
-                    </h1>
-
-                    {currentCard.description && (
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 max-w-md leading-relaxed text-center">
-                        {currentCard.description}
-                      </p>
-                    )}
-
-                    {/* Clean Score & Universal Flame Streak Pill */}
-                    <div className="mt-3 flex items-center gap-3.5 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-750 shadow-xs">
-                      {/* Score without XP text */}
-                      <div className="text-base sm:text-lg font-extrabold font-mono text-slate-900 dark:text-slate-100 flex items-center gap-1">
-                        <Zap className="w-4 h-4 text-amber-500" />
-                        <span>{currentStats?.currentScore ?? 0}</span>
-                      </div>
-
-                      <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
-
-                      {/* Universal Flame Streak without d/D text */}
-                      <div className="text-base sm:text-lg font-extrabold font-mono text-amber-500 dark:text-amber-400 flex items-center gap-1">
-                        <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
-                        <span>{currentStats?.currentStreak ?? 0}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dynamic Charging Target Goal Progress Box */}
-                  <div className={`my-3.5 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border transition-all duration-300 relative z-10 ${
-                    isChargingThisCard
-                      ? 'border-emerald-500/50 dark:border-emerald-500/60 shadow-md shadow-emerald-500/10'
-                      : 'border-slate-200 dark:border-slate-750'
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1.5">
-                        <Target className={`w-4 h-4 transition-colors ${isChargingThisCard ? 'text-emerald-500 animate-pulse' : 'text-cyan-500'}`} />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          Target Goal
-                        </span>
-                      </div>
-                      <div className="text-xs font-mono font-bold">
-                        <span className={`font-black text-sm transition-all inline-block ${
-                          isChargingThisCard && chargePhase === 'incremented'
-                            ? 'animate-count-pop text-emerald-600 dark:text-emerald-400'
-                            : 'text-slate-900 dark:text-slate-100'
-                        }`}>
-                          {displayStreak}
-                        </span>
-                        <span className="text-slate-400 dark:text-slate-500 font-semibold"> / {targetGoalDays} D</span>
-                      </div>
-                    </div>
-
-                    {/* Dynamic Horizontal Progress Track with Luminous Leading Beacon */}
-                    <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden relative shadow-inner">
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 relative ${
-                          isChargingThisCard ? 'shadow-[0_0_12px_rgba(16,185,129,0.8)]' : ''
-                        }`}
-                        style={{
-                          width: `${currentBarWidth}%`,
-                          transition: isChargingThisCard ? 'width 400ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
-                          willChange: 'width',
+                  <AnimatePresence custom={{ mode: animationMode, dir: direction }} initial={false} mode="popLayout">
+                    {currentCard && (
+                      <motion.div
+                        key={currentCard.id}
+                        custom={{ mode: animationMode, dir: direction }}
+                        variants={cardVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        drag={!chargingHabitId && !isDeckLocked ? 'x' : false}
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.65}
+                        onDragEnd={(_, info) => {
+                          if (chargingHabitId || isDeckLocked) return;
+                          if (info.offset.x > 70 && hasNext) {
+                            handleNextCard();
+                          } else if (info.offset.x < -70 && hasPrev) {
+                            handlePrevCard();
+                          }
                         }}
+                        className="w-full relative z-30 touch-pan-y"
                       >
-                        {/* Moving sheen shine while charging */}
-                        {isChargingThisCard && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-bar-sheen" />
-                        )}
-                      </div>
-
-                      {/* Soft glowing beacon particle at leading edge of charging progress bar */}
-                      {isChargingThisCard && currentBarWidth > 0 && (
-                        <div
-                          className="absolute top-1/2 -translate-y-1/2 -ml-1.5 w-3 h-3 rounded-full bg-emerald-300 dark:bg-emerald-200 animate-pulse-beacon pointer-events-none"
-                          style={{
-                            left: `${currentBarWidth}%`,
-                            transition: 'left 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-                            willChange: 'left',
-                          }}
+                        <HabitCardContent
+                          habit={currentCard}
+                          activeDateStr={activeDateStr}
+                          floorAtZero={floorAtZero}
+                          isInteractive={true}
+                          isCharging={chargingHabitId === currentCard.id}
+                          isDeckLocked={isDeckLocked}
+                          chargePhase={chargingHabitId === currentCard.id ? chargePhase : 'idle'}
+                          onCheckIn={handleCheckInCard}
+                          onOpenDetail={onOpenDetail}
                         />
-                      )}
-                    </div>
-                  </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
-                  {/* Clean One-Tap Check-In Actions (Left: Failed/Missed, Right: Controlled/Done) */}
-                  <div className="mt-4 relative z-10">
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Left: Failure Button (Failed for Break, Missed for Build) */}
-                      <button
-                        onClick={() => handleCheckInCard('missed')}
-                        disabled={!!chargingHabitId}
-                        className="flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:opacity-50"
-                      >
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-1">
-                          <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
-                        </div>
-                        <span className="text-xs sm:text-sm font-extrabold">
-                          {isBreak ? 'Failed' : 'Missed'}
-                        </span>
-                      </button>
+                {hasNext && (
+                  <button
+                    type="button"
+                    onClick={handleNextCard}
+                    disabled={!!chargingHabitId || isDeckLocked}
+                    className="absolute -right-3.5 sm:-right-5 top-1/2 -translate-y-1/2 z-40 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-850/95 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md sm:shadow-lg backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 hover:scale-110 active:scale-90 transition-all cursor-pointer disabled:opacity-30 disabled:pointer-events-none group"
+                    title="Swipe card towards right"
+                    aria-label="Next Card"
+                  >
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                )}
+              </div>
 
-                      {/* Right: Success Button (Controlled with Shield for Break, Done with Check for Build) */}
-                      <button
-                        onClick={() => handleCheckInCard('done')}
-                        disabled={!!chargingHabitId}
-                        className={`flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl border font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:opacity-90 ${
-                          isChargingThisCard
-                            ? 'bg-emerald-500 text-white dark:text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/30 scale-[0.98]'
-                            : 'bg-emerald-500/15 hover:bg-emerald-500 text-emerald-800 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border-emerald-500/30 dark:bg-emerald-500/25 dark:border-emerald-400/50'
-                        }`}
-                      >
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-500/20 dark:bg-emerald-500/30 flex items-center justify-center mb-1">
-                          {isBreak ? (
-                            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
-                          ) : (
-                            <Check className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3]" />
-                          )}
-                        </div>
-                        <span className="text-xs sm:text-sm font-extrabold">
-                          {isBreak ? 'Controlled' : 'Done'}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
+              {loggedHabits.length > 0 && (
+                <div className="w-full mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setViewModeOverride('summary')}
+                    className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors cursor-pointer inline-flex items-center gap-1 py-1 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <span>View Today's Logged Summary ({completedCount} Done{loggedHabits.length - completedCount > 0 ? `, ${loggedHabits.length - completedCount} Missed` : ''})</span>
+                    <span>→</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -815,7 +1055,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         })()
       )}
 
-      {/* Interactive Date Picker Calendar Popover Modal */}
       <DatePickerPopover
         activeDateStr={activeDateStr}
         isOpen={isDatePickerOpen}
