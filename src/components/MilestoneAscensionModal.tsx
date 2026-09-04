@@ -100,14 +100,10 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
             </span>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-black font-mono uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-black font-mono uppercase tracking-wider mb-2">
             <Crown className="w-3.5 h-3.5" />
             <span>Milestone Conquered!</span>
           </div>
-
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            Ascend & Level Up
-          </h2>
 
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs leading-relaxed">
             You completed the <strong className="text-slate-900 dark:text-white font-mono">{currentTarget}-Day Goal</strong> for{' '}
@@ -122,27 +118,27 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {/* Crown Level Up */}
-            <div className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 shadow-xs">
+            {/* Level Progression */}
+            <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 shadow-xs">
               <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center flex-shrink-0">
                 <Crown className="w-4.5 h-4.5" />
               </div>
-              <div>
-                <div className="text-[10px] font-mono text-slate-400">Mastery Rank</div>
-                <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
-                  Tier {nextTier} 👑
+              <div className="min-w-0 flex-1">
+                <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono flex items-center gap-1 whitespace-nowrap">
+                  <span>Level {currentTier}</span>
+                  <span className="text-amber-500">→</span>
+                  <span>{nextTier} 👑</span>
                 </div>
               </div>
             </div>
 
             {/* Instant Bonus XP */}
-            <div className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 shadow-xs">
+            <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-2.5 shadow-xs">
               <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-500 flex items-center justify-center flex-shrink-0">
                 <Zap className="w-4.5 h-4.5" />
               </div>
-              <div>
-                <div className="text-[10px] font-mono text-slate-400">Clear Bonus</div>
-                <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+              <div className="min-w-0 flex-1">
+                <div className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap">
                   +{bonusRewardXP} Bonus XP
                 </div>
               </div>
