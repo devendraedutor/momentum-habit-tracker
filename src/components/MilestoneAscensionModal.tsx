@@ -168,8 +168,8 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
                       : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 font-bold hover:scale-[1.01]'
                   }`}
                 >
-                  <div className="text-sm sm:text-base font-black tracking-tight">
-                    {days} <span className="text-xs font-bold opacity-80">D</span>
+                  <div className="text-base sm:text-lg font-black font-mono tracking-tight">
+                    {days} D
                   </div>
                 </button>
               );
