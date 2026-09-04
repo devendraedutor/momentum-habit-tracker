@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Zap, KeyRound, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Zap, KeyRound, ArrowRight, AlertCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { validatePasskey, setActiveSessionUserId, type Tester } from '../config/testers';
 
@@ -91,24 +91,16 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({ isOpen, onSuccess 
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500" />
 
         {/* Brand Icon Header */}
-        <div className="flex flex-col items-center text-center mb-5 sm:mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-cyan-500 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 mb-3.5 flex items-center justify-center">
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-cyan-500 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 mb-3 flex items-center justify-center">
             <div className="w-full h-full bg-slate-900 dark:bg-slate-950 rounded-[14px] flex items-center justify-center text-emerald-400">
               <Zap className="w-7 h-7 fill-emerald-400" />
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[10px] font-bold font-mono uppercase tracking-wider mb-1.5">
-            <ShieldCheck className="w-3 h-3" /> Closed Beta Access Gate
-          </div>
-
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-            Flux // Beta Access
+            Flux Beta Access
           </h1>
-
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 italic font-sans">
-            Enter your assigned beta passkey
-          </p>
         </div>
 
         {/* Passkey Input Form */}
@@ -130,7 +122,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({ isOpen, onSuccess 
                   setPasskeyInput(e.target.value.toUpperCase());
                   if (errorMsg) setErrorMsg(null);
                 }}
-                placeholder="e.g. FLUX_DEVENDRA"
+                placeholder="ENTER PASSKEY"
                 className={`w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-850 border text-sm text-slate-900 dark:text-white font-mono tracking-wider placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:font-sans placeholder:tracking-normal focus:outline-none focus:ring-2 transition-all ${
                   errorMsg
                     ? 'border-rose-500/80 focus:ring-rose-500 bg-rose-50/10 dark:bg-rose-950/20'
@@ -154,17 +146,10 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({ isOpen, onSuccess 
             disabled={isUnlocking}
             className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 hover:from-emerald-400 hover:to-indigo-400 text-slate-950 font-bold text-sm font-mono tracking-wide shadow-lg shadow-cyan-500/20 transition-all duration-200 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 group disabled:opacity-75"
           >
-            <span>Unlock Quest 🚀</span>
+            <span>Unlock Flux</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </form>
-
-        {/* Security / System Footer Note */}
-        <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-            Personal profiles & history are isolated per tester key.
-          </p>
-        </div>
       </div>
     </div>
   );
