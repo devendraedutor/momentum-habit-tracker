@@ -71,9 +71,9 @@ export const HabitCard: React.FC<HabitCardProps> = ({
     <div
       className={`app-card app-card-hover rounded-2xl p-5 flex flex-col justify-between ${
         todayStatus === 'done'
-          ? 'ring-1 ring-emerald-500/50 bg-emerald-50/20 dark:bg-slate-800/90'
+          ? 'ring-1 ring-emerald-500/50 bg-emerald-50/20 dark:bg-slate-800'
           : todayStatus === 'missed'
-          ? 'ring-1 ring-rose-500/50 bg-rose-50/20 dark:bg-slate-800/90'
+          ? 'ring-1 ring-rose-500/50 bg-rose-50/20 dark:bg-slate-800'
           : ''
       }`}
     >
@@ -81,10 +81,8 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-xs flex-shrink-0"
+              className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-xs flex-shrink-0 bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700"
               style={{
-                backgroundColor: `${habit.color}25`,
-                border: `1.5px solid ${habit.color}`,
                 color: habit.color,
               }}
             >
@@ -92,7 +90,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+                <span className="text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
                   {habit.category}
                 </span>
                 <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
@@ -101,7 +99,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
               </div>
               <h3
                 onClick={() => onOpenDetail(habit)}
-                className="text-base font-bold text-slate-900 dark:text-white mt-1 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors line-clamp-1"
+                className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors line-clamp-1"
                 title={habit.name}
               >
                 {habit.name}
@@ -112,7 +110,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="More Options"
             >
               <MoreVertical className="w-4 h-4" />
@@ -153,14 +151,14 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         </div>
 
         {habit.description && (
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-2.5 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-2.5 line-clamp-2 leading-relaxed">
             {habit.description}
           </p>
         )}
 
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-750 flex items-center justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Momentum Score</div>
+            <div className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-400 font-semibold">Flux Score</div>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span
                 className={`text-2xl font-extrabold font-mono tracking-tight ${
@@ -168,12 +166,12 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : stats.currentScore < 0
                     ? 'text-rose-600 dark:text-rose-400'
-                    : 'text-slate-700 dark:text-slate-300'
+                    : 'text-slate-700 dark:text-slate-200'
                 }`}
               >
                 {stats.currentScore > 0 ? `+${stats.currentScore}` : stats.currentScore}
               </span>
-              <span className="text-[11px] text-slate-400">pts</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-400">pts</span>
             </div>
           </div>
 
@@ -200,7 +198,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
       <div className="mt-5 pt-3">
         {isLoggedToday ? (
-          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5">
+          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl p-2.5">
             <div className="flex items-center gap-2">
               {todayStatus === 'done' ? (
                 <>
@@ -209,7 +207,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                   </div>
                   <div>
                     <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Done Today</div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">+1 Momentum added</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">+1 Flux XP added</div>
                   </div>
                 </>
               ) : (
@@ -219,7 +217,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                   </div>
                   <div>
                     <div className="text-xs font-bold text-rose-600 dark:text-rose-400">Missed Today</div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">-1 Momentum penalty</div>
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">-1 Flux XP penalty</div>
                   </div>
                 </>
               )}
@@ -227,7 +225,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
             <button
               onClick={() => onUndo(habit.id)}
-              className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 transition-colors shadow-2xs"
+              className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs"
               title="Undo today's check-in"
             >
               <RotateCcw className="w-3 h-3" />
@@ -238,7 +236,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
           <div className="grid grid-cols-2 gap-2.5">
             <button
               onClick={() => onCheckIn(habit.id, 'done')}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-700 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border border-emerald-500/30 font-semibold text-xs transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-700 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border border-emerald-500/30 dark:bg-emerald-500/25 dark:border-emerald-400/50 font-semibold text-xs transition-all active:scale-[0.98]"
             >
               <Check className="w-4 h-4 stroke-[2.5]" />
               <span>Done (+1)</span>
@@ -246,7 +244,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
             <button
               onClick={() => onCheckIn(habit.id, 'missed')}
-              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 hover:bg-rose-500/20 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 font-medium text-xs transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 font-medium text-xs transition-all active:scale-[0.98]"
             >
               <X className="w-4 h-4 stroke-[2]" />
               <span>Missed (-1)</span>

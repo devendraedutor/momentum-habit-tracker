@@ -87,11 +87,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div
-        className="w-full max-w-lg max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in"
+        className="w-full max-w-lg max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl flex flex-col overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 flex-shrink-0">
+        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-750 flex items-center justify-between gap-4 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xs">
               <Settings className="w-5 h-5" />
@@ -122,17 +122,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </h3>
             <div className="space-y-2.5">
               {/* Theme Toggle */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750">
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300">
+                  <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                     {settings.theme === 'dark' ? <Moon className="w-4 h-4 text-indigo-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Color Theme</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-slate-100">Color Theme</div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Dark / Light UI appearance</div>
                   </div>
                 </div>
-                <div className="flex items-center p-1 rounded-xl bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
+                <div className="flex items-center p-1 rounded-xl bg-slate-200 dark:bg-slate-850 border border-slate-300 dark:border-slate-700">
                   <button
                     onClick={() => onUpdateSettings({ ...settings, theme: 'light' })}
                     className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
@@ -157,13 +157,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* Sound Effects */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750">
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300">
+                  <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                     {settings.soundEffects ? <Volume2 className="w-4 h-4 text-emerald-500" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Audio Feedback</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-slate-100">Audio Feedback</div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Sound effects on check-in and rewards</div>
                   </div>
                 </div>
@@ -179,13 +179,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* Confetti */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750">
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300">
+                  <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                     <Sparkles className="w-4 h-4 text-amber-500" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Confetti Celebrations</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-slate-100">Confetti Celebrations</div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Particles on perfect days and goal clears</div>
                   </div>
                 </div>
@@ -201,13 +201,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* Hold Score Floor at 0 */}
-              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750">
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300">
+                  <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                     <ShieldCheck className="w-4 h-4 text-cyan-500" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Score Floor at 0 XP</div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-slate-100">Score Floor at 0 XP</div>
                     <div className="text-[11px] text-slate-500 dark:text-slate-400">Prevent habit scores from going below 0</div>
                   </div>
                 </div>

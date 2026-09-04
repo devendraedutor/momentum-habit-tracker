@@ -141,7 +141,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         </div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Active Habits Found</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-          Create positive Build Habits or control Bad Habits to start tracking daily score momentum.
+          Create positive Build Habits or control Bad Habits to start building your Flux momentum.
         </p>
         <button
           onClick={onOpenNewHabit}
@@ -156,12 +156,12 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   return (
     <div className="w-full max-w-lg mx-auto px-3 sm:px-4 flex flex-col items-center">
       {/* Aesthetic Unified Date Bar */}
-      <div className="w-full mb-4 flex items-center justify-between bg-white/80 dark:bg-slate-800/80 p-2 sm:p-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-xs backdrop-blur-md">
+      <div className="w-full mb-4 flex items-center justify-between bg-white/90 dark:bg-slate-900 p-2 sm:p-2.5 rounded-2xl border border-slate-200 dark:border-slate-750 shadow-xs backdrop-blur-md">
         {/* Left: Previous / Next Controls with Formatted Date */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => handleShiftDate(-1)}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Previous Day"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -170,7 +170,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
           <button
             type="button"
             onClick={() => setIsDatePickerOpen(true)}
-            className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/60 text-xs sm:text-sm font-bold text-slate-900 dark:text-white font-mono whitespace-nowrap transition-colors cursor-pointer group"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 font-mono whitespace-nowrap transition-colors cursor-pointer group"
             title="Click to jump to any date"
           >
             <Calendar className="w-4 h-4 text-cyan-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
@@ -179,7 +179,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
           <button
             onClick={() => handleShiftDate(1)}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Next Day"
           >
             <ChevronRight className="w-4 h-4" />
@@ -208,11 +208,11 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
       {/* Case 0: No habits started yet on this date */}
       {activeHabits.length === 0 ? (
-        <div className="w-full app-card rounded-3xl p-8 text-center border-slate-200 dark:border-slate-800 animate-scale-in">
+        <div className="w-full app-card rounded-3xl p-8 text-center border-slate-200 dark:border-slate-750 animate-scale-in">
           <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center mx-auto mb-3 border border-cyan-500/20 shadow-sm">
             <Calendar className="w-7 h-7" />
           </div>
-          <h3 className="text-base font-extrabold text-slate-900 dark:text-white mb-1">
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 mb-1">
             No Habits Active On This Date
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 max-w-sm mx-auto leading-relaxed">
@@ -233,12 +233,12 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         </div>
       ) : isAllDone ? (
         <div className="w-full animate-scale-in">
-          <div className="app-card rounded-3xl p-5 sm:p-6 shadow-2xl border-slate-200 dark:border-slate-800 relative overflow-hidden">
+          <div className="app-card rounded-3xl p-5 sm:p-6 shadow-2xl border-slate-200 dark:border-slate-750 relative overflow-hidden">
             {/* Ambient Background Glow */}
             <div className="absolute -top-24 -right-24 w-56 h-56 rounded-full blur-3xl pointer-events-none opacity-20 bg-emerald-500 transition-all duration-700" />
 
             {/* Gamified Score Arena Header with Circular Gauge */}
-            <div className="relative z-10 flex flex-col items-center pb-4 border-b border-slate-200 dark:border-slate-800/80">
+            <div className="relative z-10 flex flex-col items-center pb-4 border-b border-slate-200 dark:border-slate-800">
               {/* Radial Progress Ring (Emerald Mint Task Completion) */}
               <div className="relative w-28 h-28 flex items-center justify-center my-1">
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 96 96">
@@ -279,12 +279,12 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     </>
                   ) : (
                     <>
-                      <div className="text-3xl font-black font-mono text-slate-900 dark:text-white leading-none">
-                        <span className="text-emerald-500">{completedCount}</span>
-                        <span className="text-slate-400 text-xl font-normal">/</span>
-                        <span className="text-slate-400">{totalHabitsCount}</span>
+                      <div className="text-3xl font-black font-mono text-slate-900 dark:text-slate-100 leading-none">
+                        <span className="text-emerald-500 dark:text-emerald-400">{completedCount}</span>
+                        <span className="text-slate-400 dark:text-slate-500 text-xl font-normal">/</span>
+                        <span className="text-slate-400 dark:text-slate-500">{totalHabitsCount}</span>
                       </div>
-                      <span className="text-[9px] font-bold font-mono text-slate-400 mt-1 uppercase tracking-wider">
+                      <span className="text-[9px] font-bold font-mono text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
                         {percent}% DONE
                       </span>
                     </>
@@ -294,7 +294,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
               {/* Dynamic Jumbo Point Achievement Banner (Render ONLY on 100% Perfect Cleared Days with >= 3 habits) */}
               {isPerfectDay && totalHabitsCount >= 3 && (
-                <div className="mt-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-400/40 text-amber-900 dark:text-amber-200 text-xs font-black font-mono flex items-center gap-2 shadow-xs animate-bounce">
+                <div className="mt-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-black font-mono flex items-center gap-2 shadow-xs animate-bounce">
                   <Gem className="w-4 h-4 fill-amber-400 text-amber-500" />
                   <span>+1 Jumbo Point Credited</span>
                   <span className="w-1 h-1 rounded-full bg-amber-400/60" />
@@ -321,10 +321,10 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                   <div
                     key={h.id}
                     onClick={() => onOpenDetail(h)}
-                    className={`p-3 pb-3.5 rounded-2xl bg-white dark:bg-slate-850/90 hover:bg-slate-50 dark:hover:bg-slate-800 border flex items-center justify-between gap-3 transition-all shadow-xs cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
+                    className={`p-3 pb-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border flex items-center justify-between gap-3 transition-all shadow-xs dark:shadow-md dark:shadow-black/20 cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
                       isGoalConquered
-                        ? 'border-amber-500/40 dark:border-amber-500/30'
-                        : 'border-slate-200/90 dark:border-slate-800'
+                        ? 'border-amber-500/40 dark:border-amber-400/40'
+                        : 'border-slate-200/90 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                     }`}
                     title={`Click to view insights and modify check-in for ${h.name}`}
                   >
@@ -332,12 +332,12 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       {/* Icon Frame: Rounded with Leaf for Build, Shielded for Break */}
                       <div
-                        className={`w-10 h-10 flex items-center justify-center text-white flex-shrink-0 shadow-xs relative transition-transform group-hover:scale-105 ${
+                        className={`w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-xs relative transition-transform group-hover:scale-105 rounded-2xl bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 ${
                           isBreak
-                            ? 'rounded-xl ring-2 ring-rose-500/30 dark:ring-rose-500/40'
-                            : 'rounded-2xl ring-2 ring-emerald-500/30 dark:ring-emerald-500/40'
+                            ? 'ring-2 ring-rose-500/30 dark:ring-rose-500/40'
+                            : 'ring-2 ring-emerald-500/30 dark:ring-emerald-500/40'
                         }`}
-                        style={{ backgroundColor: `${h.color}25`, color: h.color }}
+                        style={{ color: h.color }}
                       >
                         <DynamicIcon name={h.icon} className="w-5 h-5" />
                         <span className="absolute -bottom-1 -right-1 text-[11px] leading-none select-none">
@@ -347,7 +347,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors">
+                          <span className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                             {h.name}
                           </span>
                           {h.currentTier && h.currentTier > 1 && (
@@ -361,24 +361,24 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                         {/* Secondary Info Row: Streak + Lifetime XP + Near Goal Alert */}
                         <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
                           {/* Flame Streak Indicator */}
-                          <span className="flex items-center gap-1 text-amber-500" title={`Current Streak: ${stats.currentStreak} days`}>
+                          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Current Streak: ${stats.currentStreak} days`}>
                             <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                            <span>{stats.currentStreak}d</span>
+                            <span>{stats.currentStreak}</span>
                           </span>
 
-                          <span className="text-slate-300 dark:text-slate-700">•</span>
+                          <span className="text-slate-300 dark:text-slate-600">•</span>
 
                           {/* Lifetime XP Badge */}
-                          <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium" title={`Lifetime XP: ${stats.currentScore} XP`}>
-                            <Zap className="w-3 h-3 text-amber-500" />
+                          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium" title={`Lifetime XP: ${stats.currentScore} XP`}>
+                            <Zap className="w-3.5 h-3.5 text-amber-500" />
                             <span>{stats.currentScore} XP</span>
                           </span>
 
                           {/* Engaging Near Goal Indicator */}
                           {isNearGoal && (
                             <>
-                              <span className="text-slate-300 dark:text-slate-700">•</span>
-                              <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono animate-pulse" title={`${daysRemaining} days left to conquer target goal!`}>
+                              <span className="text-slate-300 dark:text-slate-600">•</span>
+                              <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono animate-pulse" title={`${daysRemaining} days left to conquer target goal!`}>
                                 <Flag className="w-3 h-3 text-cyan-500" />
                                 <span>{daysRemaining === 1 ? '1 day to goal!' : `${daysRemaining}d to goal!`}</span>
                               </span>
@@ -411,7 +411,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                         <div className="flex items-baseline gap-0.5 justify-end">
                           <span className={`font-black text-sm font-mono tracking-tight ${
                             isDone
-                              ? 'text-slate-900 dark:text-white'
+                              ? 'text-slate-900 dark:text-slate-100'
                               : 'text-slate-400 dark:text-slate-500'
                           }`}>
                             {isDone ? goalStreak : 0}
@@ -421,7 +421,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                           </span>
                         </div>
                         <span className="text-[9px] font-mono font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tighter">
-                          target
+                          TARGET
                         </span>
                       </div>
 
@@ -434,8 +434,8 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                         }}
                         className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-150 active:scale-90 shadow-xs cursor-pointer ${
                           isDone
-                            ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:border-emerald-500/50'
-                            : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 border-rose-500/30 hover:border-rose-500/50'
+                            ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50 dark:bg-emerald-500/25 dark:border-emerald-400/50'
+                            : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50 dark:bg-rose-500/25 dark:border-rose-400/50'
                         }`}
                         title={isDone ? 'Marked Done. Click to toggle to Missed.' : 'Marked Missed. Click to toggle to Done.'}
                       >
@@ -448,7 +448,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     </div>
 
                     {/* Ultra-Thin (3px) Seamless Bottom Progress Rail */}
-                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-200/50 dark:bg-slate-800/80 overflow-hidden">
+                    <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-slate-200/50 dark:bg-slate-800 overflow-hidden">
                       <div
                         className={`h-full transition-all duration-700 ease-out ${
                           isGoalConquered
@@ -489,7 +489,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                   </span>
                 </div>
 
-                <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 shadow-xs">
+                <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/20 dark:border-emerald-500/40 shadow-xs">
                   {loggedHabits.length}/{totalHabitsCount}
                 </div>
               </div>
@@ -523,8 +523,8 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     {/* Habit Paradigm Intent Badge */}
                     <span className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border flex items-center gap-1 shadow-xs ${
                       isBreak
-                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30'
-                        : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
+                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30 dark:bg-rose-500/20 dark:border-rose-500/40'
+                        : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 dark:bg-emerald-500/20 dark:border-emerald-500/40'
                     }`}>
                       {isBreak ? <Shield className="w-3 h-3 text-rose-500" /> : <Sprout className="w-3 h-3 text-emerald-500" />}
                       <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
@@ -533,7 +533,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     {/* Minimalist Icon-Only Analytics Trigger */}
                     <button
                       onClick={() => onOpenDetail(currentCard)}
-                      className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all active:scale-90 cursor-pointer shadow-xs"
+                      className="p-2 rounded-xl text-slate-500 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 transition-all active:scale-90 cursor-pointer shadow-xs"
                       title={`View Analytics & History for ${currentCard.name}`}
                       aria-label="View Analytics"
                     >
@@ -554,20 +554,20 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                       <DynamicIcon name={currentCard.icon} className="w-9 h-9 sm:w-10 sm:h-10" />
                     </div>
 
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
                       {currentCard.name}
                     </h1>
 
                     {currentCard.description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-md leading-relaxed">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 max-w-md leading-relaxed">
                         {currentCard.description}
                       </p>
                     )}
 
                     {/* Clean XP & Universal Flame Streak Pill */}
-                    <div className="mt-3 flex items-center gap-3.5 bg-slate-100 dark:bg-slate-800/80 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
+                    <div className="mt-3 flex items-center gap-3.5 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xs">
                       {/* XP without plus symbol */}
-                      <div className="text-base sm:text-lg font-extrabold font-mono text-slate-900 dark:text-white flex items-center gap-1">
+                      <div className="text-base sm:text-lg font-extrabold font-mono text-slate-900 dark:text-slate-100 flex items-center gap-1">
                         <Zap className="w-4 h-4 text-amber-500" />
                         <span>{currentStats?.currentScore ?? 0} XP</span>
                       </div>
@@ -583,7 +583,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                   </div>
 
                   {/* Simplified Target Goal Progress Box */}
-                  <div className="my-3.5 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700/80 relative z-10">
+                  <div className="my-3.5 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 relative z-10">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
                         <Target className="w-4 h-4 text-cyan-500" />
@@ -592,7 +592,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                         </span>
                       </div>
                       <div className="text-xs font-mono font-bold">
-                        <span className="text-slate-900 dark:text-white font-black text-sm">{streakProgress}</span>
+                        <span className="text-slate-900 dark:text-slate-100 font-black text-sm">{streakProgress}</span>
                         <span className="text-slate-400 dark:text-slate-500 font-semibold"> / {targetGoalDays}</span>
                       </div>
                     </div>
@@ -612,7 +612,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                       {/* Left: Failure Button (Failed for Break, Missed for Build) */}
                       <button
                         onClick={() => handleCheckInCard('missed')}
-                        className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 hover:bg-rose-500/20 text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[72px]"
+                        className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[72px]"
                       >
                         <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-1">
                           <X className="w-5 h-5 stroke-[2.5]" />
@@ -625,9 +625,9 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                       {/* Right: Success Button (Controlled with Shield for Break, Done with Check for Build) */}
                       <button
                         onClick={() => handleCheckInCard('done')}
-                        className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-800 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border border-emerald-500/30 font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[72px]"
+                        className="flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-800 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border border-emerald-500/30 dark:bg-emerald-500/25 dark:border-emerald-400/50 font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[72px]"
                       >
-                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center mb-1">
+                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 dark:bg-emerald-500/30 flex items-center justify-center mb-1">
                           {isBreak ? (
                             <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
                           ) : (

@@ -55,13 +55,6 @@ export function App() {
     }
   }, [settings.theme]);
 
-  const toggleTheme = useCallback(() => {
-    setSettings((prev) => ({
-      ...prev,
-      theme: prev.theme === 'dark' ? 'light' : 'dark',
-    }));
-  }, []);
-
   // Save to localStorage whenever habits, settings, or jumboDates change
   useEffect(() => {
     saveHabitsToStorage(habits);
@@ -84,6 +77,142 @@ export function App() {
       }
     }
   }, [habits, selectedDetailHabit]);
+
+  // Base browser history initialization
+  useEffect(() => {
+    if (!window.history.state) {
+      window.history.replaceState({ activeDate: activeDateStr }, '');
+    }
+  }, []);
+
+  // System PopState (Android Back / Browser Back) Listener
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+
+      // Close any active modal on system back
+      setIsDetailModalOpen(false);
+      setSelectedDetailHabit(null);
+      setIsDirectoryOpen(false);
+      setIsSettingsOpen(false);
+      setIsHabitFormOpen(false);
+      setEditingHabit(null);
+      setIsHubOpen(false);
+      setAscendHabit(null);
+      setIsJumboUnlockModalOpen(false);
+
+      // Restore active date if the state has a recorded date
+      if (state?.activeDate) {
+        setActiveDateStr(state.activeDate);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Modal Open/Close helpers synchronized with browser/system history
+  const openDetailModal = useCallback(
+    (habit: Habit) => {
+      setSelectedDetailHabit(habit);
+      setIsDetailModalOpen(true);
+      window.history.pushState({ activeDate: activeDateStr, modal: 'detail', habitId: habit.id }, '');
+    },
+    [activeDateStr]
+  );
+
+  const closeDetailModal = useCallback(() => {
+    setIsDetailModalOpen(false);
+    setSelectedDetailHabit(null);
+    if (window.history.state?.modal === 'detail') {
+      window.history.back();
+    }
+  }, []);
+
+  const openDirectory = useCallback(() => {
+    setIsDirectoryOpen(true);
+    window.history.pushState({ activeDate: activeDateStr, modal: 'directory' }, '');
+  }, [activeDateStr]);
+
+  const closeDirectory = useCallback(() => {
+    setIsDirectoryOpen(false);
+    if (window.history.state?.modal === 'directory') {
+      window.history.back();
+    }
+  }, []);
+
+  const openSettings = useCallback(() => {
+    setIsSettingsOpen(true);
+    window.history.pushState({ activeDate: activeDateStr, modal: 'settings' }, '');
+  }, [activeDateStr]);
+
+  const closeSettings = useCallback(() => {
+    setIsSettingsOpen(false);
+    if (window.history.state?.modal === 'settings') {
+      window.history.back();
+    }
+  }, []);
+
+  const openHabitForm = useCallback(
+    (habit: Habit | null = null) => {
+      setEditingHabit(habit);
+      setIsHabitFormOpen(true);
+      window.history.pushState({ activeDate: activeDateStr, modal: 'habit-form' }, '');
+    },
+    [activeDateStr]
+  );
+
+  const closeHabitForm = useCallback(() => {
+    setIsHabitFormOpen(false);
+    setEditingHabit(null);
+    if (window.history.state?.modal === 'habit-form') {
+      window.history.back();
+    }
+  }, []);
+
+  const openHub = useCallback(() => {
+    setIsHubOpen(true);
+    window.history.pushState({ activeDate: activeDateStr, modal: 'hub' }, '');
+  }, [activeDateStr]);
+
+  const closeHub = useCallback(() => {
+    setIsHubOpen(false);
+    if (window.history.state?.modal === 'hub') {
+      window.history.back();
+    }
+  }, []);
+
+  const openAscendModal = useCallback(
+    (habit: Habit) => {
+      setAscendHabit(habit);
+      window.history.pushState({ activeDate: activeDateStr, modal: 'ascend' }, '');
+    },
+    [activeDateStr]
+  );
+
+  const closeAscendModal = useCallback(() => {
+    setAscendHabit(null);
+    if (window.history.state?.modal === 'ascend') {
+      window.history.back();
+    }
+  }, []);
+
+  const closeJumboUnlockModal = useCallback(() => {
+    setIsJumboUnlockModalOpen(false);
+    if (window.history.state?.modal === 'jumbo-unlock') {
+      window.history.back();
+    }
+  }, []);
+
+  const handleSelectDate = useCallback(
+    (newDate: string) => {
+      if (newDate !== activeDateStr) {
+        window.history.pushState({ activeDate: newDate }, '');
+        setActiveDateStr(newDate);
+      }
+    },
+    [activeDateStr]
+  );
 
   // Check-in logic for a specific date (and automatic Jumbo Point award/reconcile)
   const handleCheckIn = useCallback(
@@ -268,6 +397,7 @@ export function App() {
         sound.playMilestone();
       }
     }
+    closeHabitForm();
   };
 
   const handleArchiveHabit = (habitId: string) => {
@@ -279,23 +409,23 @@ export function App() {
   const handleDeleteHabit = (habitId: string) => {
     setHabits((prev) => prev.filter((h) => h.id !== habitId));
     if (selectedDetailHabit?.id === habitId) {
-      setIsDetailModalOpen(false);
-      setSelectedDetailHabit(null);
+      closeDetailModal();
     }
     if (selectedChartHabitId === habitId) {
       setSelectedChartHabitId('all');
     }
   };
 
+  // Ascend habit milestone level up handler
   const handleAscendHabit = useCallback(
     (habitId: string, newTargetDays: number, bonusXP: number) => {
       setHabits((prev) =>
         prev.map((h) => {
           if (h.id !== habitId) return h;
           const currentTier = h.currentTier || 1;
-          const prevTargets = h.previousTargets || [];
           const currentTarget = h.targetGoalDays || 21;
           const milestones = (h.milestonesCompleted || 0) + 1;
+          const prevTargets = h.previousTargets || [];
           const stats = calculateHabitStats(h, false);
 
           return {
@@ -314,19 +444,14 @@ export function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       {/* Top Navigation with glowing Jumbo Points Counter */}
       <Navbar
         habits={habits}
         jumboPointsCount={jumboDates.length}
-        theme={settings.theme}
-        onToggleTheme={toggleTheme}
-        onOpenNewHabit={() => {
-          setEditingHabit(null);
-          setIsHabitFormOpen(true);
-        }}
-        onOpenDirectory={() => setIsDirectoryOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenNewHabit={() => openHabitForm(null)}
+        onOpenDirectory={openDirectory}
+        onOpenSettings={openSettings}
       />
 
       {/* Main Reel Card Deck Showcase */}
@@ -334,19 +459,13 @@ export function App() {
         <HabitReelDeck
           habits={habits}
           activeDateStr={activeDateStr}
-          onSelectDate={setActiveDateStr}
+          onSelectDate={handleSelectDate}
           onCheckIn={handleCheckIn}
           onBatchSave={handleBatchSave}
-          onOpenNewHabit={() => {
-            setEditingHabit(null);
-            setIsHabitFormOpen(true);
-          }}
-          onOpenDetail={(habit) => {
-            setSelectedDetailHabit(habit);
-            setIsDetailModalOpen(true);
-          }}
-          onOpenHub={() => setIsDirectoryOpen(true)}
-          onAscendHabit={(h) => setAscendHabit(h)}
+          onOpenNewHabit={() => openHabitForm(null)}
+          onOpenDetail={openDetailModal}
+          onOpenHub={openHub}
+          onAscendHabit={openAscendModal}
           jumboPointsCount={jumboDates.length}
           floorAtZero={settings.floorAtZero}
         />
@@ -354,25 +473,19 @@ export function App() {
 
       {/* Footer */}
       <footer className="py-3 text-center text-xs text-slate-400 dark:text-slate-500 font-mono border-t border-slate-200 dark:border-slate-800">
-        <p>Momentum Habit Tracker • Daily Score Momentum • Instant Multi-Day Testing</p>
+        <p>Flux Habit Tracker • Daily Score Momentum • Instant Multi-Day Testing</p>
       </footer>
 
       {/* Corner Hub & Analytics Drawer */}
       <CornerHubModal
         isOpen={isHubOpen}
-        onClose={() => setIsHubOpen(false)}
+        onClose={closeHub}
         habits={habits}
         settings={settings}
         jumboPointsCount={jumboDates.length}
         onUpdateSettings={setSettings}
-        onOpenNewHabit={() => {
-          setEditingHabit(null);
-          setIsHabitFormOpen(true);
-        }}
-        onEditHabit={(h) => {
-          setEditingHabit(h);
-          setIsHabitFormOpen(true);
-        }}
+        onOpenNewHabit={() => openHabitForm(null)}
+        onEditHabit={openHabitForm}
         onArchiveHabit={handleArchiveHabit}
         onDeleteHabit={handleDeleteHabit}
         onRestoreHabits={setHabits}
@@ -383,20 +496,14 @@ export function App() {
         onTimeRangeChange={setTimeRange}
         selectedChartHabitId={selectedChartHabitId}
         onSelectChartHabitId={setSelectedChartHabitId}
-        onSelectHabitProfile={(h) => {
-          setSelectedDetailHabit(h);
-          setIsDetailModalOpen(true);
-        }}
+        onSelectHabitProfile={openDetailModal}
       />
 
       {/* Habit Create / Edit Modal (Key ensures fresh form state every time) */}
       <HabitFormModal
         key={editingHabit ? `edit-${editingHabit.id}` : `new-habit-${activeDateStr}`}
         isOpen={isHabitFormOpen}
-        onClose={() => {
-          setIsHabitFormOpen(false);
-          setEditingHabit(null);
-        }}
+        onClose={closeHabitForm}
         onSave={handleSaveHabit}
         initialHabit={editingHabit}
         defaultStartDate={activeDateStr}
@@ -406,16 +513,10 @@ export function App() {
       <HabitDetailModal
         habit={selectedDetailHabit}
         isOpen={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false);
-          setSelectedDetailHabit(null);
-        }}
+        onClose={closeDetailModal}
         onCheckInDate={(hId, dStr, st) => handleCheckIn(hId, st, dStr)}
-        onEdit={(h) => {
-          setIsDetailModalOpen(false);
-          setEditingHabit(h);
-          setIsHabitFormOpen(true);
-        }}
+        onSelectDate={handleSelectDate}
+        onEdit={openHabitForm}
         onArchive={handleArchiveHabit}
         onDelete={handleDeleteHabit}
         activeDateStr={activeDateStr}
@@ -427,42 +528,33 @@ export function App() {
       <MilestoneAscensionModal
         habit={ascendHabit}
         isOpen={!!ascendHabit}
-        onClose={() => setAscendHabit(null)}
+        onClose={closeAscendModal}
         onAscend={handleAscendHabit}
       />
 
       {/* Gamified Jumbo Points 3-Habit Unlock Ceremony Modal */}
       <JumboUnlockModal
         isOpen={isJumboUnlockModalOpen}
-        onClose={() => setIsJumboUnlockModalOpen(false)}
+        onClose={closeJumboUnlockModal}
         activeHabitsCount={habits.filter((h) => !h.archived).length}
       />
 
       {/* Dedicated Habit Directory & Management Modal (No Settings / Analytics clutter) */}
       <HabitDirectoryModal
         isOpen={isDirectoryOpen}
-        onClose={() => setIsDirectoryOpen(false)}
+        onClose={closeDirectory}
         habits={habits}
-        onOpenNewHabit={() => {
-          setEditingHabit(null);
-          setIsHabitFormOpen(true);
-        }}
-        onEditHabit={(h) => {
-          setEditingHabit(h);
-          setIsHabitFormOpen(true);
-        }}
+        onOpenNewHabit={() => openHabitForm(null)}
+        onEditHabit={openHabitForm}
         onDeleteHabit={handleDeleteHabit}
-        onSelectHabitProfile={(h) => {
-          setSelectedDetailHabit(h);
-          setIsDetailModalOpen(true);
-        }}
+        onSelectHabitProfile={openDetailModal}
         floorAtZero={settings.floorAtZero}
       />
 
       {/* System Settings, Backups & Data Erasure Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
+        onClose={closeSettings}
         habits={habits}
         settings={settings}
         jumboDates={jumboDates}

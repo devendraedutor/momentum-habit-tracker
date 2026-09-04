@@ -8,6 +8,7 @@ import {
   Edit2,
   Trash2,
   Flame,
+  Zap,
   Target,
   ShieldAlert,
   Sprout,
@@ -58,23 +59,18 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div
-        className="w-full max-w-xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in"
+        className="w-full max-w-xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl flex flex-col overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 flex-shrink-0">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-                Habit Directory
-              </h2>
-              <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 text-xs font-bold font-mono">
-                {activeHabits.length} Active
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Manage habits, view core metrics, and edit profiles
-            </p>
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-750 flex items-center justify-between gap-4 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
+              Habit Directory
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 text-xs font-bold font-mono">
+              {activeHabits.length} Active
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -83,16 +79,19 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                 onClose();
                 onOpenNewHabit();
               }}
-              className="px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-bold font-mono shadow-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
+              title="Add New Habit"
+              aria-label="Add New Habit"
             >
-              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>Add Habit</span>
+              <Plus className="w-4 h-4 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-2.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              title="Close"
+              aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4.5 h-4.5" />
             </button>
           </div>
         </div>
@@ -107,7 +106,7 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search habits or categories..."
-                className="w-full pl-9 pr-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 font-sans"
+                className="w-full pl-9 pr-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 font-sans"
               />
             </div>
           </div>
@@ -143,17 +142,15 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                     onClose();
                     onSelectHabitProfile(h);
                   }}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 hover:bg-slate-100/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-750 transition-all shadow-xs cursor-pointer group flex flex-col gap-3 relative overflow-hidden"
+                  className="p-4 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200/80 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-xs dark:shadow-md dark:shadow-black/25 cursor-pointer group flex flex-col gap-3 relative overflow-hidden"
                 >
                   {/* Card Top Row */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xs group-hover:scale-105 transition-transform"
+                        className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xs group-hover:scale-105 transition-transform bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700"
                         style={{
-                          backgroundColor: `${h.color}20`,
                           color: h.color,
-                          border: `1.5px solid ${h.color}40`,
                         }}
                       >
                         <DynamicIcon name={h.icon} className="w-5.5 h-5.5" />
@@ -161,7 +158,7 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors truncate">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
                             {h.name}
                           </h4>
                           <span
@@ -246,29 +243,30 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Core Metrics Row */}
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 text-left font-mono">
-                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
-                      <span className="text-[9px] text-slate-400 font-semibold block uppercase">Streak</span>
-                      <div className="flex items-center gap-1 text-amber-500 font-black text-xs mt-0.5">
-                        <Flame className="w-3.5 h-3.5 fill-amber-500" />
-                        <span>{stats.currentStreak}d</span>
-                      </div>
+                  {/* Core Metrics Row - Minimalist Icon + Value Aesthetic */}
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-750 font-mono">
+                    {/* Streak */}
+                    <div className="py-2 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1.5 shadow-2xs">
+                      <Flame className="w-4 h-4 fill-amber-500 text-amber-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
+                        {stats.currentStreak}d
+                      </span>
                     </div>
 
-                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
-                      <span className="text-[9px] text-slate-400 font-semibold block uppercase">Score XP</span>
-                      <span className="text-emerald-500 font-black text-xs mt-0.5 block">
+                    {/* Score XP */}
+                    <div className="py-2 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1.5 shadow-2xs">
+                      <Zap className="w-4 h-4 fill-emerald-500 text-emerald-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
                         {stats.currentScore} XP
                       </span>
                     </div>
 
-                    <div className="p-2 rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
-                      <span className="text-[9px] text-slate-400 font-semibold block uppercase">Target Goal</span>
-                      <div className="flex items-center gap-1 text-cyan-500 font-black text-xs mt-0.5">
-                        <Target className="w-3.5 h-3.5" />
-                        <span>{stats.currentGoalStreak}/{targetDays}d</span>
-                      </div>
+                    {/* Target Goal */}
+                    <div className="py-2 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1.5 shadow-2xs">
+                      <Target className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
+                        {stats.currentGoalStreak}/{targetDays}d
+                      </span>
                     </div>
                   </div>
                 </div>
