@@ -77,7 +77,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({ isOpen, onSuccess 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#090d16]/95 backdrop-blur-xl animate-fade-in select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#F8FAFC]/95 dark:bg-[#090d16]/95 backdrop-blur-xl animate-fade-in select-none">
       {/* Ambient background glow */}
       <div className="absolute w-96 h-96 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none -top-20 -right-20 animate-pulse" />
       <div className="absolute w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none -bottom-20 -left-20 animate-pulse" />
@@ -93,8 +93,8 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({ isOpen, onSuccess 
         {/* Brand Icon Header */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 via-cyan-500 to-indigo-600 p-0.5 shadow-lg shadow-cyan-500/20 mb-3 flex items-center justify-center">
-            <div className="w-full h-full bg-slate-900 dark:bg-slate-950 rounded-[14px] flex items-center justify-center text-emerald-400">
-              <Zap className="w-7 h-7 fill-emerald-400" />
+            <div className="w-full h-full bg-slate-50 dark:bg-slate-950 rounded-[14px] flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <Zap className="w-7 h-7 fill-emerald-500 dark:fill-emerald-400" />
             </div>
           </div>
 

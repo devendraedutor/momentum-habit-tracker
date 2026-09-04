@@ -139,7 +139,6 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                 <div
                   key={h.id}
                   onClick={() => {
-                    onClose();
                     onSelectHabitProfile(h);
                   }}
                   className="p-4 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200/80 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-xs dark:shadow-md dark:shadow-black/25 cursor-pointer group flex flex-col gap-3 relative overflow-hidden"
@@ -171,12 +170,6 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                             {isBreak ? <ShieldAlert className="w-2.5 h-2.5" /> : <Sprout className="w-2.5 h-2.5" />}
                             <span>{isBreak ? 'BREAK' : 'BUILD'}</span>
                           </span>
-                          {h.currentTier && h.currentTier > 1 && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold font-mono flex items-center gap-0.5">
-                              <Crown className="w-2.5 h-2.5 fill-amber-500" />
-                              <span>T{h.currentTier}</span>
-                            </span>
-                          )}
                         </div>
 
                         <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-sans flex-wrap">
@@ -243,28 +236,48 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Core Metrics Row - Minimalist Icon + Value Aesthetic */}
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-750 font-mono">
-                    {/* Streak */}
-                    <div className="py-2 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1.5 shadow-2xs">
-                      <Flame className="w-4 h-4 fill-amber-500 text-amber-500 flex-shrink-0" />
+                  {/* Core Metrics Row - 4 Balanced Clean Metric Pills with Level */}
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-750 font-mono">
+                    {/* Streak (Icon + Number) */}
+                    <div
+                      className="py-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1 shadow-2xs"
+                      title="Current Streak"
+                    >
+                      <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
-                        {stats.currentStreak}d
+                        {stats.currentStreak}
                       </span>
                     </div>
 
-                    {/* Score XP */}
-                    <div className="py-2 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1.5 shadow-2xs">
-                      <Zap className="w-4 h-4 fill-emerald-500 text-emerald-500 flex-shrink-0" />
+                    {/* Score (Icon + Number) */}
+                    <div
+                      className="py-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1 shadow-2xs"
+                      title="Momentum Score"
+                    >
+                      <Zap className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
-                        {stats.currentScore} XP
+                        {stats.currentScore}
                       </span>
                     </div>
 
-                    {/* Target Goal */}
-                    <div className="py-2 px-2.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1.5 shadow-2xs">
-                      <Target className="w-4 h-4 text-cyan-500 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
+                    {/* Level (Icon + Number) */}
+                    <div
+                      className="py-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1 shadow-2xs"
+                      title="Habit Level"
+                    >
+                      <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-500 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 tracking-tight">
+                        {h.currentTier || 1}
+                      </span>
+                    </div>
+
+                    {/* Target Goal Progress */}
+                    <div
+                      className="py-1.5 px-1.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1 shadow-2xs"
+                      title="Target Goal Progress"
+                    >
+                      <Target className="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" />
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-tight">
                         {stats.currentGoalStreak}/{targetDays} D
                       </span>
                     </div>

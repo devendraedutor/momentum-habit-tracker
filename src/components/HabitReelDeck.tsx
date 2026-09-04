@@ -143,10 +143,10 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
 
             <span className="text-slate-300 dark:text-slate-600">•</span>
 
-            {/* Lifetime XP Badge */}
-            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium" title={`Lifetime XP: ${stats.currentScore} XP`}>
+            {/* Lifetime Score Badge */}
+            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium" title={`Lifetime Score: ${stats.currentScore}`}>
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>{stats.currentScore} XP</span>
+              <span>{stats.currentScore}</span>
             </span>
 
             {/* Engaging Near Goal Indicator */}
@@ -697,20 +697,20 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                       </p>
                     )}
 
-                    {/* Clean XP & Universal Flame Streak Pill */}
+                    {/* Clean Score & Universal Flame Streak Pill */}
                     <div className="mt-3 flex items-center gap-3.5 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-750 shadow-xs">
-                      {/* XP without plus symbol */}
+                      {/* Score without XP text */}
                       <div className="text-base sm:text-lg font-extrabold font-mono text-slate-900 dark:text-slate-100 flex items-center gap-1">
                         <Zap className="w-4 h-4 text-amber-500" />
-                        <span>{currentStats?.currentScore ?? 0} XP</span>
+                        <span>{currentStats?.currentScore ?? 0}</span>
                       </div>
 
                       <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
 
-                      {/* Universal Flame Streak */}
+                      {/* Universal Flame Streak without d/D text */}
                       <div className="text-base sm:text-lg font-extrabold font-mono text-amber-500 dark:text-amber-400 flex items-center gap-1">
                         <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
-                        <span>{currentStats?.currentStreak ?? 0}d</span>
+                        <span>{currentStats?.currentStreak ?? 0}</span>
                       </div>
                     </div>
                   </div>
@@ -736,7 +736,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                         }`}>
                           {displayStreak}
                         </span>
-                        <span className="text-slate-400 dark:text-slate-500 font-semibold"> / {targetGoalDays}</span>
+                        <span className="text-slate-400 dark:text-slate-500 font-semibold"> / {targetGoalDays} D</span>
                       </div>
                     </div>
 

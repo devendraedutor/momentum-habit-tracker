@@ -63,27 +63,21 @@ export const JumboUnlockModal: React.FC<JumboUnlockModalProps> = ({
 
         {/* 2 Clean Micro-Cards */}
         <div className="mt-4 grid grid-cols-2 gap-2 text-left relative z-10">
-          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25">
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col justify-center">
             <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block font-mono">
-              Daily Reward
+              Reward
             </span>
-            <span className="text-sm font-black text-slate-900 dark:text-white font-mono mt-0.5 block">
+            <span className="text-sm font-black text-slate-900 dark:text-white font-mono mt-1 block">
               +1 💎 Point
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-              100% All Done
             </span>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col justify-center">
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-mono">
               Requirement
             </span>
-            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 block">
+            <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1 block">
               ≥ 3 Habits
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-              Unlocked Now ✓
             </span>
           </div>
         </div>

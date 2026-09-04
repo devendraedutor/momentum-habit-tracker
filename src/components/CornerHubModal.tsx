@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Habit, UserSettings, ChartTimeRange } from '../types/habit';
 import type { Tester } from '../config/testers';
 import { DashboardStats } from './DashboardStats';
@@ -87,6 +87,12 @@ export const CornerHubModal: React.FC<CornerHubModalProps> = ({
 
   // Granular Reset Dialog State
   const [activeResetModal, setActiveResetModal] = useState<'history' | 'today' | 'factory' | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab('analytics');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

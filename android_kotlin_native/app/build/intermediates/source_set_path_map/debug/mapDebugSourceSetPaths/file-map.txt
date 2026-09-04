@@ -1,0 +1,58 @@
+com.flux.habittracker.app-navigation-common-2.8.7-0 /Users/macbook/.gradle/caches/9.7.1/transforms/07406c19596c7e380e752e1ea57e5489/transformed/navigation-common-2.8.7/res
+com.flux.habittracker.app-material-release-1 /Users/macbook/.gradle/caches/9.7.1/transforms/089ee55695c13525fdcae49e5df726f4/transformed/material-release/res
+com.flux.habittracker.app-savedstate-ktx-1.2.1-2 /Users/macbook/.gradle/caches/9.7.1/transforms/15148e94c3c3585dc8eda972d5961193/transformed/savedstate-ktx-1.2.1/res
+com.flux.habittracker.app-ui-tooling-preview-release-3 /Users/macbook/.gradle/caches/9.7.1/transforms/1810dbf7d6ca113ab17716c5f9d26994/transformed/ui-tooling-preview-release/res
+com.flux.habittracker.app-lifecycle-viewmodel-savedstate-2.8.7-4 /Users/macbook/.gradle/caches/9.7.1/transforms/1bab9d64bffd67a4d0bb2fec7caf311c/transformed/lifecycle-viewmodel-savedstate-2.8.7/res
+com.flux.habittracker.app-lifecycle-runtime-release-5 /Users/macbook/.gradle/caches/9.7.1/transforms/1c0ac9d6b1a55d9742454fa48979664a/transformed/lifecycle-runtime-release/res
+com.flux.habittracker.app-savedstate-1.2.1-6 /Users/macbook/.gradle/caches/9.7.1/transforms/2011a715a684c409ee3a84e5c18e9512/transformed/savedstate-1.2.1/res
+com.flux.habittracker.app-startup-runtime-1.1.1-7 /Users/macbook/.gradle/caches/9.7.1/transforms/233b13a41e5dfb53928f350d734f24e4/transformed/startup-runtime-1.1.1/res
+com.flux.habittracker.app-ui-tooling-release-8 /Users/macbook/.gradle/caches/9.7.1/transforms/2d25c485ab17dc644a7f63beb9cec275/transformed/ui-tooling-release/res
+com.flux.habittracker.app-core-ktx-1.15.0-9 /Users/macbook/.gradle/caches/9.7.1/transforms/2d8a98d02fe6a5a079103095b0643399/transformed/core-ktx-1.15.0/res
+com.flux.habittracker.app-lifecycle-runtime-compose-release-10 /Users/macbook/.gradle/caches/9.7.1/transforms/30f5c43fad98880aa9c1ebc5d56fecb5/transformed/lifecycle-runtime-compose-release/res
+com.flux.habittracker.app-lifecycle-viewmodel-ktx-2.8.7-11 /Users/macbook/.gradle/caches/9.7.1/transforms/357f6b932de71a0febf268844485c5fc/transformed/lifecycle-viewmodel-ktx-2.8.7/res
+com.flux.habittracker.app-runtime-saveable-release-12 /Users/macbook/.gradle/caches/9.7.1/transforms/3e3a75b043806764ec8ffbd158cc5f9c/transformed/runtime-saveable-release/res
+com.flux.habittracker.app-datastore-release-13 /Users/macbook/.gradle/caches/9.7.1/transforms/42d70c49cb5de33d5eb4cb94319b7683/transformed/datastore-release/res
+com.flux.habittracker.app-runtime-release-14 /Users/macbook/.gradle/caches/9.7.1/transforms/441d401a0b3b65716089b2aff781e83b/transformed/runtime-release/res
+com.flux.habittracker.app-lifecycle-livedata-core-2.8.7-15 /Users/macbook/.gradle/caches/9.7.1/transforms/5175a5806fe7562586b3d60006e82fab/transformed/lifecycle-livedata-core-2.8.7/res
+com.flux.habittracker.app-activity-1.10.0-16 /Users/macbook/.gradle/caches/9.7.1/transforms/542ceadcd59ea90882fced162299f478/transformed/activity-1.10.0/res
+com.flux.habittracker.app-ui-geometry-release-17 /Users/macbook/.gradle/caches/9.7.1/transforms/58a35f59b43efbc09e0964b2c0b1be68/transformed/ui-geometry-release/res
+com.flux.habittracker.app-navigation-runtime-2.8.7-18 /Users/macbook/.gradle/caches/9.7.1/transforms/5b965d1f9df82b6d660092ed6036aae9/transformed/navigation-runtime-2.8.7/res
+com.flux.habittracker.app-foundation-layout-release-19 /Users/macbook/.gradle/caches/9.7.1/transforms/5bd665722d7cae979643a7110f5f2bc0/transformed/foundation-layout-release/res
+com.flux.habittracker.app-ui-text-release-20 /Users/macbook/.gradle/caches/9.7.1/transforms/603129a555d2b21a93c056ba423e0368/transformed/ui-text-release/res
+com.flux.habittracker.app-ui-util-release-21 /Users/macbook/.gradle/caches/9.7.1/transforms/6249be8e0252819cb7fbf805a35e595e/transformed/ui-util-release/res
+com.flux.habittracker.app-graphics-path-1.0.1-22 /Users/macbook/.gradle/caches/9.7.1/transforms/67bb548e175ef0de8829485dd7d43b28/transformed/graphics-path-1.0.1/res
+com.flux.habittracker.app-material-icons-extended-release-23 /Users/macbook/.gradle/caches/9.7.1/transforms/6820b72ee0398140fd289da9fe952522/transformed/material-icons-extended-release/res
+com.flux.habittracker.app-core-1.15.0-24 /Users/macbook/.gradle/caches/9.7.1/transforms/719bf239a204ef75fe3f26ca93f5fdab/transformed/core-1.15.0/res
+com.flux.habittracker.app-navigation-common-ktx-2.8.7-25 /Users/macbook/.gradle/caches/9.7.1/transforms/71cbd05036aabffb52dc10f821527be6/transformed/navigation-common-ktx-2.8.7/res
+com.flux.habittracker.app-lifecycle-process-2.8.7-26 /Users/macbook/.gradle/caches/9.7.1/transforms/721100eeab1778b518b8a372d41b2ea3/transformed/lifecycle-process-2.8.7/res
+com.flux.habittracker.app-activity-ktx-1.10.0-27 /Users/macbook/.gradle/caches/9.7.1/transforms/81a0b1f53efb9bbe16fcfee3048e682c/transformed/activity-ktx-1.10.0/res
+com.flux.habittracker.app-lifecycle-viewmodel-release-28 /Users/macbook/.gradle/caches/9.7.1/transforms/88ac62fd0692f045634caa29f78f7725/transformed/lifecycle-viewmodel-release/res
+com.flux.habittracker.app-datastore-core-release-29 /Users/macbook/.gradle/caches/9.7.1/transforms/8cd998c0aad6c6412c2cb7744c3365c0/transformed/datastore-core-release/res
+com.flux.habittracker.app-animation-release-30 /Users/macbook/.gradle/caches/9.7.1/transforms/943712b7d2e7f304273b1df90b69cf99/transformed/animation-release/res
+com.flux.habittracker.app-navigation-compose-2.8.7-31 /Users/macbook/.gradle/caches/9.7.1/transforms/96dfb3a7832ba88c43b079732008f861/transformed/navigation-compose-2.8.7/res
+com.flux.habittracker.app-navigation-runtime-ktx-2.8.7-32 /Users/macbook/.gradle/caches/9.7.1/transforms/9a3a9ab3647ae570692458627214f635/transformed/navigation-runtime-ktx-2.8.7/res
+com.flux.habittracker.app-ui-unit-release-33 /Users/macbook/.gradle/caches/9.7.1/transforms/9c708965a3cb4a2f46c250c61c755cac/transformed/ui-unit-release/res
+com.flux.habittracker.app-material3-release-34 /Users/macbook/.gradle/caches/9.7.1/transforms/aaa8ced7a614c6ed9d8d14559a5e742b/transformed/material3-release/res
+com.flux.habittracker.app-core-runtime-2.2.0-35 /Users/macbook/.gradle/caches/9.7.1/transforms/ace30099b55d9950f6aa2ae28e3be29e/transformed/core-runtime-2.2.0/res
+com.flux.habittracker.app-material-ripple-release-36 /Users/macbook/.gradle/caches/9.7.1/transforms/ad6f250a3ebef984330f04f21b3a3213/transformed/material-ripple-release/res
+com.flux.habittracker.app-lifecycle-runtime-ktx-release-37 /Users/macbook/.gradle/caches/9.7.1/transforms/afc2a07d803f30dbb619548140903bd8/transformed/lifecycle-runtime-ktx-release/res
+com.flux.habittracker.app-ui-release-38 /Users/macbook/.gradle/caches/9.7.1/transforms/b3204267c706e61fd8125b9965b24ed9/transformed/ui-release/res
+com.flux.habittracker.app-lifecycle-viewmodel-compose-release-39 /Users/macbook/.gradle/caches/9.7.1/transforms/b46c4d0bc1409fc5266f6a9bb6075697/transformed/lifecycle-viewmodel-compose-release/res
+com.flux.habittracker.app-profileinstaller-1.4.0-40 /Users/macbook/.gradle/caches/9.7.1/transforms/b52e4e33f902635143c2ecbecc7ecc19/transformed/profileinstaller-1.4.0/res
+com.flux.habittracker.app-activity-compose-1.10.0-41 /Users/macbook/.gradle/caches/9.7.1/transforms/b7daf1addf28111f001bb78d78638a2d/transformed/activity-compose-1.10.0/res
+com.flux.habittracker.app-ui-graphics-release-42 /Users/macbook/.gradle/caches/9.7.1/transforms/b850e730b14628c2b977a1a44d992327/transformed/ui-graphics-release/res
+com.flux.habittracker.app-customview-poolingcontainer-1.0.0-43 /Users/macbook/.gradle/caches/9.7.1/transforms/c11aab15d041243803a7cdec1dbfb748/transformed/customview-poolingcontainer-1.0.0/res
+com.flux.habittracker.app-material-icons-core-release-44 /Users/macbook/.gradle/caches/9.7.1/transforms/cb1da3e1bff62d479a15a89e07d7ae05/transformed/material-icons-core-release/res
+com.flux.habittracker.app-tracing-1.2.0-45 /Users/macbook/.gradle/caches/9.7.1/transforms/cb2af67aaf64028b4f1bc7e517947bf7/transformed/tracing-1.2.0/res
+com.flux.habittracker.app-annotation-experimental-1.4.1-46 /Users/macbook/.gradle/caches/9.7.1/transforms/e388b13943693a99b0202c59beb6d43d/transformed/annotation-experimental-1.4.1/res
+com.flux.habittracker.app-animation-core-release-47 /Users/macbook/.gradle/caches/9.7.1/transforms/ed19a595de6b9e5e735fbb3c83ca69ed/transformed/animation-core-release/res
+com.flux.habittracker.app-datastore-preferences-release-48 /Users/macbook/.gradle/caches/9.7.1/transforms/ef9de54d91a60b574d5f1859119183db/transformed/datastore-preferences-release/res
+com.flux.habittracker.app-ui-tooling-data-release-49 /Users/macbook/.gradle/caches/9.7.1/transforms/f63b43d99b09d7abc6c0e8b759c7ce4e/transformed/ui-tooling-data-release/res
+com.flux.habittracker.app-emoji2-1.3.0-50 /Users/macbook/.gradle/caches/9.7.1/transforms/fb00db4ade6b397bdae0df6c0650ab7b/transformed/emoji2-1.3.0/res
+com.flux.habittracker.app-foundation-release-51 /Users/macbook/.gradle/caches/9.7.1/transforms/fcabc181471df90e00b7c738a5d5a01b/transformed/foundation-release/res
+com.flux.habittracker.app-resValues-52 /Users/macbook/Documents/Projects/Habit Tracker/android/app/build/generated/res/resValues/debug
+com.flux.habittracker.app-packageDebugResources-53 /Users/macbook/Documents/Projects/Habit Tracker/android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.flux.habittracker.app-packageDebugResources-54 /Users/macbook/Documents/Projects/Habit Tracker/android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.flux.habittracker.app-debug-55 /Users/macbook/Documents/Projects/Habit Tracker/android/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.flux.habittracker.app-debug-56 /Users/macbook/Documents/Projects/Habit Tracker/android/app/src/debug/res
+com.flux.habittracker.app-main-57 /Users/macbook/Documents/Projects/Habit Tracker/android/app/src/main/res

@@ -19,7 +19,7 @@ import { sound } from './lib/audio';
 import { getTodayString, calculateHabitStats } from './lib/momentum';
 import { Navbar } from './components/Navbar';
 import { HabitReelDeck } from './components/HabitReelDeck';
-import { CornerHubModal } from './components/CornerHubModal';
+
 import { HabitFormModal } from './components/HabitFormModal';
 import { HabitDetailModal } from './components/HabitDetailModal';
 import { MilestoneAscensionModal } from './components/MilestoneAscensionModal';
@@ -27,6 +27,7 @@ import { JumboUnlockModal } from './components/JumboUnlockModal';
 import { HabitDirectoryModal } from './components/HabitDirectoryModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AuthGateModal } from './components/AuthGateModal';
+import { HabitLaunchCelebration } from './components/HabitLaunchCelebration';
 import confetti from 'canvas-confetti';
 
 export function App() {
@@ -58,6 +59,11 @@ export function App() {
   const [selectedDetailHabit, setSelectedDetailHabit] = useState<Habit | null>(null);
   const [ascendHabit, setAscendHabit] = useState<Habit | null>(null);
   const [isJumboUnlockModalOpen, setIsJumboUnlockModalOpen] = useState(false);
+  const [habitCreatedCelebration, setHabitCreatedCelebration] = useState<{
+    habitName: string;
+    habitIcon: string;
+    habitColor: string;
+  } | null>(null);
 
   // Chart state for Hub
   const [selectedChartHabitId, setSelectedChartHabitId] = useState<string | 'all'>('all');
@@ -222,6 +228,16 @@ export function App() {
     setIsHubOpen(true);
     window.history.pushState({ activeDate: activeDateStr, modal: 'hub' }, '');
   }, [activeDateStr]);
+
+  const handleSelectHabitFromDirectory = useCallback(
+    (habit: Habit) => {
+      setSelectedChartHabitId(habit.id);
+      setIsDirectoryOpen(false);
+      setIsHubOpen(true);
+      window.history.replaceState({ activeDate: activeDateStr, modal: 'hub', habitId: habit.id }, '');
+    },
+    [activeDateStr]
+  );
 
   const closeHub = useCallback(() => {
     setIsHubOpen(false);
@@ -441,8 +457,15 @@ export function App() {
         }
       }
 
+      // Trigger distinct 400ms Habit Launch celebration
+      setHabitCreatedCelebration({
+        habitName: newHabit.name,
+        habitIcon: newHabit.icon,
+        habitColor: newHabit.color,
+      });
+
       if (settings.soundEffects) {
-        sound.playMilestone();
+        sound.playHabitLaunch();
       }
     }
     closeHabitForm();
@@ -528,45 +551,20 @@ export function App() {
         />
       </main>
 
-      {/* Footer */}
-      <footer className="py-3 text-center text-xs text-slate-400 dark:text-slate-500 font-mono border-t border-slate-200 dark:border-slate-800">
-        <p>Flux Habit Tracker • Daily Score Momentum • Instant Multi-Day Testing</p>
-      </footer>
 
-      {/* Corner Hub & Analytics Drawer */}
-      <CornerHubModal
-        isOpen={isHubOpen}
-        onClose={closeHub}
-        habits={habits}
-        settings={settings}
-        tester={activeTester}
-        onLogout={handleLogout}
-        jumboPointsCount={jumboDates.length}
-        onUpdateSettings={setSettings}
-        onOpenNewHabit={() => openHabitForm(null)}
-        onEditHabit={openHabitForm}
-        onArchiveHabit={handleArchiveHabit}
-        onDeleteHabit={handleDeleteHabit}
-        onRestoreHabits={setHabits}
-        onClearHistoryOnly={handleClearHistoryOnly}
-        onResetActiveDateCheckIns={handleResetActiveDateCheckIns}
-        onFactoryReset={handleFactoryReset}
-        timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-        selectedChartHabitId={selectedChartHabitId}
-        onSelectChartHabitId={setSelectedChartHabitId}
-        onSelectHabitProfile={openDetailModal}
-      />
 
-      {/* Habit Create / Edit Modal (Key ensures fresh form state every time) */}
-      <HabitFormModal
-        key={editingHabit ? `edit-${editingHabit.id}` : `new-habit-${activeDateStr}`}
-        isOpen={isHabitFormOpen}
-        onClose={closeHabitForm}
-        onSave={handleSaveHabit}
-        initialHabit={editingHabit}
-        defaultStartDate={activeDateStr}
-      />
+
+      {/* Habit Create / Edit Modal (Mounts fresh instance with today's date) */}
+      {isHabitFormOpen && (
+        <HabitFormModal
+          key={editingHabit ? `edit-${editingHabit.id}` : `new-habit-${Date.now()}`}
+          isOpen={isHabitFormOpen}
+          onClose={closeHabitForm}
+          onSave={handleSaveHabit}
+          initialHabit={editingHabit}
+          defaultStartDate={getTodayString()}
+        />
+      )}
 
       {/* Single Habit Detail View */}
       <HabitDetailModal
@@ -606,7 +604,7 @@ export function App() {
         onOpenNewHabit={() => openHabitForm(null)}
         onEditHabit={openHabitForm}
         onDeleteHabit={handleDeleteHabit}
-        onSelectHabitProfile={openDetailModal}
+        onSelectHabitProfile={handleSelectHabitFromDirectory}
         floorAtZero={settings.floorAtZero}
       />
 
@@ -625,6 +623,16 @@ export function App() {
         onClearHistoryOnly={handleClearHistoryOnly}
         onFactoryReset={handleFactoryReset}
       />
+
+      {/* Distinct 400ms Habit Launch Shockwave & Energy Burst Celebration */}
+      {habitCreatedCelebration && (
+        <HabitLaunchCelebration
+          habitName={habitCreatedCelebration.habitName}
+          habitIcon={habitCreatedCelebration.habitIcon}
+          habitColor={habitCreatedCelebration.habitColor}
+          onComplete={() => setHabitCreatedCelebration(null)}
+        />
+      )}
     </div>
   );
 }

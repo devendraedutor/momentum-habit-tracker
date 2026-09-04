@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.flux.habittracker.app-mergeDebugResources-54:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "/Users/macbook/.gradle/caches/9.7.1/transforms/aaa8ced7a614c6ed9d8d14559a5e742b/transformed/material3-release/res/values-v30/values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}
