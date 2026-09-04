@@ -205,7 +205,11 @@ export function App() {
     (habit: Habit | null = null) => {
       setEditingHabit(habit);
       setIsHabitFormOpen(true);
-      window.history.pushState({ activeDate: activeDateStr, modal: 'habit-form' }, '');
+      if (window.history.state?.modal === 'directory' || window.history.state?.modal === 'detail') {
+        window.history.replaceState({ activeDate: activeDateStr, modal: 'habit-form' }, '');
+      } else {
+        window.history.pushState({ activeDate: activeDateStr, modal: 'habit-form' }, '');
+      }
     },
     [activeDateStr]
   );
@@ -217,6 +221,19 @@ export function App() {
       window.history.back();
     }
   }, []);
+
+  const handleOpenNewHabitFromDirectory = useCallback(() => {
+    setIsDirectoryOpen(false);
+    openHabitForm(null);
+  }, [openHabitForm]);
+
+  const handleEditHabitFromDirectory = useCallback(
+    (habit: Habit) => {
+      setIsDirectoryOpen(false);
+      openHabitForm(habit);
+    },
+    [openHabitForm]
+  );
 
   const handleSelectHabitFromDirectory = useCallback(
     (habit: Habit) => {
@@ -559,8 +576,8 @@ export function App() {
         isOpen={isDirectoryOpen}
         onClose={closeDirectory}
         habits={habits}
-        onOpenNewHabit={() => openHabitForm(null)}
-        onEditHabit={openHabitForm}
+        onOpenNewHabit={handleOpenNewHabitFromDirectory}
+        onEditHabit={handleEditHabitFromDirectory}
         onDeleteHabit={handleDeleteHabit}
         onSelectHabitProfile={handleSelectHabitFromDirectory}
         floorAtZero={settings.floorAtZero}

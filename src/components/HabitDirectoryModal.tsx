@@ -76,7 +76,6 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                onClose();
                 onOpenNewHabit();
               }}
               className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
@@ -119,7 +118,6 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
               <p className="text-sm font-medium">No habits found.</p>
               <button
                 onClick={() => {
-                  onClose();
                   onOpenNewHabit();
                 }}
                 className="mt-3 px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold font-mono shadow-md cursor-pointer hover:bg-emerald-400 transition-all"
@@ -215,7 +213,6 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                           <button
                             type="button"
                             onClick={() => {
-                              onClose();
                               onEditHabit(h);
                             }}
                             className="p-2 rounded-xl text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 transition-colors cursor-pointer"

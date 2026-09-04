@@ -197,8 +197,10 @@ export function calculateAggregateTrajectory(
   });
 }
 
-export function calculateHabitStats(habit: Habit, floorAtZero = false): HabitStats {
+export function calculateHabitStats(habit: Habit, floorAtZero = false, asOfDateStr?: string): HabitStats {
   const endDateStr = getEffectiveEndDate(habit);
+  const targetEnd = asOfDateStr || endDateStr;
+  const startDate = getEffectiveStartDate(habit);
   const trajectory = calculateHabitTrajectory(habit, 'all', floorAtZero);
 
   let totalDone = 0;
@@ -209,6 +211,8 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false): HabitSta
   let tempStreak = 0;
 
   trajectory.forEach((pt) => {
+    if (asOfDateStr && pt.date > asOfDateStr) return;
+
     if (pt.score > highestScore) highestScore = pt.score;
     if (pt.score < lowestScore) lowestScore = pt.score;
     if (pt.status === 'done') {
@@ -225,25 +229,27 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false): HabitSta
   const currentScore = baseScore + (habit.bonusXP || 0);
   if (currentScore > highestScore) highestScore = currentScore;
 
-  // Calculate current active streak backwards from the latest effective date
+  // Calculate active streak backwards from targetEnd (supports retroactive multi-day check-ins)
   let currentStreak = 0;
-  const allDatesDesc = getDateRange(getEffectiveStartDate(habit), endDateStr).reverse();
+  if (startDate <= targetEnd) {
+    const allDatesDesc = getDateRange(startDate, targetEnd).reverse();
 
-  for (let i = 0; i < allDatesDesc.length; i++) {
-    const d = allDatesDesc[i];
-    const status = habit.history[d];
+    for (let i = 0; i < allDatesDesc.length; i++) {
+      const d = allDatesDesc[i];
+      const status = habit.history?.[d];
 
-    // If today is not logged yet at index 0, check from yesterday
-    if (i === 0 && (!status || status === 'none')) {
-      continue;
-    }
+      // If evaluating the targetEnd date at index 0 and it is not logged yet, check yesterday's ongoing streak
+      if (i === 0 && (!status || status === 'none')) {
+        continue;
+      }
 
-    if (status === 'done') {
-      currentStreak++;
-    } else if (status === 'missed') {
-      break; // missed breaks streak
-    } else {
-      break; // unlogged past day breaks streak
+      if (status === 'done') {
+        currentStreak++;
+      } else if (status === 'missed') {
+        break; // missed breaks streak
+      } else {
+        break; // unlogged past day breaks streak
+      }
     }
   }
 

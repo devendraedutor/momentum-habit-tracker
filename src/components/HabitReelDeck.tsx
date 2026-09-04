@@ -57,40 +57,37 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   const currentStatus = h.history?.[activeDateStr];
   const isBreak = h.type === 'BREAK';
   const isDone = currentStatus === 'done';
-  const stats = calculateHabitStats(h, floorAtZero);
+  const stats = calculateHabitStats(h, floorAtZero, activeDateStr);
   const targetDays = h.targetGoalDays || 21;
   const goalStreak = stats.currentGoalStreak;
   const isGoalConquered = goalStreak >= targetDays && isDone;
   const daysRemaining = Math.max(0, targetDays - goalStreak);
   const isNearGoal = !isGoalConquered && isDone && (goalStreak / targetDays) >= 0.7 && daysRemaining > 0;
-  const isToday = activeDateStr === getTodayString();
-  const isDoneToday = isDone && isToday;
 
   // 1. Mount with Previous State:
-  // On initial render, set the visual streak state to `goalStreak - 1` (e.g., start at 2 instead of 3) if completed today
+  // On initial render, set the visual streak state to `goalStreak - 1` if completed on this active date so fill animates
   const [animatedStreak, setAnimatedStreak] = useState<number>(() => {
-    return isDoneToday && goalStreak > 0 ? goalStreak - 1 : (isDone ? goalStreak : 0);
+    return isDone && goalStreak > 0 ? goalStreak - 1 : (isDone ? goalStreak : 0);
   });
 
   // 2. Trigger the Fill After Screen Mount:
-  // Delayed useEffect gives the view time to render so the user clearly witnesses the bar filling
   React.useEffect(() => {
-    if (!isDoneToday) {
-      setAnimatedStreak(isDone ? goalStreak : 0);
+    if (!isDone) {
+      setAnimatedStreak(0);
       return;
     }
     const timer = setTimeout(() => {
       setAnimatedStreak(goalStreak);
-    }, 300 + idx * 80);
+    }, 200 + idx * 60);
 
     return () => clearTimeout(timer);
-  }, [goalStreak, isDoneToday, isDone, idx]);
+  }, [goalStreak, isDone, idx]);
 
   const railWidth = !isDone
     ? 0
     : Math.min(100, Math.round((animatedStreak / targetDays) * 100));
 
-  const isExpanded = animatedStreak === goalStreak && isDoneToday && goalStreak > 0;
+  const isExpanded = animatedStreak === goalStreak && isDone && goalStreak > 0;
 
   return (
     <div
@@ -191,7 +188,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
               } ${
                 isExpanded
                   ? 'scale-100 text-slate-900 dark:text-slate-100'
-                  : isDoneToday
+                  : isDone
                   ? 'scale-110 text-emerald-600 dark:text-emerald-400'
                   : ''
               }`}
@@ -582,7 +579,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
       ) : (
         /* Case 2: Active Card Deck Queue (1 habit card at a time for active date) */
         (() => {
-          const currentStats = currentCard ? calculateHabitStats(currentCard, floorAtZero) : null;
+          const currentStats = currentCard ? calculateHabitStats(currentCard, floorAtZero, activeDateStr) : null;
           const targetGoalDays = currentCard?.targetGoalDays || 21;
           const initialStreak = currentStats ? currentStats.currentGoalStreak : 0;
           const targetStreak = initialStreak + 1;
