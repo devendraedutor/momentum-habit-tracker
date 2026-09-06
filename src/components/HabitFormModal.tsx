@@ -3,10 +3,10 @@ import type { Habit, HabitType } from '../types/habit';
 import { AVAILABLE_ICONS, DynamicIcon } from './DynamicIcon';
 import { loadCategoriesFromStorage, saveCategoriesToStorage } from '../lib/storage';
 import { getTodayString } from '../lib/momentum';
+import { DEFAULT_START_TARGET_DAYS } from '../config/progression';
 import {
   X,
   Check,
-  Target,
   Plus,
   Trash2,
   ShieldAlert,
@@ -77,8 +77,6 @@ const PRESET_COLORS = [
   { name: 'Neon Blush', hex: '#f472b6' },
 ];
 
-const TARGET_PRESETS = [7, 14, 21, 30, 66];
-
 export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   isOpen,
   onClose,
@@ -86,7 +84,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   initialHabit,
   defaultStartDate,
 }) => {
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
   const [habitType, setHabitType] = useState<HabitType>('BUILD');
   const [name, setName] = useState('');
@@ -98,9 +96,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [icon, setIcon] = useState('Flame');
   const [color, setColor] = useState('#06b6d4');
-  const [targetGoalDays, setTargetGoalDays] = useState<number>(21);
-  const [isCustomTarget, setIsCustomTarget] = useState(false);
-  const [customTargetInput, setCustomTargetInput] = useState('');
+  const [targetGoalDays, setTargetGoalDays] = useState<number>(DEFAULT_START_TARGET_DAYS);
   const [startDate, setStartDate] = useState<string>(() => initialHabit?.startDate || getTodayString());
 
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -125,15 +121,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
           initialHabit.createdAt?.split('T')[0] ||
           todayStr
       );
-      const target = initialHabit.targetGoalDays || 21;
-      setTargetGoalDays(target);
-      if (!TARGET_PRESETS.includes(target)) {
-        setIsCustomTarget(true);
-        setCustomTargetInput(String(target));
-      } else {
-        setIsCustomTarget(false);
-        setCustomTargetInput('');
-      }
+      setTargetGoalDays(initialHabit.targetGoalDays || DEFAULT_START_TARGET_DAYS);
     } else {
       setHabitType('BUILD');
       setName('');
@@ -142,10 +130,8 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       setSelectedCategory(loaded[0] || 'Productivity');
       setIcon('Flame');
       setColor('#06b6d4');
-      setTargetGoalDays(21);
+      setTargetGoalDays(DEFAULT_START_TARGET_DAYS);
       setStartDate(getTodayString());
-      setIsCustomTarget(false);
-      setCustomTargetInput('');
     }
   }, [initialHabit, isOpen, defaultStartDate]);
 
@@ -158,7 +144,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
 
   if (!isOpen) return null;
 
-  const goToStep = (next: 1 | 2 | 3) => {
+  const goToStep = (next: 1 | 2) => {
     if (next > currentStep) {
       setStepDirection('forward');
     } else {
@@ -190,21 +176,6 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
     }
   };
 
-  const handleSelectPresetTarget = (days: number) => {
-    setTargetGoalDays(days);
-    setIsCustomTarget(false);
-    setCustomTargetInput('');
-  };
-
-  const handleCustomTargetChange = (val: string) => {
-    setCustomTargetInput(val);
-    setIsCustomTarget(true);
-    const num = parseInt(val, 10);
-    if (!isNaN(num) && num > 0) {
-      setTargetGoalDays(num);
-    }
-  };
-
   const handleFinalSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!name.trim()) {
@@ -221,7 +192,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       icon,
       color,
       startDate: startDate || getTodayString(),
-      targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : 21,
+      targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : DEFAULT_START_TARGET_DAYS,
     });
   };
 
@@ -239,11 +210,11 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       icon,
       color,
       startDate: startDate || getTodayString(),
-      targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : 21,
+      targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : DEFAULT_START_TARGET_DAYS,
     });
   };
 
-  const progressPercentage = currentStep === 1 ? 33.33 : currentStep === 2 ? 66.66 : 100;
+  const progressPercentage = currentStep === 1 ? 50 : 100;
   const slideAnimationClass = stepDirection === 'forward' ? 'animate-slide-right' : 'animate-slide-left';
 
   return (
@@ -252,14 +223,14 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
         className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in relative"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 1. Modal Header (Clean & Uncluttered) */}
+        {/* 1. Modal Header */}
         <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
-          {/* Top Left: Back Button on Steps 2 and 3 */}
+          {/* Top Left: Back Button on Step 2 */}
           <div className="w-16">
             {currentStep > 1 && (
               <button
                 type="button"
-                onClick={() => goToStep((currentStep - 1) as 1 | 2)}
+                onClick={() => goToStep(1)}
                 className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer py-1 px-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-mono"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -285,13 +256,13 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
           </div>
         </div>
 
-        {/* 2. Step Content Container with Directional Slide Transition */}
+        {/* 2. Step Content Container */}
         <div className="p-5 sm:p-6 overflow-y-auto max-h-[68vh] min-h-[350px] flex flex-col justify-between">
           <div key={currentStep} className={slideAnimationClass}>
-            {/* ================= STEP 1: Identity & Core Quest ================= */}
+            {/* ================= STEP 1: Identity, Name & Start Date ================= */}
             {currentStep === 1 && (
               <div className="space-y-4">
-                {/* Habit Goal Paradigm: Build vs Break with Fluid Springy Toggle */}
+                {/* Habit Goal Paradigm: Build vs Break */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 font-mono">
                     Habit Goal Paradigm <span className="text-emerald-500">*</span>
@@ -357,6 +328,34 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   />
                 </div>
 
+                {/* Start Tracking From Date Picker (Moved to Step 1 per user request) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 font-mono">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                      <span>Start Tracking From</span>
+                    </span>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white text-xs sm:text-sm font-mono font-bold transition-all shadow-2xs"
+                    />
+                    {startDate !== getTodayString() && (
+                      <button
+                        type="button"
+                        onClick={() => setStartDate(getTodayString())}
+                        className="px-4 py-2.5 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 text-xs font-bold font-mono transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs"
+                      >
+                        Today
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Collapsible Description / Motivation */}
                 <div>
                   <button
@@ -392,100 +391,8 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
               </div>
             )}
 
-            {/* ================= STEP 2: Milestone & Timeline ================= */}
+            {/* ================= STEP 2: Visual Identity & Category ================= */}
             {currentStep === 2 && (
-              <div className="space-y-5">
-                {/* Target Goal Days */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono flex items-center gap-1.5">
-                      <Target className="w-3.5 h-3.5 text-cyan-500" />
-                      <span>Target Goal Days</span>
-                    </label>
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 font-bold">
-                      {targetGoalDays} Days Goal
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                    {TARGET_PRESETS.map((days) => (
-                      <button
-                        key={days}
-                        type="button"
-                        onClick={() => handleSelectPresetTarget(days)}
-                        className={`py-2 px-2 rounded-xl text-xs font-bold font-mono transition-all duration-200 border cursor-pointer hover:scale-105 active:scale-95 select-none ${
-                          !isCustomTarget && targetGoalDays === days
-                            ? 'bg-cyan-500 text-slate-950 border-cyan-500 shadow-sm shadow-cyan-500/30 font-black'
-                            : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300'
-                        }`}
-                      >
-                        {days} D
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCustomTarget(true);
-                        if (!customTargetInput) setCustomTargetInput(String(targetGoalDays));
-                      }}
-                      className={`py-2 px-2 rounded-xl text-xs font-bold font-mono transition-all duration-200 border cursor-pointer hover:scale-105 active:scale-95 select-none ${
-                        isCustomTarget
-                          ? 'bg-cyan-500 text-slate-950 border-cyan-500 shadow-sm shadow-cyan-500/30 font-black'
-                          : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300'
-                      }`}
-                    >
-                      Custom
-                    </button>
-                  </div>
-
-                  {isCustomTarget && (
-                    <div className="mt-2 flex items-center gap-2 animate-fade-in">
-                      <input
-                        type="number"
-                        min={1}
-                        max={365}
-                        value={customTargetInput}
-                        onChange={(e) => handleCustomTargetChange(e.target.value)}
-                        placeholder="e.g. 45"
-                        className="w-28 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-xs font-mono font-bold text-slate-900 dark:text-white"
-                      />
-                      <span className="text-xs text-slate-500 font-mono">consecutive days goal</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Start Tracking From */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-cyan-500" />
-                      <span>Start Tracking From</span>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white text-xs sm:text-sm font-mono font-bold transition-all shadow-2xs"
-                    />
-                    {startDate !== getTodayString() && (
-                      <button
-                        type="button"
-                        onClick={() => setStartDate(getTodayString())}
-                        className="px-4 py-2.5 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 text-xs font-bold font-mono transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs animate-fade-in"
-                      >
-                        Today
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ================= STEP 3: Visual Identity & Category ================= */}
-            {currentStep === 3 && (
               <div className="space-y-4">
                 {/* Category Selector */}
                 <div>
@@ -626,7 +533,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
             ) : (
               <button
                 type="button"
-                onClick={() => goToStep((currentStep - 1) as 1 | 2)}
+                onClick={() => goToStep(1)}
                 className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-all active:scale-95 cursor-pointer font-mono"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -643,29 +550,18 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                 disabled={!name.trim()}
                 aria-label="Next Step"
                 title="Next"
-                className={`p-3 rounded-2xl font-bold text-xs font-mono flex items-center justify-center transition-all duration-200 shadow-md ${
+                className={`py-3 px-5 rounded-2xl font-bold text-xs font-mono flex items-center justify-center gap-2 transition-all duration-200 shadow-md ${
                   name.trim()
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 shadow-emerald-500/20 hover:scale-105 active:scale-95 cursor-pointer'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                 }`}
               >
-                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+                <span>Next</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </button>
             )}
 
             {currentStep === 2 && (
-              <button
-                type="button"
-                onClick={() => goToStep(3)}
-                aria-label="Next Step"
-                title="Next"
-                className="p-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-slate-950 font-bold text-xs font-mono flex items-center justify-center transition-all duration-200 shadow-md shadow-cyan-500/20 hover:scale-105 active:scale-95 cursor-pointer"
-              >
-                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
-              </button>
-            )}
-
-            {currentStep === 3 && (
               <div className="flex items-center gap-2">
                 {initialHabit && (
                   <button
@@ -681,7 +577,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   onClick={() => handleFinalSubmit()}
                   className="py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-sm font-mono shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer group relative overflow-hidden"
                 >
-                  {/* Subtle sheen highlight animation across button */}
+                  {/* Sheen highlight animation */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-bar-sheen pointer-events-none" />
                   
                   <Sparkles className="w-4 h-4 fill-slate-950 text-slate-950 transition-transform group-hover:rotate-12" />
@@ -693,7 +589,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
           </div>
         </div>
 
-        {/* 4. Subtle, Low-Profile Progress Bar (Anchored at very bottom edge) */}
+        {/* 4. Progress Bar */}
         <div className="w-full h-[2.5px] bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
           <div
             className="h-full bg-emerald-500/50 dark:bg-emerald-400/60 transition-all duration-300 ease-out"

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import type { Habit, CheckInStatus } from '../types/habit';
 import { calculateHabitStats, calculateHabitTrajectory, getTodayString } from '../lib/momentum';
 import { DynamicIcon } from './DynamicIcon';
@@ -6,46 +6,50 @@ import { Check, X, RotateCcw, Flame, MoreVertical, Edit2, Archive, Eye, Target }
 
 interface HabitCardProps {
   habit: Habit;
-  onCheckIn: (habitId: string, status: CheckInStatus) => void;
+  activeDateStr: string;
+  onCheckIn: (habitId: string, status: CheckInStatus, dateStr?: string) => void;
   onUndo: (habitId: string) => void;
   onOpenDetail: (habit: Habit) => void;
   onEdit: (habit: Habit) => void;
-  onArchive: (habitId: string) => void;
+  onDelete: (habitId: string) => void;
+  onArchiveToggle?: (habitId: string) => void;
   floorAtZero?: boolean;
 }
 
 export const HabitCard: React.FC<HabitCardProps> = ({
   habit,
+  activeDateStr,
   onCheckIn,
   onUndo,
   onOpenDetail,
   onEdit,
-  onArchive,
+  onArchiveToggle,
   floorAtZero = false,
 }) => {
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const menuRef = React.useRef<HTMLDivElement>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const todayStr = getTodayString();
   const todayStatus = habit.history[todayStr] || 'none';
   const isLoggedToday = todayStatus === 'done' || todayStatus === 'missed';
 
-  const stats = calculateHabitStats(habit, floorAtZero);
+  const stats = calculateHabitStats(habit, floorAtZero, activeDateStr);
   const recentPoints = calculateHabitTrajectory(habit, '7d', floorAtZero);
+  const targetDays = stats.targetGoalDays;
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
+        setIsMenuOpen(false);
       }
     };
-    if (menuOpen) {
+    if (isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [menuOpen]);
+  }, [isMenuOpen]);
 
   const sparklinePoints = React.useMemo(() => {
     if (recentPoints.length < 2) return '';
@@ -64,8 +68,6 @@ export const HabitCard: React.FC<HabitCardProps> = ({
       })
       .join(' ');
   }, [recentPoints]);
-
-  const targetDays = habit.targetGoalDays || 21;
 
   return (
     <div
@@ -94,7 +96,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                   {habit.category}
                 </span>
                 <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 whitespace-nowrap">
-                  <Target className="w-3 h-3 text-slate-400" /> Goal: {targetDays} D
+                  <Target className="w-3 h-3 text-cyan-500" /> Goal: {stats.currentGoalStreak}/{targetDays} D
                 </span>
               </div>
               <h3
@@ -109,18 +111,18 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
           <div className="relative" ref={menuRef}>
             <button
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="More Options"
             >
               <MoreVertical className="w-4 h-4" />
             </button>
 
-            {menuOpen && (
+            {isMenuOpen && (
               <div className="absolute right-0 top-full mt-1 w-40 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl z-30 animate-fade-in">
                 <button
                   onClick={() => {
-                    setMenuOpen(false);
+                    setIsMenuOpen(false);
                     onOpenDetail(habit);
                   }}
                   className="w-full px-3 py-2 text-xs text-left text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
@@ -129,22 +131,24 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    setMenuOpen(false);
+                    setIsMenuOpen(false);
                     onEdit(habit);
                   }}
                   className="w-full px-3 py-2 text-xs text-left text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"
                 >
                   <Edit2 className="w-3.5 h-3.5 text-amber-500" /> Edit Habit
                 </button>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onArchive(habit.id);
-                  }}
-                  className="w-full px-3 py-2 text-xs text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-700/80 flex items-center gap-2"
-                >
-                  <Archive className="w-3.5 h-3.5" /> Archive Habit
-                </button>
+                {onArchiveToggle && (
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onArchiveToggle(habit.id);
+                    }}
+                    className="w-full px-3 py-2 text-xs text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-700/80 flex items-center gap-2"
+                  >
+                    <Archive className="w-3.5 h-3.5" /> Archive Habit
+                  </button>
+                )}
               </div>
             )}
           </div>

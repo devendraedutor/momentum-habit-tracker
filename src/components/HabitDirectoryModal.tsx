@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { Habit } from '../types/habit';
 import { DynamicIcon } from './DynamicIcon';
 import { calculateHabitStats, formatDisplayDate } from '../lib/momentum';
+import { getTierByLevel } from '../config/progression';
 import {
   X,
   Plus,
@@ -129,7 +130,8 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
             filteredHabits.map((h) => {
               const isBreak = h.type === 'BREAK';
               const stats = calculateHabitStats(h, floorAtZero);
-              const targetDays = h.targetGoalDays || 21;
+              const activeTier = getTierByLevel(stats.activeTierLevel);
+              const targetDays = stats.targetGoalDays;
               const isDeleting = deletingHabitId === h.id;
               const startDateFormatted = formatDisplayDate(h.startDate || h.createdAt, true);
 
@@ -238,7 +240,7 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                     {/* Streak (Icon + Number) */}
                     <div
                       className="py-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1 shadow-2xs"
-                      title="Current Streak"
+                      title="Lifetime Streak"
                     >
                       <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 tracking-tight">
@@ -260,22 +262,22 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                     {/* Level (Icon + Number) */}
                     <div
                       className="py-1.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1 shadow-2xs"
-                      title="Habit Level"
+                      title={`Mastery Level ${stats.achievedLevel} (Target: Lv.${activeTier.level} ${activeTier.name})`}
                     >
                       <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 tracking-tight">
-                        {h.currentTier || 1}
+                        L{stats.achievedLevel}
                       </span>
                     </div>
 
                     {/* Target Goal Progress */}
                     <div
                       className="py-1.5 px-1.5 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center gap-1 shadow-2xs"
-                      title="Target Goal Progress"
+                      title={`Sprint Progress: ${stats.currentGoalStreak}/${targetDays} Days (Level ${activeTier.level})`}
                     >
                       <Target className="w-3.5 h-3.5 text-cyan-500 flex-shrink-0" />
                       <span className="text-xs font-black text-slate-800 dark:text-slate-200 tracking-tight">
-                        {stats.currentGoalStreak}/{targetDays} D
+                        {stats.currentGoalStreak} / {targetDays} D
                       </span>
                     </div>
                   </div>

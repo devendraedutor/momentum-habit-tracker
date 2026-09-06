@@ -1,7 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { Habit, CheckInStatus } from '../types/habit';
-import { calculateHabitStats, formatDisplayDate, getTodayString } from '../lib/momentum';
+import {
+  calculateHabitStats,
+  formatDisplayDate,
+  getTodayString,
+  getEarliestHabitDate,
+  isLocalTestingEnvironment,
+} from '../lib/momentum';
 import { DynamicIcon } from './DynamicIcon';
 import {
   Check,
@@ -518,6 +524,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   const pendingCount = unloggedHabits.length;
   const safeIndex = pendingCount > 0 ? Math.max(0, Math.min(pendingCount - 1, deckIndex)) : 0;
   const currentCard = unloggedHabits[safeIndex];
+  const currentCardOverallIndex = currentCard ? activeHabits.findIndex((h) => h.id === currentCard.id) : -1;
 
   // Keep deckIndex in valid range if pendingCount decreases
   React.useEffect(() => {
@@ -605,7 +612,16 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
     [currentCard, chargingHabitId, isDeckLocked, onCheckIn, activeDateStr, unloggedHabits.length, completedCount]
   );
 
+  const todayStr = useMemo(() => getTodayString(), []);
+  const isTestingAllowed = useMemo(() => isLocalTestingEnvironment(), []);
+  const earliestDate = useMemo(() => getEarliestHabitDate(habits), [habits]);
+
+  const canGoBack = activeDateStr > earliestDate || isTestingAllowed;
+  const canGoForward = activeDateStr < todayStr || isTestingAllowed;
+
   const handleShiftDate = (days: number) => {
+    if (days < 0 && !canGoBack) return;
+    if (days > 0 && !canGoForward) return;
     const [y, m, d] = activeDateStr.split('-').map(Number);
     const date = new Date(y, m - 1, d);
     date.setDate(date.getDate() + days);
@@ -615,11 +631,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
     onSelectDate(`${yStr}-${mStr}-${dStr}`);
   };
 
-  const isToday = useMemo(() => {
-    const today = new Date();
-    const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    return activeDateStr === iso;
-  }, [activeDateStr]);
 
   if (!hasAnyHabits) {
     return (
@@ -647,7 +658,8 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => handleShiftDate(-1)}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            disabled={!canGoBack}
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-25 disabled:pointer-events-none disabled:cursor-not-allowed"
             title="Previous Day"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -665,7 +677,8 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
           <button
             onClick={() => handleShiftDate(1)}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            disabled={!canGoForward}
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-25 disabled:pointer-events-none disabled:cursor-not-allowed"
             title="Next Day"
           >
             <ChevronRight className="w-4 h-4" />
@@ -673,20 +686,10 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {!isToday && (
-            <button
-              onClick={() => {
-                const today = new Date();
-                const y = today.getFullYear();
-                const m = String(today.getMonth() + 1).padStart(2, '0');
-                const d = String(today.getDate()).padStart(2, '0');
-                onSelectDate(`${y}-${m}-${d}`);
-              }}
-              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-500 hover:text-white border border-cyan-500/30 transition-all cursor-pointer font-mono whitespace-nowrap"
-              title="Return to Today"
-            >
-              Today
-            </button>
+          {currentView === 'deck' && totalHabitsCount > 1 && currentCardOverallIndex >= 0 && (
+            <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/20 dark:border-emerald-500/40 shadow-xs">
+              {currentCardOverallIndex + 1}/{totalHabitsCount}
+            </div>
           )}
         </div>
       </div>
@@ -898,43 +901,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
           };
 
           return (
-            <div className="w-full flex flex-col">
-              <div className="w-full flex items-center justify-between mb-2 px-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-                    Active Card Stack
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {loggedHabits.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setViewModeOverride('summary')}
-                      disabled={isDeckLocked}
-                      className="text-[11px] font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 px-2.5 py-0.5 rounded-lg border border-cyan-500/25 transition-all cursor-pointer flex items-center gap-1 shadow-xs disabled:opacity-50"
-                      title="Peek at logged habits summary"
-                    >
-                      <span>Summary</span>
-                      <span className="font-extrabold text-cyan-700 dark:text-cyan-300">({loggedHabits.length})</span>
-                    </button>
-                  )}
-
-                  <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/20 dark:border-emerald-500/40 shadow-xs">
-                    {safeIndex + 1}/{pendingCount}
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-full mb-3.5">
-                <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner">
-                  <div
-                    className="bg-gradient-to-r from-emerald-500 via-cyan-400 to-indigo-500 h-full rounded-full transition-all duration-300"
-                    style={{ width: `${(loggedHabits.length / totalHabitsCount) * 100}%` }}
-                  />
-                </div>
-              </div>
+            <div className="w-full flex flex-col pt-1">
 
               <div className="w-full relative flex items-center justify-center pb-3 sm:pb-4">
                 {hasPrev && (
@@ -1058,6 +1025,8 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
       <DatePickerPopover
         activeDateStr={activeDateStr}
         isOpen={isDatePickerOpen}
+        minDateStr={isTestingAllowed ? undefined : earliestDate}
+        maxDateStr={isTestingAllowed ? undefined : todayStr}
         onClose={() => setIsDatePickerOpen(false)}
         onSelectDate={onSelectDate}
       />

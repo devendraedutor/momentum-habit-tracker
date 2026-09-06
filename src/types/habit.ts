@@ -17,11 +17,14 @@ export interface Habit {
   icon: string;
   color: string;
   type?: HabitType; // 'BUILD' (positive habit) or 'BREAK' (quitting/abstaining habit)
-  targetGoalDays?: number; // e.g. 7, 21, 30 days strict consecutive streak goal
-  currentTier?: number; // Tier / Level (e.g. 1, 2, 3...)
-  tierStartStreak?: number; // Streak at which current tier began (e.g. 7)
-  milestonesCompleted?: number; // Number of conquered milestones (e.g. 0, 1, 2...)
-  previousTargets?: number[]; // History of conquered targets e.g. [7, 14]
+  currentLevel?: number; // Starts at 0 (unlocked). Level 1 is achieved after 3 days.
+  levelProgress?: number; // Days completed toward NEXT level (e.g., 0, 1, 2, 3)
+  overallStreak?: number; // Total continuous unbroken days across the habit
+  targetGoalDays?: number; // e.g. 3, 7, 14, 30, 60, 120, 365 days
+  currentTier?: number; // Legacy compatibility
+  tierStartStreak?: number; // Legacy compatibility
+  milestonesCompleted?: number; // Number of conquered milestones
+  previousTargets?: number[]; // History of conquered targets
   bonusXP?: number; // Accumulated milestone clear bonus XP
   startDate?: string; // Date (YYYY-MM-DD) from which tracking begins
   createdAt: string;
@@ -50,11 +53,13 @@ export interface HabitStats {
   totalMissed: number;
   completionRate: number;
   weeklyVelocity: number;
-  targetGoalDays?: number;
+  targetGoalDays: number;
   currentGoalStreak: number;
   goalDaysRemaining: number;
   goalProgressPercent: number;
   goalAchieved: boolean;
+  activeTierLevel: number;
+  achievedLevel: number;
 }
 
 export interface UserSettings {

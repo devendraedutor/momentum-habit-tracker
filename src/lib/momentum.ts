@@ -1,4 +1,5 @@
 import type { Habit, DailyMomentumPoint, HabitStats, ChartTimeRange, CheckInStatus } from '../types/habit';
+import { getSprintStats } from '../config/progression';
 
 export function formatDate(date: Date): string {
   const year = date.getFullYear();
@@ -53,20 +54,49 @@ export function getEffectiveEndDate(habits: Habit[] | Habit): string {
   return latestDate;
 }
 
-export function getEffectiveStartDate(habits: Habit[] | Habit): string {
+export function isLocalTestingEnvironment(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return (
+    Boolean(import.meta.env?.DEV) ||
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    hostname.endsWith('.local')
+  );
+}
+
+export function getEarliestHabitDate(habits: Habit[] | Habit): string {
   const todayStr = getTodayString();
   const habitList = Array.isArray(habits) ? habits : [habits];
-  
-  let earliestDate = todayStr;
+  if (!habitList.length) return todayStr;
+
+  let earliest = todayStr;
   habitList.forEach((h) => {
-    if (h.createdAt && h.createdAt < earliestDate) earliestDate = h.createdAt;
-    const dates = Object.keys(h.history || {});
-    dates.forEach((d) => {
-      if (d < earliestDate) earliestDate = d;
+    if (h.startDate && h.startDate < earliest) {
+      earliest = h.startDate;
+    }
+    if (h.createdAt) {
+      const cDate = h.createdAt.split('T')[0];
+      if (cDate && cDate < earliest) {
+        earliest = cDate;
+      }
+    }
+    const historyDates = Object.keys(h.history || {});
+    historyDates.forEach((d) => {
+      if (d < earliest) {
+        earliest = d;
+      }
     });
   });
 
-  return earliestDate;
+  return earliest;
+}
+
+export function getEffectiveStartDate(habits: Habit[] | Habit): string {
+  return getEarliestHabitDate(habits);
 }
 
 export function getStartDateForRange(
@@ -259,21 +289,9 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false, asOfDateS
   const last7Days = trajectory.slice(-7);
   const weeklyVelocity = last7Days.reduce((acc, curr) => acc + curr.delta, 0);
 
-  // Target Days calculation (handles both continuous ascension and restarted streaks)
-  const targetGoalDays = habit.targetGoalDays || 21;
-  const tierStartStreak = habit.tierStartStreak || 0;
-  let currentGoalStreak = 0;
-  if (currentStreak === 0) {
-    currentGoalStreak = 0;
-  } else if (tierStartStreak > 0 && currentStreak >= tierStartStreak) {
-    currentGoalStreak = currentStreak - tierStartStreak;
-  } else {
-    // If streak was broken and restarted below tierStartStreak, progress counts up with current active streak
-    currentGoalStreak = currentStreak;
-  }
-  const goalDaysRemaining = Math.max(0, targetGoalDays - currentGoalStreak);
-  const goalProgressPercent = Math.min(100, Math.round((currentGoalStreak / targetGoalDays) * 100));
-  const goalAchieved = currentGoalStreak >= targetGoalDays && currentStreak > 0;
+  // Sprint-based Target Goal: Multi-tier sprint model
+  const currentLevel = habit.currentLevel ?? (habit.currentTier ? Math.max(0, habit.currentTier - 1) : 0);
+  const sprint = getSprintStats(currentStreak, currentLevel, habit.levelProgress, habit.milestonesCompleted);
 
   return {
     currentScore,
@@ -285,10 +303,12 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false, asOfDateS
     totalMissed,
     completionRate,
     weeklyVelocity,
-    targetGoalDays,
-    currentGoalStreak,
-    goalDaysRemaining,
-    goalProgressPercent,
-    goalAchieved,
+    targetGoalDays: sprint.targetGoalDays,
+    currentGoalStreak: sprint.currentGoalStreak,
+    goalDaysRemaining: sprint.goalDaysRemaining,
+    goalProgressPercent: sprint.goalProgressPercent,
+    goalAchieved: sprint.goalAchieved,
+    activeTierLevel: sprint.activeTierLevel,
+    achievedLevel: sprint.achievedLevel,
   };
 }

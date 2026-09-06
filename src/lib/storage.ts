@@ -1,5 +1,6 @@
 import type { Habit, UserSettings, ExportData } from '../types/habit';
 import { getActiveSessionUserId } from '../config/testers';
+import { getTargetGoalForHabit, recalculateHabitProgressionFromHistory } from '../config/progression';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   soundEffects: true,
@@ -70,8 +71,28 @@ export function loadHabitsFromStorage(userId?: string): Habit[] {
         const createdDate = h.createdAt ? h.createdAt.split('T')[0] : undefined;
         const resolvedStartDate = h.startDate || earliestHistory || createdDate || new Date().toISOString().split('T')[0];
 
+        // Smart progression migration for existing / live users:
+        // Evaluates clean consecutive completion history to instantly award Level 1+ (3+ clean days)
+        const historyProg = recalculateHabitProgressionFromHistory(h);
+        let resolvedCurrentLevel = h.currentLevel ?? (h.currentTier ? Math.max(0, h.currentTier - 1) : 0);
+        let resolvedProgress = h.levelProgress ?? 0;
+
+        if (resolvedCurrentLevel === 0 && historyProg.currentLevel > 0) {
+          resolvedCurrentLevel = historyProg.currentLevel;
+          resolvedProgress = historyProg.levelProgress;
+        } else if (h.currentLevel === undefined && h.levelProgress === undefined) {
+          resolvedCurrentLevel = historyProg.currentLevel;
+          resolvedProgress = historyProg.levelProgress;
+        }
+
+        const resolvedTarget = getTargetGoalForHabit(resolvedCurrentLevel);
+
         return {
           ...h,
+          currentLevel: resolvedCurrentLevel,
+          levelProgress: resolvedProgress,
+          currentTier: resolvedCurrentLevel + 1,
+          targetGoalDays: resolvedTarget,
           startDate: resolvedStartDate,
           type: (h.type === 'BREAK' || (h.name && h.name.toLowerCase() === 'porn watching') ? 'BREAK' : 'BUILD') as 'BUILD' | 'BREAK',
           archived: Boolean(h.archived),

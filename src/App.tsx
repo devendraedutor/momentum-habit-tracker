@@ -16,13 +16,14 @@ import {
   type Tester,
 } from './config/testers';
 import { sound } from './lib/audio';
-import { getTodayString, calculateHabitStats } from './lib/momentum';
+import { getTodayString } from './lib/momentum';
+import { evaluateCheckInProgression, LEVEL_REQUIREMENTS } from './config/progression';
 import { Navbar } from './components/Navbar';
 import { HabitReelDeck } from './components/HabitReelDeck';
 
 import { HabitFormModal } from './components/HabitFormModal';
 import { HabitDetailModal } from './components/HabitDetailModal';
-import { MilestoneAscensionModal } from './components/MilestoneAscensionModal';
+import { AscensionCeremonyModal } from './components/AscensionCeremonyModal';
 import { JumboUnlockModal } from './components/JumboUnlockModal';
 import { HabitDirectoryModal } from './components/HabitDirectoryModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -57,6 +58,7 @@ export function App() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDetailHabit, setSelectedDetailHabit] = useState<Habit | null>(null);
   const [ascendHabit, setAscendHabit] = useState<Habit | null>(null);
+  const [ascendLevel, setAscendLevel] = useState<number>(1);
   const [isJumboUnlockModalOpen, setIsJumboUnlockModalOpen] = useState(false);
   const [pendingJumboUnlock, setPendingJumboUnlock] = useState(false);
   const [habitCreatedCelebration, setHabitCreatedCelebration] = useState<{
@@ -244,8 +246,9 @@ export function App() {
   );
 
   const openAscendModal = useCallback(
-    (habit: Habit) => {
+    (habit: Habit, level?: number) => {
       setAscendHabit(habit);
+      setAscendLevel(level || habit.currentLevel || 1);
       window.history.pushState({ activeDate: activeDateStr, modal: 'ascend' }, '');
     },
     [activeDateStr]
@@ -279,20 +282,41 @@ export function App() {
   const handleCheckIn = useCallback(
     (habitId: string, status: CheckInStatus, dateStr?: string) => {
       const targetDate = dateStr || activeDateStr;
+      let levelUpInfo: { habit: Habit; unlockedLevel: number } | null = null;
 
       setHabits((prev) => {
         const nextHabits = prev.map((h) => {
           if (h.id !== habitId) return h;
+          const prevStatus = h.history[targetDate] || 'none';
           const newHistory = { ...h.history };
           if (status === 'none' || !status) {
             delete newHistory[targetDate];
           } else {
             newHistory[targetDate] = status;
           }
-          return {
+
+          // Evaluate isolated multi-tier sprint progression with two-way rollback support
+          const prog = evaluateCheckInProgression(
+            h,
+            status === 'done' ? 'done' : status === 'missed' ? 'missed' : 'none',
+            prevStatus === 'done' ? 'done' : prevStatus === 'missed' ? 'missed' : 'none'
+          );
+
+          const updatedHabit: Habit = {
             ...h,
             history: newHistory,
+            currentLevel: prog.newCurrentLevel,
+            levelProgress: prog.newLevelProgress,
+            targetGoalDays: prog.targetDays,
+            currentTier: prog.newCurrentLevel + 1,
+            milestonesCompleted: prog.newCurrentLevel,
           };
+
+          if (prog.leveledUp && prog.unlockedLevel) {
+            levelUpInfo = { habit: updatedHabit, unlockedLevel: prog.unlockedLevel };
+          }
+
+          return updatedHabit;
         });
 
         // Reconcile Jumbo Point for this specific target date
@@ -315,12 +339,17 @@ export function App() {
         return nextHabits;
       });
 
-      if (settings.soundEffects) {
+      if (levelUpInfo) {
+        openAscendModal(
+          (levelUpInfo as { habit: Habit; unlockedLevel: number }).habit,
+          (levelUpInfo as { habit: Habit; unlockedLevel: number }).unlockedLevel
+        );
+      } else if (settings.soundEffects) {
         if (status === 'done') sound.playDone();
         else if (status === 'missed') sound.playMissed();
       }
 
-      if (status === 'done' && settings.confetti) {
+      if (status === 'done' && settings.confetti && !levelUpInfo) {
         confetti({
           particleCount: 35,
           spread: 50,
@@ -329,7 +358,7 @@ export function App() {
         });
       }
     },
-    [activeDateStr, settings]
+    [activeDateStr, settings, openAscendModal]
   );
 
   // Batch commit multiple modifications at once
@@ -338,15 +367,28 @@ export function App() {
       const nextHabits = prev.map((h) => {
         const newStatus = updates[h.id];
         if (!newStatus) return h;
+        const prevStatus = h.history[dateStr] || 'none';
         const newHistory = { ...h.history };
         if (newStatus === 'none') {
           delete newHistory[dateStr];
         } else {
           newHistory[dateStr] = newStatus;
         }
+
+        const prog = evaluateCheckInProgression(
+          h,
+          newStatus === 'done' ? 'done' : newStatus === 'missed' ? 'missed' : 'none',
+          prevStatus === 'done' ? 'done' : prevStatus === 'missed' ? 'missed' : 'none'
+        );
+
         return {
           ...h,
           history: newHistory,
+          currentLevel: prog.newCurrentLevel,
+          levelProgress: prog.newLevelProgress,
+          targetGoalDays: prog.targetDays,
+          currentTier: prog.newCurrentLevel + 1,
+          milestonesCompleted: prog.newCurrentLevel,
         };
       });
 
@@ -375,6 +417,11 @@ export function App() {
       prev.map((h) => ({
         ...h,
         history: {},
+        currentLevel: 0,
+        levelProgress: 0,
+        currentTier: 1,
+        milestonesCompleted: 0,
+        targetGoalDays: LEVEL_REQUIREMENTS[1],
       }))
     );
     setJumboDates([]);
@@ -403,14 +450,13 @@ export function App() {
                 icon: habitData.icon,
                 color: habitData.color,
                 type: habitData.type || h.type || 'BUILD',
-                targetGoalDays: habitData.targetGoalDays || 21,
                 startDate: habitData.startDate || h.startDate || getTodayString(),
               }
             : h
         )
       );
     } else {
-      // Create brand new habit
+      // Create brand new habit (Starts at Level 0, 0 / 3 D)
       const newHabit: Habit = {
         id: `habit-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
         name: habitData.name,
@@ -419,7 +465,12 @@ export function App() {
         icon: habitData.icon,
         color: habitData.color,
         type: habitData.type || 'BUILD',
-        targetGoalDays: habitData.targetGoalDays || 21,
+        currentLevel: 0,
+        levelProgress: 0,
+        targetGoalDays: LEVEL_REQUIREMENTS[1],
+        currentTier: 1,
+        tierStartStreak: 0,
+        milestonesCompleted: 0,
         startDate: habitData.startDate || getTodayString(),
         createdAt: habitData.startDate || getTodayString(),
         archived: false,
@@ -463,33 +514,6 @@ export function App() {
     }
   };
 
-  // Ascend habit milestone level up handler
-  const handleAscendHabit = useCallback(
-    (habitId: string, newTargetDays: number, bonusXP: number) => {
-      setHabits((prev) =>
-        prev.map((h) => {
-          if (h.id !== habitId) return h;
-          const currentTier = h.currentTier || 1;
-          const currentTarget = h.targetGoalDays || 21;
-          const milestones = (h.milestonesCompleted || 0) + 1;
-          const prevTargets = h.previousTargets || [];
-          const stats = calculateHabitStats(h, false);
-
-          return {
-            ...h,
-            currentTier: currentTier + 1,
-            tierStartStreak: stats.currentStreak,
-            milestonesCompleted: milestones,
-            previousTargets: [...prevTargets, currentTarget],
-            targetGoalDays: newTargetDays,
-            bonusXP: (h.bonusXP || 0) + bonusXP,
-          };
-        })
-      );
-    },
-    []
-  );
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       {/* Closed Beta Access Gate Modal */}
@@ -526,9 +550,6 @@ export function App() {
         />
       </main>
 
-
-
-
       {/* Habit Create / Edit Modal (Mounts fresh instance with today's date) */}
       {isHabitFormOpen && (
         <HabitFormModal
@@ -556,12 +577,12 @@ export function App() {
         theme={settings.theme}
       />
 
-      {/* Milestone Ascension & Level Up Modal */}
-      <MilestoneAscensionModal
+      {/* Ascension Ceremony Modal (Level Up Achievement) */}
+      <AscensionCeremonyModal
         habit={ascendHabit}
+        level={ascendLevel}
         isOpen={!!ascendHabit}
         onClose={closeAscendModal}
-        onAscend={handleAscendHabit}
       />
 
       {/* Gamified Jumbo Points 3-Habit Unlock Ceremony Modal */}

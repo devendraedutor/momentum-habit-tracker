@@ -5,6 +5,7 @@ interface DynamicIconProps {
   name: string;
   className?: string;
   size?: number;
+  style?: React.CSSProperties;
 }
 
 export const AVAILABLE_ICONS = [
@@ -42,12 +43,12 @@ export const AVAILABLE_ICONS = [
   { name: 'Award', label: 'Mastery / Quest' },
 ];
 
-export const DynamicIcon: React.FC<DynamicIconProps> = ({ name, className = 'w-5 h-5', size }) => {
-  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string; size?: number }>>)[name];
+export const DynamicIcon: React.FC<DynamicIconProps> = ({ name, className = 'w-5 h-5', size, style }) => {
+  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string; size?: number; style?: React.CSSProperties }>>)[name];
 
   if (!IconComponent) {
-    return <LucideIcons.CheckCircle2 className={className} size={size} />;
+    return <LucideIcons.CheckCircle2 className={className} size={size} style={style} />;
   }
 
-  return <IconComponent className={className} size={size} />;
+  return <IconComponent className={className} size={size} style={style} />;
 };

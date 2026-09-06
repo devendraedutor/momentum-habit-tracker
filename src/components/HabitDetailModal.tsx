@@ -22,6 +22,7 @@ import {
   formatDate,
   getEffectiveEndDate,
 } from '../lib/momentum';
+import { getTierByLevel } from '../config/progression';
 import { DynamicIcon } from './DynamicIcon';
 import {
   X,
@@ -300,7 +301,8 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   if (!isOpen || !habit || !stats) return null;
 
   const isBreak = habit.type === 'BREAK';
-  const targetDays = habit.targetGoalDays || 21;
+  const activeTier = getTierByLevel(stats.activeTierLevel);
+  const targetDays = stats.targetGoalDays;
   const startDateFormatted = formatDisplayDate(habit.startDate || habit.createdAt, true);
 
   return (
@@ -348,12 +350,16 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                   {isBreak ? <ShieldAlert className="w-3 h-3" /> : <Sprout className="w-3 h-3" />}
                   <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
                 </span>
-                {habit.currentTier && habit.currentTier > 1 && (
+                {stats.achievedLevel > 0 && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold font-mono flex items-center gap-1 shadow-xs">
                     <Crown className="w-3 h-3 fill-amber-500" />
-                    <span>Tier {habit.currentTier}</span>
+                    <span>Level {stats.achievedLevel} Mastered</span>
                   </span>
                 )}
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-bold font-mono flex items-center gap-1 shadow-xs">
+                  <Target className="w-3 h-3 text-cyan-500" />
+                  <span>Sprint: Lv.{activeTier.level} ({activeTier.name})</span>
+                </span>
               </div>
             </div>
           </div>
@@ -393,7 +399,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
             {/* 1. Streak Tile: 🔥 [Streak] (Universal flame icon for all habits) */}
             <div
               className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex flex-col justify-center items-center text-center transition-all hover:border-amber-500/40 select-none shadow-xs dark:shadow-md dark:shadow-black/20 group min-h-[64px]"
-              title={`Current Streak: ${stats.currentStreak} Days (Best: ${stats.bestStreak}d)`}
+              title={`Lifetime Streak: ${stats.currentStreak} Days (Best: ${stats.bestStreak}d)`}
             >
               <div className="flex items-center justify-center gap-1.5 py-0.5">
                 <Flame className="w-5 h-5 fill-amber-500 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -419,20 +425,20 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
             {/* 3. Mastery Level Tile: 👑 [Tier] (No Lv. text) */}
             <div
               className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex flex-col justify-center items-center text-center transition-all hover:border-amber-400/40 select-none shadow-xs dark:shadow-md dark:shadow-black/20 group min-h-[64px]"
-              title={`Mastery Tier ${habit.currentTier || 1} • Milestones Conquered: ${habit.milestonesCompleted || (habit.currentTier ? habit.currentTier - 1 : 0)}`}
+              title={`Mastery Level ${stats.achievedLevel} • Sprinting for Level ${activeTier.level} (${activeTier.days}d)`}
             >
               <div className="flex items-center justify-center gap-1.5 py-0.5">
                 <Crown className="w-5 h-5 fill-amber-400 text-amber-500 group-hover:scale-110 transition-transform" />
                 <span className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-slate-900 dark:text-slate-100">
-                  {habit.currentTier || 1}
+                  {stats.achievedLevel}
                 </span>
               </div>
             </div>
 
             {/* 4. Target Goal Tile: 🎯 [current]/[target]d + micro-bar */}
             <div
-              className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex flex-col justify-between items-center text-center transition-all hover:border-cyan-500/40 select-none shadow-xs dark:shadow-md dark:shadow-black/20 group min-h-[64px]"
-              title={`Target Goal: ${stats.currentGoalStreak} of ${targetDays} days (${stats.goalProgressPercent}%)`}
+              className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-700 flex flex-col justify-between items-center text-center transition-all hover:border-cyan-500/40 select-none shadow-xs dark:shadow-md dark:shadow-black/20 group min-h-[64px]"
+              title={`Sprint Progress: ${stats.currentGoalStreak} of ${targetDays} days (${stats.goalProgressPercent}%)`}
             >
               <div className="flex items-center justify-center gap-1.5 py-0.5">
                 <Target className="w-5 h-5 text-cyan-500 group-hover:scale-110 transition-transform" />

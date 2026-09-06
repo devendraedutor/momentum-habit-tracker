@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Habit } from '../types/habit';
 import { sound } from '../lib/audio';
 import {
@@ -11,6 +11,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { getTierByLevel } from '../config/progression';
 
 interface MilestoneAscensionModalProps {
   habit: Habit | null;
@@ -25,39 +26,15 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
   onClose,
   onAscend,
 }) => {
-  const currentTarget = habit?.targetGoalDays || 21;
-  const currentTier = habit?.currentTier || 1;
-  const nextTier = currentTier + 1;
-  const bonusRewardXP = 5;
-
-  // Clean goal presets for next tier
-  const preset1 = 7;
-  const preset2 = 14;
-  const preset3 = 21;
-  const preset4 = 30;
-
-  const [selectedTarget, setSelectedTarget] = useState<number>(currentTarget || 7);
-  const [customDays, setCustomDays] = useState<string>('');
-  const [isCustom, setIsCustom] = useState(false);
-
   if (!isOpen || !habit) return null;
 
-  const handleSelectPreset = (days: number) => {
-    setSelectedTarget(days);
-    setIsCustom(false);
-  };
-
-  const handleCustomChange = (val: string) => {
-    setCustomDays(val);
-    const num = parseInt(val, 10);
-    if (!isNaN(num) && num > 0) {
-      setSelectedTarget(num);
-    }
-  };
+  const currentAchievedLevel = Math.max(1, habit.currentLevel ?? 1);
+  const unlockedTier = getTierByLevel(currentAchievedLevel);
+  const nextLevel = Math.min(7, currentAchievedLevel + 1);
+  const nextTier = getTierByLevel(nextLevel);
+  const bonusRewardXP = 5;
 
   const handleConfirm = () => {
-    const finalTarget = isCustom ? parseInt(customDays, 10) || preset1 : selectedTarget;
-
     // Trigger celebration effects
     confetti({
       particleCount: 100,
@@ -67,7 +44,7 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
     });
     sound.playMilestone();
 
-    onAscend(habit.id, finalTarget, bonusRewardXP);
+    onAscend(habit.id, nextTier.days, bonusRewardXP);
     onClose();
   };
 
@@ -102,11 +79,11 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
 
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-black font-mono uppercase tracking-wider mb-2">
             <Crown className="w-3.5 h-3.5" />
-            <span>Milestone Conquered!</span>
+            <span>LEVEL {currentAchievedLevel} UNLOCKED!</span>
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs leading-relaxed">
-            You completed the <strong className="text-slate-900 dark:text-white font-mono">{currentTarget}-Day Goal</strong> for{' '}
+            You completed the <strong className="text-slate-900 dark:text-white font-mono">{unlockedTier.days}-Day Goal</strong> for{' '}
             <span className="text-amber-600 dark:text-amber-400 font-bold">{habit.name}</span>!
           </p>
         </div>
@@ -114,7 +91,7 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
         {/* Unlocked Rewards Showcase */}
         <div className="my-3 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-cyan-500/10 border border-amber-500/25 relative z-10">
           <div className="text-[10px] font-black uppercase font-mono tracking-wider text-slate-400 mb-2">
-            Unlocked Rewards:
+            Unlocked Tier & Rewards:
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
@@ -125,9 +102,9 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono flex items-center gap-1 whitespace-nowrap">
-                  <span>Level {currentTier}</span>
-                  <span className="text-amber-500">→</span>
-                  <span>{nextTier} 👑</span>
+                  <span>Lv.{currentAchievedLevel}</span>
+                  <span className="text-amber-500">👑</span>
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400 truncate">{unlockedTier.name}</span>
                 </div>
               </div>
             </div>
@@ -146,53 +123,30 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
           </div>
         </div>
 
-        {/* Next Target Milestone Selection */}
-        <div className="my-4 relative z-10">
-          <label className="text-xs font-black uppercase font-mono tracking-wider text-slate-700 dark:text-slate-300 block mb-2 flex items-center gap-1.5">
-            <Target className="w-3.5 h-3.5 text-cyan-500" />
-            <span>Set Next Challenge Target:</span>
-          </label>
-
-          {/* Presets Grid */}
-          <div className="grid grid-cols-4 gap-2 mb-2.5">
-            {[preset1, preset2, preset3, preset4].map((days) => {
-              const isSelected = !isCustom && selectedTarget === days;
-              return (
-                <button
-                  key={days}
-                  type="button"
-                  onClick={() => handleSelectPreset(days)}
-                  className={`py-3 px-2 rounded-2xl border font-mono text-center transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md font-black ring-2 ring-amber-500/40 scale-[1.02]'
-                      : 'bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 font-bold hover:scale-[1.01]'
-                  }`}
-                >
-                  <div className="text-base sm:text-lg font-black font-mono tracking-tight">
-                    {days} D
-                  </div>
-                </button>
-              );
-            })}
+        {/* Mindset Tag & Next Fixed Tier Milestone Showcase */}
+        <div className="my-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-emerald-500/10 border border-amber-500/30 relative z-10">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                <Target className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-black font-mono text-slate-900 dark:text-white uppercase tracking-wider">
+                  Next: Level {nextTier.level} ({nextTier.name})
+                </div>
+                <div className="text-[11px] text-amber-600 dark:text-amber-400 font-mono font-bold">
+                  {nextTier.tag}
+                </div>
+              </div>
+            </div>
+            <span className="px-3 py-1 rounded-xl bg-amber-500 text-slate-950 text-xs font-black font-mono shadow-xs">
+              {nextTier.days} D
+            </span>
           </div>
 
-          {/* Custom Days Input */}
-          <div className="relative">
-            <input
-              type="number"
-              placeholder="Custom Target Days (e.g. 10, 21, 66...)"
-              value={customDays}
-              onChange={(e) => {
-                setIsCustom(true);
-                handleCustomChange(e.target.value);
-              }}
-              className={`w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border text-xs font-mono transition-all text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none ${
-                isCustom
-                  ? 'border-cyan-500 ring-2 ring-cyan-500/20'
-                  : 'border-slate-200 dark:border-slate-700'
-              }`}
-            />
-          </div>
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mt-1">
+            Next sprint target resets to <strong>0 / {nextTier.days} D</strong> for Level {nextTier.level}!
+          </p>
         </div>
 
         {/* Celebratory Action Button */}
@@ -204,7 +158,7 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-bar-sheen pointer-events-none" />
           
           <Sparkles className="w-4 h-4 fill-slate-950 text-slate-950 transition-transform group-hover:rotate-12" />
-          <span className="tracking-wide">Confirm & Collect Reward</span>
+          <span className="tracking-wide">Claim Reward & Start Level {nextTier.level}</span>
           <ArrowRight className="w-4 h-4 stroke-[3] group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
