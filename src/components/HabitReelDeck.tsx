@@ -123,10 +123,10 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
             <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
               {h.name}
             </span>
-            {h.currentTier && h.currentTier > 1 && (
+            {stats.achievedLevel > 0 && (
               <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[9px] font-black font-mono flex items-center gap-0.5 shadow-xs flex-shrink-0">
                 <Crown className="w-2.5 h-2.5 fill-amber-500" />
-                <span>Lv.{h.currentTier}</span>
+                <span>Lv.{stats.achievedLevel}</span>
               </span>
             )}
           </div>
