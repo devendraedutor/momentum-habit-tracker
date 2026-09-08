@@ -20,29 +20,14 @@ export interface DayJumboStatus {
   totalActiveHabitsCount: number;
 }
 
-export interface BossHabitInfo {
+export interface HabitSaboteurItem {
   id: string;
   name: string;
   icon: string;
   color?: string;
-  fails: number;
-  ruinShare: number;
-}
-
-export interface DeficitStats {
-  cleanCount: number;
-  cleanPercent: number;
-  nearMissCount: number;
-  nearMissPercent: number;
-  collapseCount: number;
-  collapsePercent: number;
-}
-
-export interface StreakRaceStats {
-  currentStreak: number;
-  bestStreak: number;
-  progressRatio: number;
-  isNewRecord: boolean;
+  ruinedCount: number;
+  leakPercentage: number;
+  isTopBoss: boolean;
 }
 
 export interface JumboAnalytics {
@@ -52,60 +37,7 @@ export interface JumboAnalytics {
   unloggedCount: number;
   totalPoints: number;
   rangeTitle: string;
-  streakStats: StreakRaceStats;
-  deficitStats: DeficitStats;
-  bossHabit: BossHabitInfo | null;
-}
-
-function computeCurrentStreak(dates: string[]): number {
-  if (!dates || dates.length === 0) return 0;
-  const set = new Set(dates);
-  const today = parseDateString(getTodayString());
-  const todayKey = formatDate(today);
-
-  let streak = 0;
-  const curr = new Date(today);
-
-  if (set.has(todayKey)) {
-    streak++;
-    curr.setDate(curr.getDate() - 1);
-  } else {
-    curr.setDate(curr.getDate() - 1);
-    if (!set.has(formatDate(curr))) {
-      return 0;
-    }
-  }
-
-  while (set.has(formatDate(curr))) {
-    streak++;
-    curr.setDate(curr.getDate() - 1);
-  }
-
-  return streak;
-}
-
-function computeLongestFlawlessStreak(dates: string[]): number {
-  if (!dates || dates.length === 0) return 0;
-  const sorted = Array.from(new Set(dates)).sort();
-  let maxStreak = 1;
-  let currentStreak = 1;
-
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const d1 = parseDateString(sorted[i]);
-    const d2 = parseDateString(sorted[i + 1]);
-    const diffDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-      currentStreak++;
-      if (currentStreak > maxStreak) {
-        maxStreak = currentStreak;
-      }
-    } else if (diffDays > 1) {
-      currentStreak = 1;
-    }
-  }
-
-  return maxStreak;
+  saboteurRanking: HabitSaboteurItem[];
 }
 
 export const useJumboAnalytics = (
@@ -161,9 +93,9 @@ export const useJumboAnalytics = (
     let failedCount = 0;
     let unloggedCount = 0;
 
-    const habitFailCounts: Record<string, { habit: Habit; fails: number }> = {};
+    const habitFailCounts: Record<string, number> = {};
     activeHabits.forEach((h) => {
-      habitFailCounts[h.id] = { habit: h, fails: 0 };
+      habitFailCounts[h.id] = 0;
     });
 
     const days: DayJumboStatus[] = dateRangeList.map((dateKey) => {
@@ -197,9 +129,7 @@ export const useJumboAnalytics = (
             color: habit.color,
             status: 'Failed',
           });
-          if (habitFailCounts[habit.id]) {
-            habitFailCounts[habit.id].fails += 1;
-          }
+          habitFailCounts[habit.id] = (habitFailCounts[habit.id] || 0) + 1;
         }
       });
 
@@ -245,62 +175,31 @@ export const useJumboAnalytics = (
     const endFormatted = formatDisplayDate(endStr, true);
     const rangeTitle = `${startFormatted} – ${endFormatted}`;
 
-    // 1. Streak Race Stats
-    const currentStreak = computeCurrentStreak(jumboDates);
-    const bestStreak = computeLongestFlawlessStreak(jumboDates);
-    const progressRatio = Math.min(100, Math.round((currentStreak / Math.max(bestStreak, 1)) * 100));
-    const isNewRecord = currentStreak >= bestStreak && currentStreak > 0;
+    // Expanded Habit Saboteur Ranking
+    const totalJumboFailedDaysInWindow = failedCount;
+    const saboteurRanking: HabitSaboteurItem[] = activeHabits
+      .map((habit) => {
+        const ruinedCount = habitFailCounts[habit.id] || 0;
+        const leakPercentage =
+          totalJumboFailedDaysInWindow > 0
+            ? Math.min(100, Math.round((ruinedCount / totalJumboFailedDaysInWindow) * 100))
+            : 0;
 
-    const streakStats: StreakRaceStats = {
-      currentStreak,
-      bestStreak,
-      progressRatio,
-      isNewRecord,
-    };
+        return {
+          id: habit.id,
+          name: habit.name,
+          icon: habit.icon,
+          color: habit.color,
+          ruinedCount,
+          leakPercentage,
+          isTopBoss: false,
+        };
+      })
+      .sort((a, b) => b.ruinedCount - a.ruinedCount || a.name.localeCompare(b.name));
 
-    // 2. Clean Sheet Deficit Stats (Single Slip-Up Reality)
-    let cleanDays = 0;
-    let nearMissDays = 0;
-    let collapseDays = 0;
-
-    days.forEach((day) => {
-      if (day.isPerfect) {
-        cleanDays++;
-      } else if (day.failedHabits.length === 1) {
-        nearMissDays++;
-      } else if (day.failedHabits.length >= 2) {
-        collapseDays++;
-      }
-    });
-
-    const totalTracked = cleanDays + nearMissDays + collapseDays;
-    const deficitStats: DeficitStats = {
-      cleanCount: cleanDays,
-      cleanPercent: totalTracked > 0 ? Math.round((cleanDays / totalTracked) * 100) : 0,
-      nearMissCount: nearMissDays,
-      nearMissPercent: totalTracked > 0 ? Math.round((nearMissDays / totalTracked) * 100) : 0,
-      collapseCount: collapseDays,
-      collapsePercent: totalTracked > 0 ? Math.round((collapseDays / totalTracked) * 100) : 0,
-    };
-
-    // 3. Habit Boss Fight (Highest failure count habit)
-    const rankedBosses = Object.values(habitFailCounts)
-      .filter((b) => b.fails > 0)
-      .sort((a, b) => b.fails - a.fails);
-
-    let bossHabit: BossHabitInfo | null = null;
-    if (rankedBosses.length > 0) {
-      const topBoss = rankedBosses[0];
-      const totalFails = failedCount || 1;
-      const ruinShare = Math.round((topBoss.fails / totalFails) * 100);
-      bossHabit = {
-        id: topBoss.habit.id,
-        name: topBoss.habit.name,
-        icon: topBoss.habit.icon,
-        color: topBoss.habit.color,
-        fails: topBoss.fails,
-        ruinShare: Math.min(100, Math.max(1, ruinShare)),
-      };
+    // Mark top boss if ruinedCount > 0
+    if (saboteurRanking.length > 0 && saboteurRanking[0].ruinedCount > 0) {
+      saboteurRanking[0].isTopBoss = true;
     }
 
     return {
@@ -310,9 +209,7 @@ export const useJumboAnalytics = (
       unloggedCount,
       totalPoints,
       rangeTitle,
-      streakStats,
-      deficitStats,
-      bossHabit,
+      saboteurRanking,
     };
   }, [habits, jumboDates, historyRange, weekOffset]);
 };

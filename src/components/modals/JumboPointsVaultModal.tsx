@@ -6,9 +6,6 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  Flame,
-  Trophy,
-  Zap,
   Swords,
   ShieldCheck,
   Lock,
@@ -43,6 +40,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
   onSelectDate,
 }) => {
   const [selectedDay, setSelectedDay] = useState<DayJumboStatus | null>(null);
+  const [hoveredDay, setHoveredDay] = useState<DayJumboStatus | null>(null);
   const [historyRange, setHistoryRange] = useState<JumboHistoryRange>('30d');
   const [weekOffset, setWeekOffset] = useState<number>(0);
 
@@ -55,9 +53,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
     failedCount,
     totalPoints,
     rangeTitle,
-    streakStats,
-    deficitStats,
-    bossHabit,
+    saboteurRanking,
   } = useJumboAnalytics(habits, jumboDates, historyRange, weekOffset);
 
   // Diagnostic log for historical accomplishments inspection
@@ -67,13 +63,10 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         storedJumboPoints: totalPoints,
         jumboDatesArray: jumboDates,
         pendingBacklogCount: pendingBacklog.length,
-        sampleHabitKeys: habits.map((h) => ({
-          name: h.name,
-          recordedDates: Object.keys(h.history || {}),
-        })),
+        saboteurRanking,
       });
     }
-  }, [isOpen, totalPoints, jumboDates, habits, pendingBacklog]);
+  }, [isOpen, totalPoints, jumboDates, habits, pendingBacklog, saboteurRanking]);
 
   if (!isOpen) return null;
 
@@ -306,14 +299,15 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               </div>
             </div>
 
-            {/* 3. SCROLLABLE BODY (Calendar Grid + Legend + 3 Insight Modules) */}
+            {/* 3. SCROLLABLE BODY (Calendar Grid + Tooltips + Saboteur Ranking) */}
             <div className="overflow-y-auto max-h-[60vh] pr-1 pt-3 pb-3 space-y-4 scrollbar-thin">
               {/* Calendar Day Tiles Grid */}
-              <div className="grid grid-cols-7 gap-x-2.5 sm:gap-x-3.5 gap-y-3 sm:gap-y-3.5 px-1">
+              <div className="grid grid-cols-7 gap-x-2.5 sm:gap-x-3.5 gap-y-3 sm:gap-y-3.5 px-1 relative">
                 {days.map((day) => {
                   const isConquered = day.isPerfect;
                   const isMissed = day.isBroken;
                   const isSelected = selectedDay?.dateKey === day.dateKey;
+                  const isHovered = hoveredDay?.dateKey === day.dateKey;
 
                   let tileStyle =
                     'bg-slate-50/40 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 text-slate-400';
@@ -330,50 +324,96 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                     tileStyle += ' ring-2 ring-amber-500 dark:ring-amber-400 border-amber-500 shadow-xs';
                   }
 
-                  return (
-                    <button
-                      key={day.dateKey}
-                      type="button"
-                      onClick={() => setSelectedDay(isSelected ? null : day)}
-                      className={`w-full max-w-[62px] sm:max-w-[70px] mx-auto aspect-[1.35/1] rounded-2xl border p-1 sm:p-1.5 flex flex-col justify-between items-center transition-all cursor-pointer select-none text-center hover:scale-[1.05] active:scale-95 ${tileStyle} ${
-                        isSelected ? 'ring-2 ring-amber-500 scale-105 z-10 shadow-md' : ''
-                      }`}
-                      title={`${day.displayDate}: ${
-                        isConquered
-                          ? '💎 Jumbo Conquered (All Habits Conquered)'
-                          : isMissed
-                          ? `✕ Jumbo Failed (${day.failedHabits.length} Missed)`
-                          : 'Unlogged / Rest Day'
-                      }`}
-                    >
-                      {/* Top Day Number + Month Label */}
-                      <div className="flex items-center justify-between w-full px-0.5 text-[8.5px] font-mono leading-none">
-                        <span className="font-mono text-[10px] sm:text-[11px] font-black">{day.dayNum}</span>
-                        <span className="text-[7px] sm:text-[7.5px] font-bold text-slate-400 uppercase opacity-75">
-                          {day.monthShort}
-                        </span>
-                      </div>
+                  const tooltipTitle = isConquered
+                    ? `${day.displayDate}: 💎 Conquered (All habits clean)`
+                    : isMissed
+                    ? `${day.displayDate}: ✕ Jumbo Lost • Leaked by: ${day.failedHabits.map((h) => h.name).join(', ')}`
+                    : `${day.displayDate}: Unlogged / Rest Day`;
 
-                      {/* Center Badge Scale */}
-                      <div className="my-auto flex items-center justify-center">
-                        {isConquered ? (
-                          <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 text-white flex items-center justify-center shadow-xs shadow-amber-500/40">
-                            <Gem className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white text-white drop-shadow-xs" />
-                          </div>
-                        ) : isMissed ? (
-                          <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] sm:text-[10px] font-black shadow-xs shadow-rose-500/20">
-                            <X className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
-                          </div>
-                        ) : (
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  return (
+                    <div
+                      key={day.dateKey}
+                      className="relative group flex flex-col items-center"
+                      onMouseEnter={() => setHoveredDay(day)}
+                      onMouseLeave={() => setHoveredDay(null)}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDay(isSelected ? null : day)}
+                        className={`w-full max-w-[62px] sm:max-w-[70px] mx-auto aspect-[1.35/1] rounded-2xl border p-1 sm:p-1.5 flex flex-col justify-between items-center transition-all cursor-pointer select-none text-center hover:scale-[1.05] active:scale-95 ${tileStyle} ${
+                          isSelected ? 'ring-2 ring-amber-500 scale-105 z-10 shadow-md' : ''
+                        }`}
+                        title={tooltipTitle}
+                      >
+                        {/* Top Day Number + Month Label */}
+                        <div className="flex items-center justify-between w-full px-0.5 text-[8.5px] font-mono leading-none">
+                          <span className="font-mono text-[10px] sm:text-[11px] font-black">{day.dayNum}</span>
+                          <span className="text-[7px] sm:text-[7.5px] font-bold text-slate-400 uppercase opacity-75">
+                            {day.monthShort}
+                          </span>
+                        </div>
+
+                        {/* Center Badge Scale */}
+                        <div className="my-auto flex items-center justify-center">
+                          {isConquered ? (
+                            <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 text-white flex items-center justify-center shadow-xs shadow-amber-500/40">
+                              <Gem className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white text-white drop-shadow-xs" />
+                            </div>
+                          ) : isMissed ? (
+                            <div className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] sm:text-[10px] font-black shadow-xs shadow-rose-500/20">
+                              <X className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
+                            </div>
+                          ) : (
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                          )}
+                        </div>
+                      </button>
+
+                      {/* Floating Rich Tooltip on Hover */}
+                      <AnimatePresence>
+                        {isHovered && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 4, scale: 0.96 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 2, scale: 0.96 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-40 pointer-events-none bg-slate-900/95 dark:bg-slate-950 text-white rounded-xl py-2 px-3 shadow-xl border border-slate-700 text-xs whitespace-nowrap min-w-max max-w-[220px]"
+                          >
+                            {isConquered ? (
+                              <div className="font-mono font-bold text-amber-400 text-[11px] flex items-center gap-1.5">
+                                <Gem className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                <span>{day.displayDate}: 💎 Conquered (All habits clean)</span>
+                              </div>
+                            ) : isMissed ? (
+                              <div className="space-y-1">
+                                <div className="font-mono font-bold text-rose-400 text-[11px] flex items-center gap-1">
+                                  <X className="w-3 h-3 stroke-[3]" />
+                                  <span>{day.displayDate}: ✕ Jumbo Lost</span>
+                                </div>
+                                <div className="text-[10px] text-slate-300 font-mono flex items-start gap-1 flex-wrap">
+                                  <span className="text-slate-400 font-semibold">Leaked by:</span>
+                                  <span className="text-rose-300 font-bold truncate max-w-[170px]">
+                                    {day.failedHabits.map((h) => `${h.name}`).join(', ')}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="font-mono text-slate-300 text-[11px]">
+                                {day.displayDate}: Unlogged / Rest Day
+                              </div>
+                            )}
+
+                            {/* Tooltip Downward Arrow */}
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-slate-900/95 dark:border-t-slate-950" />
+                          </motion.div>
                         )}
-                      </div>
-                    </button>
+                      </AnimatePresence>
+                    </div>
                   );
                 })}
               </div>
 
-              {/* Interactive Day Details Micro-Banner */}
+              {/* Interactive Day Details Micro-Banner (When Tile Clicked) */}
               <AnimatePresence>
                 {selectedDay && (
                   <motion.div
@@ -395,7 +435,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                       ) : selectedDay.failedHabits.length > 0 ? (
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-rose-600 dark:text-rose-400 font-bold">
-                            Failed Habits:
+                            Leaked by:
                           </span>
                           {selectedDay.failedHabits.map((h) => (
                             <span
@@ -446,119 +486,132 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               </div>
 
               {/* ═════════════════════════════════════════════════════════════════ */}
-              {/* POST-CALENDAR VISUAL GAMIFIED INSIGHT MODULES                   */}
+              {/* EXPANDED HABIT SABOTEUR RANKING (Ranked Boss List)               */}
               {/* ═════════════════════════════════════════════════════════════════ */}
-
-              {/* MODULE 1: CURRENT VS. BEST FLAWLESS RUN (Micro Rail) */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-700/30 space-y-2">
-                <div className="flex items-center justify-between font-mono font-bold text-xs">
-                  <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                    <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500 flex-shrink-0" />
-                    <span>Current: {streakStats.currentStreak}d</span>
-                    {streakStats.isNewRecord && (
-                      <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500 text-white animate-pulse shadow-xs ml-1">
-                        👑 NEW RECORD
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                    <Trophy className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                    <span>Best: {streakStats.bestStreak}d</span>
-                  </div>
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-3">
+                {/* Header */}
+                <div className="text-xs font-mono font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span>👾 HABIT SABOTEUR RANKING</span>
+                  </span>
+                  <span>IMPACT SHARE</span>
                 </div>
 
-                <div className="h-2.5 rounded-full bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-700"
-                    style={{ width: `${streakStats.progressRatio}%` }}
-                  />
+                {/* List of Habits */}
+                <div className="space-y-2">
+                  {saboteurRanking.length === 0 ? (
+                    <div className="p-3 text-center text-xs font-mono text-slate-400">
+                      No active habits found for this time range.
+                    </div>
+                  ) : (
+                    saboteurRanking.map((item, idx) => {
+                      const isTopBoss = idx === 0 && item.ruinedCount > 0;
+
+                      // 1. Rank 1: Active Boss
+                      if (isTopBoss) {
+                        return (
+                          <div
+                            key={item.id}
+                            className="bg-rose-500/10 border border-rose-200 dark:border-rose-900/40 p-3 rounded-xl flex items-center justify-between gap-3 shadow-2xs"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="bg-rose-500 text-white font-black text-[9px] px-2 py-0.5 rounded tracking-wider uppercase inline-flex items-center gap-1 flex-shrink-0 shadow-xs">
+                                <Swords className="w-2.5 h-2.5" />
+                                <span>ACTIVE BOSS</span>
+                              </span>
+                              <div
+                                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{
+                                  backgroundColor: `${item.color || '#f43f5e'}25`,
+                                  color: item.color || '#f43f5e',
+                                }}
+                              >
+                                <DynamicIcon name={item.icon} className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                {item.name}
+                              </span>
+                            </div>
+
+                            <div className="flex-shrink-0 text-right">
+                              <div className="font-mono font-black text-rose-600 dark:text-rose-400 text-xs sm:text-sm">
+                                💔 Ruined {item.ruinedCount} {item.ruinedCount === 1 ? 'Day' : 'Days'}
+                              </div>
+                              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-tight">
+                                {item.leakPercentage}% of all leaks
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // 2. Remaining Habits with Breaks (ruinedCount > 0)
+                      if (item.ruinedCount > 0) {
+                        return (
+                          <div
+                            key={item.id}
+                            className="p-2.5 sm:p-3 rounded-xl bg-white/70 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{
+                                  backgroundColor: `${item.color || '#64748b'}20`,
+                                  color: item.color || '#64748b',
+                                }}
+                              >
+                                <DynamicIcon name={item.icon} className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+                                {item.name}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-3 flex-shrink-0 text-right font-mono">
+                              <span className="text-xs font-bold text-rose-500/90">
+                                Ruined {item.ruinedCount} {item.ruinedCount === 1 ? 'Day' : 'Days'}
+                              </span>
+                              <span className="text-[11px] font-bold text-slate-400 min-w-[36px]">
+                                {item.leakPercentage}%
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // 3. Habits with Zero Breaks (ruinedCount === 0)
+                      return (
+                        <div
+                          key={item.id}
+                          className="p-2.5 sm:p-3 rounded-xl bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{
+                                backgroundColor: `${item.color || '#10b981'}20`,
+                                color: item.color || '#10b981',
+                              }}
+                            >
+                              <DynamicIcon name={item.icon} className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
+                              {item.name}
+                            </span>
+                          </div>
+
+                          <div className="flex-shrink-0 text-right">
+                            <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold inline-flex items-center gap-1.5">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>100% Flawless (0 Leaks)</span>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
-
-              {/* MODULE 2: THE "CLEAN SHEET" DEFICIT BAR (Single Slip-Up Reality) */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2.5">
-                <div className="h-3 rounded-full flex overflow-hidden gap-0.5 bg-slate-200 dark:bg-slate-800">
-                  <div
-                    className="bg-amber-400 h-full transition-all duration-500 rounded-l-full"
-                    style={{ width: `${deficitStats.cleanPercent}%` }}
-                    title={`Clean: ${deficitStats.cleanCount} days (${deficitStats.cleanPercent}%)`}
-                  />
-                  <div
-                    className="bg-amber-200 dark:bg-amber-700 h-full transition-all duration-500"
-                    style={{ width: `${deficitStats.nearMissPercent}%` }}
-                    title={`Missed by 1: ${deficitStats.nearMissCount} days (${deficitStats.nearMissPercent}%)`}
-                  />
-                  <div
-                    className="bg-rose-500 h-full transition-all duration-500 rounded-r-full"
-                    style={{ width: `${deficitStats.collapsePercent}%` }}
-                    title={`Collapsed: ${deficitStats.collapseCount} days (${deficitStats.collapsePercent}%)`}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] font-mono font-bold flex-wrap gap-2">
-                  <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <Gem className="w-3 h-3 fill-amber-400 text-amber-500" />
-                    <span>{deficitStats.cleanCount} Clean</span>
-                  </span>
-                  <span className="text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
-                    <span>{deficitStats.nearMissCount} Missed by 1</span>
-                  </span>
-                  <span className="text-rose-500 flex items-center gap-1">
-                    <X className="w-3 h-3 stroke-[3]" />
-                    <span>{deficitStats.collapseCount} Collapsed</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* MODULE 3: HABIT BOSS FIGHT (The "Final Boss" Target) */}
-              {bossHabit ? (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent border border-rose-200/60 dark:border-rose-900/40 flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <span className="bg-rose-500 text-white font-black text-[9px] px-2 py-0.5 rounded tracking-wider uppercase inline-flex items-center gap-1">
-                      <Swords className="w-2.5 h-2.5" />
-                      <span>ACTIVE BOSS</span>
-                    </span>
-                    <div className="flex items-center gap-2 mt-1.5 truncate">
-                      <div
-                        className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${bossHabit.color || '#f43f5e'}25`, color: bossHabit.color || '#f43f5e' }}
-                      >
-                        <DynamicIcon name={bossHabit.icon} className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
-                        {bossHabit.name}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex-shrink-0 text-right">
-                    <div className="font-mono font-black text-rose-600 dark:text-rose-400 text-xs sm:text-sm">
-                      💔 Ruined {bossHabit.fails} {bossHabit.fails === 1 ? 'Day' : 'Days'}
-                    </div>
-                    <div className="text-[10px] font-mono text-slate-400 uppercase tracking-tight mt-0.5">
-                      {bossHabit.ruinShare}% of all leaks
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 dark:border-emerald-500/20 flex items-center justify-between gap-4">
-                  <div>
-                    <span className="bg-emerald-500 text-white font-black text-[9px] px-2 py-0.5 rounded tracking-wider uppercase inline-flex items-center gap-1">
-                      <ShieldCheck className="w-2.5 h-2.5" />
-                      <span>BOSS DEFEATED</span>
-                    </span>
-                    <div className="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 mt-1">
-                      100% Realm Defense • Zero active saboteurs
-                    </div>
-                  </div>
-
-                  <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <Trophy className="w-4 h-4 text-emerald-500" />
-                    <span>Flawless Victory</span>
-                  </div>
-                </div>
-              )}
             </div>
           </>
         )}
