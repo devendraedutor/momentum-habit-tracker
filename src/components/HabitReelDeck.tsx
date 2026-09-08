@@ -243,6 +243,64 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   );
 };
 
+interface MetricSlotProps {
+  icon: React.ReactNode;
+  value: number;
+  delta: string | number | null;
+  deltaColor?: string;
+  isShaking?: boolean;
+}
+
+const MetricSlot: React.FC<MetricSlotProps> = ({
+  icon,
+  value,
+  delta,
+  deltaColor = 'text-emerald-500 dark:text-emerald-400',
+  isShaking = false,
+}) => {
+  const isPositive = typeof delta === 'string' ? delta.startsWith('+') : (delta ?? 0) > 0;
+
+  return (
+    <motion.div
+      className="relative flex items-center gap-1 font-mono select-none"
+      animate={isShaking ? { x: [-3, 3, -2, 2, 0] } : { x: 0 }}
+      transition={{ duration: 0.35, ease: 'easeInOut' }}
+    >
+      {/* Floating Delta Indicator */}
+      <AnimatePresence>
+        {delta !== null && delta !== undefined && (
+          <motion.span
+            key={`delta-${delta}`}
+            initial={{ y: 0, opacity: 0, scale: 0.7 }}
+            animate={{
+              y: isPositive ? -22 : 18,
+              opacity: [0, 1, 1, 0],
+              scale: isPositive ? [0.7, 1.25, 0.95] : [0.7, 1.1, 0.85],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.75, ease: 'easeOut' }}
+            className={`absolute left-1/2 -translate-x-1/2 pointer-events-none font-black text-xs whitespace-nowrap z-30 drop-shadow-sm ${deltaColor}`}
+          >
+            {typeof delta === 'number' ? (delta > 0 ? `+${delta}` : `${delta}`) : delta}
+          </motion.span>
+        )}
+      </AnimatePresence>
+
+      <span className="flex items-center flex-shrink-0">{icon}</span>
+
+      <motion.span
+        key={value}
+        initial={{ scale: 1.35 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', stiffness: 450, damping: 18 }}
+        className="inline-block"
+      >
+        {value}
+      </motion.span>
+    </motion.div>
+  );
+};
+
 interface HabitCardContentProps {
   habit: Habit;
   activeDateStr: string;
@@ -250,7 +308,7 @@ interface HabitCardContentProps {
   isInteractive?: boolean;
   isCharging?: boolean;
   isDeckLocked?: boolean;
-  chargePhase?: 'idle' | 'charging' | 'incremented';
+  chargePhase?: 'idle' | 'charging' | 'incremented' | 'failed';
   onCheckIn?: (status: CheckInStatus) => void;
   onOpenDetail?: (habit: Habit) => void;
 }
@@ -268,19 +326,52 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
 }) => {
   const currentStats = calculateHabitStats(habit, floorAtZero, activeDateStr);
   const targetGoalDays = habit.targetGoalDays || 21;
-  const initialStreak = currentStats.currentGoalStreak;
-  const targetStreak = initialStreak + 1;
+  const initialGoalStreak = currentStats.currentGoalStreak;
+  const isSuccessCharging = isCharging && (chargePhase === 'charging' || chargePhase === 'incremented');
+  const isIncremented = isCharging && chargePhase === 'incremented';
+  const isFailed = isCharging && chargePhase === 'failed';
 
-  const initialPercent = Math.min(100, Math.round((initialStreak / targetGoalDays) * 100));
+  // Target Goal calculations
+  const targetStreak = initialGoalStreak + 1;
+  const initialPercent = Math.min(100, Math.round((initialGoalStreak / targetGoalDays) * 100));
   const targetPercent = Math.min(100, Math.round((targetStreak / targetGoalDays) * 100));
 
-  const currentBarWidth = isCharging && (chargePhase === 'charging' || chargePhase === 'incremented')
+  const currentBarWidth = isSuccessCharging
     ? targetPercent
+    : isFailed
+    ? 0
     : initialPercent;
 
-  const displayStreak = isCharging && chargePhase === 'incremented'
+  const displayGoalStreak = isIncremented
     ? targetStreak
-    : initialStreak;
+    : isFailed
+    ? 0
+    : initialGoalStreak;
+
+  // Level Up Check
+  const willLevelUp = isIncremented && targetStreak >= targetGoalDays;
+
+  // Dynamic values for the 3-Slot Metric Badge: XP — Streak — Level
+  const displayXP = isIncremented
+    ? currentStats.currentScore + 1
+    : currentStats.currentScore;
+  const xpDelta = isIncremented ? '+1 ⚡' : null;
+
+  const displayOverallStreak = isIncremented
+    ? currentStats.currentStreak + 1
+    : isFailed
+    ? 0
+    : currentStats.currentStreak;
+  const streakDelta = isIncremented
+    ? '+1 🔥'
+    : isFailed
+    ? `-${currentStats.currentStreak > 0 ? currentStats.currentStreak : 1} 🔥`
+    : null;
+
+  const displayLevel = willLevelUp
+    ? currentStats.achievedLevel + 1
+    : currentStats.achievedLevel;
+  const levelDelta = willLevelUp ? '+1 👑' : null;
 
   const isBreak = habit.type === 'BREAK';
 
@@ -293,7 +384,13 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
     >
       <div
         className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-500"
-        style={{ backgroundColor: isCharging ? '#10b981' : habit.color || (isBreak ? '#f43f5e' : '#10b981') }}
+        style={{
+          backgroundColor: isSuccessCharging
+            ? '#10b981'
+            : isFailed
+            ? '#f43f5e'
+            : habit.color || (isBreak ? '#f43f5e' : '#10b981'),
+        }}
       />
 
       <div className="flex items-center justify-between relative z-10 mb-3">
@@ -322,7 +419,13 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
       <div className="flex flex-col items-center text-center my-2 sm:my-3 relative z-10">
         <div
           className={`w-18 h-18 sm:w-20 sm:h-20 rounded-3xl flex items-center justify-center text-white mb-2.5 shadow-md transition-all duration-300 ${
-            isCharging ? 'scale-110 shadow-lg shadow-emerald-500/30' : isInteractive ? 'hover:scale-105' : ''
+            isSuccessCharging
+              ? 'scale-110 shadow-lg shadow-emerald-500/30'
+              : isFailed
+              ? 'scale-95 shadow-md shadow-rose-500/30'
+              : isInteractive
+              ? 'hover:scale-105'
+              : ''
           }`}
           style={{
             backgroundColor: `${habit.color}25`,
@@ -343,40 +446,68 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
           </p>
         )}
 
-        <div className="mt-3 flex items-center gap-3.5 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-750 shadow-xs">
-          <div className="text-base sm:text-lg font-extrabold font-mono text-slate-900 dark:text-slate-100 flex items-center gap-1">
-            <Zap className="w-4 h-4 text-amber-500" />
-            <span>{currentStats.currentScore}</span>
-          </div>
+        {/* 3-Slot Metric Badge Pill: XP — Streak — Level */}
+        <div className="mt-3.5 inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 text-sm font-bold text-slate-700 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
+          {/* 1. XP */}
+          <MetricSlot
+            icon={<Zap className="w-4 h-4 fill-amber-500 text-amber-500" />}
+            value={displayXP}
+            delta={xpDelta}
+            deltaColor="text-emerald-500 dark:text-emerald-400"
+          />
 
-          <div className="w-px h-4 bg-slate-300 dark:bg-slate-700" />
+          <span className="text-slate-300 dark:text-slate-600 select-none font-mono">|</span>
 
-          <div className="text-base sm:text-lg font-extrabold font-mono text-amber-500 dark:text-amber-400 flex items-center gap-1">
-            <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
-            <span>{currentStats.currentStreak}</span>
-          </div>
+          {/* 2. Streak */}
+          <MetricSlot
+            icon={<Flame className="w-4 h-4 fill-amber-500 text-amber-500" />}
+            value={displayOverallStreak}
+            delta={streakDelta}
+            deltaColor={isFailed ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-500 dark:text-emerald-400'}
+            isShaking={isFailed}
+          />
+
+          <span className="text-slate-300 dark:text-slate-600 select-none font-mono">|</span>
+
+          {/* 3. Level */}
+          <MetricSlot
+            icon={<Crown className="w-4 h-4 fill-amber-500 text-amber-500" />}
+            value={displayLevel}
+            delta={levelDelta}
+            deltaColor="text-amber-500 dark:text-amber-400"
+          />
         </div>
       </div>
 
       <div className={`my-3.5 p-3 sm:p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border transition-all duration-300 relative z-10 ${
-        isCharging
+        isSuccessCharging
           ? 'border-emerald-500/50 dark:border-emerald-500/60 shadow-md shadow-emerald-500/10'
+          : isFailed
+          ? 'border-rose-500/50 dark:border-rose-500/60 shadow-md shadow-rose-500/10'
           : 'border-slate-200 dark:border-slate-750'
       }`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
-            <Target className={`w-4 h-4 transition-colors ${isCharging ? 'text-emerald-500 animate-pulse' : 'text-cyan-500'}`} />
+            <Target className={`w-4 h-4 transition-colors ${
+              isSuccessCharging
+                ? 'text-emerald-500 animate-pulse'
+                : isFailed
+                ? 'text-rose-500 animate-pulse'
+                : 'text-cyan-500'
+            }`} />
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
               Target Goal
             </span>
           </div>
           <div className="text-xs font-mono font-bold">
             <span className={`font-black text-sm transition-all inline-block ${
-              isCharging && chargePhase === 'incremented'
+              isIncremented
                 ? 'animate-count-pop text-emerald-600 dark:text-emerald-400'
+                : isFailed
+                ? 'text-rose-600 dark:text-rose-400'
                 : 'text-slate-900 dark:text-slate-100'
             }`}>
-              {displayStreak}
+              {displayGoalStreak}
             </span>
             <span className="text-slate-400 dark:text-slate-500 font-semibold"> / {targetGoalDays} D</span>
           </div>
@@ -384,21 +515,29 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
 
         <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden relative shadow-inner">
           <div
-            className={`h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 relative ${
-              isCharging ? 'shadow-[0_0_12px_rgba(16,185,129,0.8)]' : ''
+            className={`h-full rounded-full relative transition-all ${
+              isFailed
+                ? 'bg-rose-500 duration-300'
+                : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400'
+            } ${
+              isSuccessCharging ? 'shadow-[0_0_12px_rgba(16,185,129,0.8)]' : ''
             }`}
             style={{
               width: `${currentBarWidth}%`,
-              transition: isCharging ? 'width 400ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+              transition: isSuccessCharging
+                ? 'width 400ms cubic-bezier(0.16, 1, 0.3, 1)'
+                : isFailed
+                ? 'width 300ms ease-out'
+                : 'none',
               willChange: 'width',
             }}
           >
-            {isCharging && (
+            {isSuccessCharging && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-bar-sheen" />
             )}
           </div>
 
-          {isCharging && currentBarWidth > 0 && (
+          {isSuccessCharging && currentBarWidth > 0 && (
             <div
               className="absolute top-1/2 -translate-y-1/2 -ml-1.5 w-3 h-3 rounded-full bg-emerald-300 dark:bg-emerald-200 animate-pulse-beacon pointer-events-none"
               style={{
@@ -416,9 +555,15 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
           <button
             onClick={() => onCheckIn && onCheckIn('missed')}
             disabled={!isInteractive || !!isCharging || isDeckLocked}
-            className="flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-300 border border-slate-200 dark:border-slate-700 font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:opacity-50 disabled:pointer-events-none"
+            className={`flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl border font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:pointer-events-none ${
+              isFailed
+                ? 'bg-rose-500 text-white dark:text-slate-950 border-rose-400 shadow-md shadow-rose-500/30 scale-[0.98]'
+                : 'bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-200 hover:text-rose-600 dark:hover:text-rose-300 border-slate-200 dark:border-slate-700 disabled:opacity-50'
+            }`}
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-1">
+            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center mb-1 ${
+              isFailed ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-700'
+            }`}>
               <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
             </div>
             <span className="text-xs sm:text-sm font-extrabold">
@@ -430,7 +575,7 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
             onClick={() => onCheckIn && onCheckIn('done')}
             disabled={!isInteractive || !!isCharging || isDeckLocked}
             className={`flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl border font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:pointer-events-none ${
-              isCharging
+              isSuccessCharging
                 ? 'bg-emerald-500 text-white dark:text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/30 scale-[0.98]'
                 : isDeckLocked
                 ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 opacity-60 border-emerald-500/30'
@@ -506,7 +651,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   }, [activeDateStr]);
 
   const [chargingHabitId, setChargingHabitId] = useState<string | null>(null);
-  const [chargePhase, setChargePhase] = useState<'idle' | 'charging' | 'incremented'>('idle');
+  const [chargePhase, setChargePhase] = useState<'idle' | 'charging' | 'incremented' | 'failed'>('idle');
 
   const totalHabitsCount = activeHabits.length;
   const completedCount = activeHabits.filter((h) => h.history?.[activeDateStr] === 'done').length;
@@ -566,17 +711,17 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
       if (status === 'done') {
         setChargingHabitId(currentCard.id);
 
-        // 2. Local Progress Fill: Animate only this specific habit's target goal bar from current to +1 over 400ms
+        // 2. Local Progress Fill: Animate target goal bar from current to +1
         requestAnimationFrame(() => {
           setChargePhase('charging');
         });
 
-        // 3. Number Pop: Pop this specific habit's target counter at 200ms
+        // 3. Number Pop & Live Delta Badges (+1 XP, +1 Streak, +1 Level)
         const numTimer = setTimeout(() => {
           setChargePhase('incremented');
-        }, 200);
+        }, 150);
 
-        // 4. Celebration Exit: Once the fill completes (~450ms), animate the completed card exiting with upward fade
+        // 4. Celebration Exit: After floating delta animation completes (~500ms), commit check-in
         const exitTimer = setTimeout(() => {
           onCheckIn(currentCard.id, 'done', activeDateStr);
           setChargingHabitId(null);
@@ -584,7 +729,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
           setTimeout(() => {
             setIsDeckLocked(false);
-          }, 350);
+          }, 300);
 
           if (unloggedHabits.length === 1 && completedCount >= 0) {
             confetti({
@@ -594,18 +739,30 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
               colors: ['#10b981', '#06b6d4', '#6366f1', '#f59e0b'],
             });
           }
-        }, 450);
+        }, 520);
 
         return () => {
           clearTimeout(numTimer);
           clearTimeout(exitTimer);
         };
       } else {
-        // Missed / Failed action
-        onCheckIn(currentCard.id, status, activeDateStr);
-        setTimeout(() => {
-          setIsDeckLocked(false);
-        }, 350);
+        // Missed / Failed action: Animate failure delta drop, streak reset, and micro-shake
+        setChargingHabitId(currentCard.id);
+        setChargePhase('failed');
+
+        const failTimer = setTimeout(() => {
+          onCheckIn(currentCard.id, status, activeDateStr);
+          setChargingHabitId(null);
+          setChargePhase('idle');
+
+          setTimeout(() => {
+            setIsDeckLocked(false);
+          }, 300);
+        }, 520);
+
+        return () => {
+          clearTimeout(failTimer);
+        };
       }
     },
     [currentCard, chargingHabitId, isDeckLocked, onCheckIn, activeDateStr, unloggedHabits.length, completedCount]
