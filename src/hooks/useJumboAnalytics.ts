@@ -8,6 +8,8 @@ export interface DayJumboStatus {
   isPerfect: boolean;
   isFuture: boolean;
   isLogged: boolean;
+  isBroken: boolean;
+  isIncomplete: boolean;
   failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[];
 }
 
@@ -30,10 +32,13 @@ export interface JumboAnalytics {
   cleanRate: number;
   perfectDaysCount: number;
   evaluatedDaysCount: number;
+  longestFlawlessStreak: number;
   rankedSaboteurs: SaboteurHabitMetric[];
   maxBreaks: number;
   totalPoints: number;
   nextMilestone: JumboMilestone;
+  windowStartDate: string;
+  windowEndDate: string;
 }
 
 const MILESTONE_TIERS = [
@@ -44,28 +49,68 @@ const MILESTONE_TIERS = [
   { target: 100, title: 'Unbreakable Legend Badge', icon: '🏆' },
 ];
 
+function computeLongestFlawlessStreak(dates: string[]): number {
+  if (!dates || dates.length === 0) return 0;
+  const sorted = Array.from(new Set(dates)).sort();
+  let maxStreak = 1;
+  let currentStreak = 1;
+
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const d1 = parseDateString(sorted[i]);
+    const d2 = parseDateString(sorted[i + 1]);
+    const diffDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      currentStreak++;
+      if (currentStreak > maxStreak) maxStreak = currentStreak;
+    } else if (diffDays > 1) {
+      currentStreak = 1;
+    }
+  }
+
+  return maxStreak;
+}
+
 export const useJumboAnalytics = (
   habits: Habit[],
   jumboDates: string[] = []
 ): JumboAnalytics => {
   return useMemo(() => {
     const activeHabits = habits.filter((h) => !h.archived);
+    const todayStr = getTodayString();
+
+    // 1. Gather all recorded dates across habits and jumbo wallet
+    const allRecordedDates: string[] = [...jumboDates];
+    activeHabits.forEach((h) => {
+      if (h.history) {
+        Object.keys(h.history).forEach((d) => allRecordedDates.push(d));
+      }
+    });
+    allRecordedDates.sort();
+
+    // Find the smart anchor date: latest date with user activity
+    const latestActiveDate =
+      allRecordedDates.length > 0
+        ? allRecordedDates[allRecordedDates.length - 1] > todayStr
+          ? allRecordedDates[allRecordedDates.length - 1]
+          : todayStr
+        : todayStr;
+
+    const anchorDate = parseDateString(latestActiveDate);
+
+    // 2. Build 28-day Window ending at anchorDate
     const days: DayJumboStatus[] = [];
     const saboteurCount: Record<string, { habit: Habit; count: number }> = {};
-
-    // Initialize saboteur dictionary
     activeHabits.forEach((h) => {
       saboteurCount[h.id] = { habit: h, count: 0 };
     });
 
-    const todayStr = getTodayString();
-    const today = parseDateString(todayStr);
     const jumboSet = new Set(jumboDates);
 
     for (let i = 27; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const dateKey = formatDate(d); // Accurate local YYYY-MM-DD
+      const d = new Date(anchorDate);
+      d.setDate(anchorDate.getDate() - i);
+      const dateKey = formatDate(d);
       const displayDate = formatDisplayDate(dateKey);
       const isFuture = dateKey > todayStr;
 
@@ -100,25 +145,39 @@ export const useJumboAnalytics = (
         jumboSet.has(dateKey) ||
         (activeHabits.length > 0 && completedCount === activeHabits.length && failedHabits.length === 0);
 
+      const isBroken = !isPerfect && failedHabits.length > 0;
+      const isIncomplete = !isPerfect && !isBroken && !isFuture;
+
       days.push({
         dateKey,
         displayDate,
         isPerfect,
         isFuture,
-        isLogged: loggedCount > 0,
+        isLogged: loggedCount > 0 || isPerfect,
+        isBroken,
+        isIncomplete,
         failedHabits,
       });
     }
 
-    // Calculate actual clean rate over past 28 days
-    const evaluatedDays = days.filter((d) => !d.isFuture);
-    const perfectDaysCount = evaluatedDays.filter((d) => d.isPerfect).length;
-    const cleanRate = evaluatedDays.length > 0 ? Math.round((perfectDaysCount / evaluatedDays.length) * 100) : 0;
+    // 3. All-time Flawless Streak
+    const longestFlawlessStreak = computeLongestFlawlessStreak(jumboDates);
 
-    // Total points (from jumbo wallet or counted perfect days)
+    // 4. Metrics & Clean Rate
+    const evaluatedDays = days.filter((d) => !d.isFuture && (d.isLogged || d.isPerfect || d.failedHabits.length > 0));
+    const perfectDaysCount = days.filter((d) => d.isPerfect).length;
+    
+    // Clean rate based on logged activity in the 28-day window (or total evaluated)
+    const cleanRate =
+      evaluatedDays.length > 0
+        ? Math.round((perfectDaysCount / evaluatedDays.length) * 100)
+        : perfectDaysCount > 0
+        ? Math.round((perfectDaysCount / 28) * 100)
+        : 0;
+
     const totalPoints = Math.max(jumboDates.length, days.filter((d) => d.isPerfect).length);
 
-    // Sort saboteurs by frequency
+    // 5. Ranked Saboteurs
     const rankedSaboteurs: SaboteurHabitMetric[] = Object.values(saboteurCount)
       .map(({ habit, count }) => ({
         habit,
@@ -133,7 +192,7 @@ export const useJumboAnalytics = (
       rankedSaboteurs[0].isTopSaboteur = true;
     }
 
-    // Next Milestone Reward Calculation
+    // 6. Next Milestone Reward Calculation
     const foundTier = MILESTONE_TIERS.find((t) => totalPoints < t.target) || {
       target: totalPoints + 50,
       title: 'Diamond Master Legend',
@@ -148,23 +207,21 @@ export const useJumboAnalytics = (
       rewardIcon: foundTier.icon,
     };
 
-    console.log('Jumbo Analytics Debug:', {
-      evaluatedDaysCount: days.length,
-      perfectDaysFound: days.filter((d) => d.isPerfect).length,
-      totalPoints,
-      jumboDatesCount: jumboDates.length,
-      rawHabitsSample: habits.map((h) => ({ name: h.name, historyKeys: Object.keys(h.history || {}) })),
-    });
+    const windowStartDate = days.length > 0 ? days[0].displayDate : '';
+    const windowEndDate = days.length > 0 ? days[days.length - 1].displayDate : '';
 
     return {
       days,
       cleanRate,
       perfectDaysCount,
-      evaluatedDaysCount: evaluatedDays.length,
+      evaluatedDaysCount: evaluatedDays.length || 28,
+      longestFlawlessStreak,
       rankedSaboteurs,
       maxBreaks,
       totalPoints,
       nextMilestone,
+      windowStartDate,
+      windowEndDate,
     };
   }, [habits, jumboDates]);
 };

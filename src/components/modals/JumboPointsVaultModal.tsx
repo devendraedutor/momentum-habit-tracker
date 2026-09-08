@@ -9,6 +9,7 @@ import {
   Sparkles,
   Zap,
   ShieldCheck,
+  Flame,
 } from 'lucide-react';
 import type { Habit } from '../../types/habit';
 import { DynamicIcon } from '../DynamicIcon';
@@ -36,11 +37,28 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
     days,
     cleanRate,
     perfectDaysCount,
+    longestFlawlessStreak,
     rankedSaboteurs,
     maxBreaks,
     totalPoints,
     nextMilestone,
+    windowStartDate,
+    windowEndDate,
   } = useJumboAnalytics(habits, jumboDates);
+
+  // Diagnostic log for historical accomplishments inspection
+  React.useEffect(() => {
+    if (isOpen) {
+      console.log('Jumbo Vault Data Map:', {
+        storedJumboPoints: totalPoints,
+        jumboDatesArray: jumboDates,
+        sampleHabitKeys: habits.map((h) => ({
+          name: h.name,
+          recordedDates: Object.keys(h.history || {}),
+        })),
+      });
+    }
+  }, [isOpen, totalPoints, jumboDates, habits]);
 
   if (!isOpen) return null;
 
@@ -73,7 +91,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         </button>
 
         {/* ZONE 1: HERO VAULT COUNTER */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80 relative z-10">
+        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800/80 relative z-10">
           <div className="flex items-center gap-3">
             <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-amber-400 via-yellow-400 to-amber-500 p-0.5 shadow-lg shadow-amber-400/25 flex items-center justify-center">
               <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-amber-400">
@@ -108,21 +126,44 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           </div>
         </div>
 
+        {/* LIFETIME JUMBO METRICS STRIP */}
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 my-3 relative z-10">
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col items-center justify-center text-center shadow-2xs">
+            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+              <Gem className="w-4 h-4 fill-amber-400 text-amber-500" />
+              <span className="text-lg sm:text-xl font-black font-mono">{totalPoints}</span>
+            </div>
+            <span className="text-[10px] sm:text-[11px] font-bold font-mono text-slate-600 dark:text-slate-300 mt-0.5">
+              Total Conquered Days
+            </span>
+          </div>
+
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-rose-500/10 border border-orange-500/25 flex flex-col items-center justify-center text-center shadow-2xs">
+            <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400">
+              <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+              <span className="text-lg sm:text-xl font-black font-mono">{longestFlawlessStreak}d</span>
+            </div>
+            <span className="text-[10px] sm:text-[11px] font-bold font-mono text-slate-600 dark:text-slate-300 mt-0.5">
+              Longest Perfect Run
+            </span>
+          </div>
+        </div>
+
         {/* ZONE 2: THE 28-DAY CONSTELLATION MATRIX */}
-        <div className="py-4 relative z-10">
-          <div className="flex items-center justify-between mb-2.5">
+        <div className="py-2.5 relative z-10">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black uppercase tracking-wider font-mono text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
               <span>Constellation Heatmap</span>
-              <span className="text-slate-400 font-normal text-[11px]">(28 Days)</span>
+              <span className="text-slate-400 font-normal text-[10px]">({windowStartDate} – {windowEndDate})</span>
             </span>
 
-            <div className="flex items-center gap-3 text-[10px] font-mono font-medium text-slate-400">
+            <div className="flex items-center gap-2.5 text-[10px] font-mono font-medium text-slate-400">
               <div className="flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-500 inline-block" />
                 <span>Claimed</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full border border-slate-400 dark:border-slate-600 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full border border-rose-400 inline-block" />
                 <span>Broken</span>
               </div>
             </div>
@@ -145,21 +186,23 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                       isClaimed
                         ? 'bg-gradient-to-tr from-amber-400/25 via-yellow-400/20 to-amber-500/30 border border-amber-400/60 text-amber-500 shadow-xs shadow-amber-400/20 hover:scale-105 hover:border-amber-400'
                         : day.isFuture
-                        ? 'border border-dashed border-slate-300 dark:border-slate-700 bg-transparent opacity-40 cursor-default'
-                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 text-slate-400'
+                        ? 'border border-dashed border-slate-200 dark:border-slate-800 bg-transparent opacity-30 cursor-default'
+                        : hasFailures
+                        ? 'bg-white dark:bg-slate-800 border border-rose-300/80 dark:border-rose-900/60 hover:border-rose-400 text-rose-500'
+                        : 'bg-slate-100/50 dark:bg-slate-800/30 border border-dashed border-slate-200/90 dark:border-slate-750/60 text-slate-300 dark:text-slate-600'
                     } ${isSelected ? 'ring-2 ring-amber-500 dark:ring-amber-400 scale-105' : ''}`}
                     title={`${day.displayDate}: ${isClaimed ? '💎 Jumbo Claimed' : hasFailures ? `${day.failedHabits.length} Habits Missed` : 'Incomplete'}`}
                   >
                     {isClaimed ? (
                       <Gem className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
-                    ) : (
+                    ) : hasFailures ? (
                       <div className="relative flex items-center justify-center">
-                        <span className="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center">
-                          {hasFailures && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500/80" />
-                          )}
+                        <span className="w-3.5 h-3.5 rounded-full border border-rose-400/70 flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                         </span>
                       </div>
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
                     )}
                   </button>
                 );
@@ -220,7 +263,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         </div>
 
         {/* ZONE 3: THE SABOTEUR RADAR */}
-        <div className="py-3 border-t border-slate-100 dark:border-slate-800/80 relative z-10">
+        <div className="py-2.5 border-t border-slate-100 dark:border-slate-800/80 relative z-10">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black uppercase tracking-wider font-mono text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
               <span>Saboteur Radar</span>
@@ -228,7 +271,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
             </span>
           </div>
 
-          <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
             {!hasAnySaboteurs ? (
               <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center gap-2 text-xs font-mono text-emerald-700 dark:text-emerald-300">
                 <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
@@ -298,7 +341,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         </div>
 
         {/* ZONE 4: VAULT UTILITY TEASER (Next Reward Milestone) */}
-        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 relative z-10">
+        <div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 relative z-10">
           <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-orange-500/10 border border-amber-400/30">
             <div className="flex items-center justify-between text-xs font-mono font-bold mb-1.5">
               <div className="flex items-center gap-1 text-slate-900 dark:text-white">
