@@ -1,4 +1,4 @@
-export type CheckInStatus = 'done' | 'missed' | 'skipped' | 'none';
+export type CheckInStatus = 'done' | 'missed' | 'skipped' | 'none' | 'controlled' | 'failed' | 'pending';
 
 export type HabitType = 'BUILD' | 'BREAK';
 

@@ -175,10 +175,15 @@ export const useJumboAnalytics = (
       const isToday = dateKey === todayStr;
       const isFuture = dateKey > todayStr;
 
+      const habitsActiveOnDate = activeHabits.filter((h) => {
+        const sDate = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : todayStr);
+        return sDate <= dateKey;
+      });
+
       const failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[] = [];
       let completedHabitsCount = 0;
 
-      activeHabits.forEach((habit) => {
+      habitsActiveOnDate.forEach((habit) => {
         const rawStatus = habit.history?.[dateKey];
         const status = rawStatus as string | undefined;
 
@@ -200,10 +205,17 @@ export const useJumboAnalytics = (
 
       const isPerfect =
         jumboSet.has(dateKey) ||
-        (activeHabits.length > 0 && completedHabitsCount === activeHabits.length && failedHabits.length === 0);
+        (habitsActiveOnDate.length > 0 &&
+          completedHabitsCount === habitsActiveOnDate.length &&
+          failedHabits.length === 0);
 
       const isBroken = !isPerfect && failedHabits.length > 0;
-      const isIncomplete = !isPerfect && !isBroken && !isFuture;
+      const isIncomplete =
+        !isPerfect &&
+        !isBroken &&
+        !isFuture &&
+        habitsActiveOnDate.length > 0 &&
+        completedHabitsCount < habitsActiveOnDate.length;
 
       if (isPerfect) conqueredCount++;
       else if (isBroken) failedCount++;
@@ -222,11 +234,11 @@ export const useJumboAnalytics = (
         isToday,
         failedHabits,
         completedHabitsCount,
-        totalActiveHabitsCount: activeHabits.length,
+        totalActiveHabitsCount: habitsActiveOnDate.length,
       };
     });
 
-    const totalPoints = Math.max(jumboDates.length, conqueredCount);
+    const totalPoints = jumboDates.length;
 
     // Range display string (e.g. "Sep 28 – Oct 25, 2026")
     const startFormatted = formatDisplayDate(startStr);

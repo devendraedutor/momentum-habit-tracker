@@ -6,6 +6,7 @@ import { Zap, Plus, ListChecks, Gem, Settings, LogOut } from 'lucide-react';
 interface NavbarProps {
   habits: Habit[];
   jumboPointsCount: number;
+  hasPendingBacklog?: boolean;
   tester: Tester | null;
   onOpenNewHabit: () => void;
   onOpenDirectory: () => void;
@@ -17,6 +18,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   habits,
   jumboPointsCount,
+  hasPendingBacklog = false,
   tester,
   onOpenNewHabit,
   onOpenDirectory,
@@ -56,8 +58,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenJumboVault}
-              className="relative px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/35 text-amber-700 dark:bg-amber-500/15 dark:border-amber-400/40 dark:text-amber-300 flex items-center gap-1.5 font-mono shadow-xs select-none cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-amber-500/60 dark:hover:border-amber-400/70 hover:shadow-amber-500/20 animate-fade-in group"
-              title={`Total Jumbo Points: ${jumboPointsCount} • Click to open Jumbo Vault Analytics`}
+              className={`relative px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 flex items-center gap-1.5 font-mono shadow-xs select-none cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-amber-500/60 dark:hover:border-amber-400/70 hover:shadow-amber-500/20 animate-fade-in group ${
+                hasPendingBacklog
+                  ? 'border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/70 dark:ring-amber-400/80 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 animate-pulse'
+                  : 'border-amber-500/35 dark:border-amber-400/40'
+              }`}
+              title={
+                hasPendingBacklog
+                  ? `Total Jumbo Points: ${jumboPointsCount} • ⚠️ Audit required: past check-ins pending`
+                  : `Total Jumbo Points: ${jumboPointsCount} • Click to open Jumbo Vault Analytics`
+              }
               aria-label="Open Jumbo Points Vault"
             >
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/0 via-amber-300/20 to-amber-400/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -65,6 +75,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-xs font-black font-mono">
                 {jumboPointsCount}
               </span>
+              {hasPendingBacklog && (
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping flex-shrink-0" />
+              )}
             </button>
           )}
 

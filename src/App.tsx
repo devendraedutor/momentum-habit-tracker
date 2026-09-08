@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Habit, UserSettings, CheckInStatus } from './types/habit';
 import {
   loadHabitsFromStorage,
@@ -8,6 +8,8 @@ import {
   loadJumboDatesFromStorage,
   saveJumboDatesToStorage,
   reconcileJumboDate,
+  recalculateAllJumboPoints,
+  getHistoricalPendingBacklog,
 } from './lib/storage';
 import {
   getTesterById,
@@ -68,6 +70,15 @@ export function App() {
     habitIcon: string;
     habitColor: string;
   } | null>(null);
+
+  // Compute pending historical check-in backlog for Audit Lockout
+  const pendingBacklog = useMemo(() => getHistoricalPendingBacklog(habits), [habits]);
+
+  // Recalculate pure mathematical Jumbo Points whenever habits are added, edited, or checked-in
+  useEffect(() => {
+    const pureJumboDates = recalculateAllJumboPoints(habits);
+    setJumboDates(pureJumboDates);
+  }, [habits]);
 
   // Login handler when passkey is validated in AuthGateModal
   const handleLogin = useCallback((tester: Tester) => {
@@ -529,6 +540,7 @@ export function App() {
       <Navbar
         habits={habits}
         jumboPointsCount={jumboDates.length}
+        hasPendingBacklog={pendingBacklog.length > 0}
         tester={activeTester}
         onOpenNewHabit={() => openHabitForm(null)}
         onOpenDirectory={openDirectory}
@@ -601,6 +613,10 @@ export function App() {
         onClose={() => setIsJumboVaultOpen(false)}
         habits={habits}
         jumboDates={jumboDates}
+        onSelectDate={(dateStr) => {
+          setActiveDateStr(dateStr);
+          setIsJumboVaultOpen(false);
+        }}
       />
 
       {/* Dedicated Habit Directory & Management Modal (No Settings / Analytics clutter) */}

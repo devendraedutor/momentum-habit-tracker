@@ -1,6 +1,13 @@
 import type { Habit, UserSettings, ExportData } from '../types/habit';
 import { getActiveSessionUserId } from '../config/testers';
 import { getTargetGoalForHabit, recalculateHabitProgressionFromHistory } from '../config/progression';
+import {
+  formatDate,
+  getTodayString,
+  parseDateString,
+  formatDisplayDate,
+  getDateRange,
+} from './momentum';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   soundEffects: true,
@@ -201,6 +208,118 @@ export function saveJumboDatesToStorage(dates: string[], userId?: string): void 
   }
 }
 
+export interface PendingAuditItem {
+  dateKey: string;      // YYYY-MM-DD
+  displayDate: string;  // e.g. "Sep 5, 2026"
+  pendingHabits: { id: string; name: string; icon: string; color?: string }[];
+}
+
+/**
+ * Collects all historical dates up to yesterday where active habits remain unlogged or pending.
+ */
+export function getHistoricalPendingBacklog(habits: Habit[]): PendingAuditItem[] {
+  const backlog: PendingAuditItem[] = [];
+  const todayKey = getTodayString();
+  const today = parseDateString(todayKey);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const yesterdayKey = formatDate(yesterday);
+
+  const activeHabits = habits.filter((h) => !h.archived);
+  if (activeHabits.length === 0) return [];
+
+  let earliestDate = todayKey;
+  activeHabits.forEach((h) => {
+    const sDate = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : todayKey);
+    if (sDate < earliestDate) earliestDate = sDate;
+    Object.keys(h.history || {}).forEach((d) => {
+      if (d < earliestDate) earliestDate = d;
+    });
+  });
+
+  if (earliestDate > yesterdayKey) return [];
+
+  const allDates = getDateRange(earliestDate, yesterdayKey);
+
+  allDates.forEach((dateKey) => {
+    const habitsActiveOnDate = activeHabits.filter((h) => {
+      const sDate = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : todayKey);
+      return sDate <= dateKey;
+    });
+
+    if (habitsActiveOnDate.length === 0) return;
+
+    const pendingHabitsOnDate: { id: string; name: string; icon: string; color?: string }[] = [];
+
+    habitsActiveOnDate.forEach((h) => {
+      const st = h.history?.[dateKey];
+      if (!st || st === 'none') {
+        pendingHabitsOnDate.push({
+          id: h.id,
+          name: h.name,
+          icon: h.icon,
+          color: h.color,
+        });
+      }
+    });
+
+    if (pendingHabitsOnDate.length > 0) {
+      backlog.push({
+        dateKey,
+        displayDate: formatDisplayDate(dateKey, true),
+        pendingHabits: pendingHabitsOnDate,
+      });
+    }
+  });
+
+  return backlog;
+}
+
+/**
+ * Pure mathematical recalculation of all valid Jumbo Points across full recorded history.
+ * Rule: A date earns a Jumbo Point iff >= 1 habit was active AND every active habit is 'done' or 'controlled'.
+ */
+export function recalculateAllJumboPoints(habits: Habit[]): string[] {
+  const activeHabits = habits.filter((h) => !h.archived);
+  if (activeHabits.length === 0) return [];
+
+  const todayKey = getTodayString();
+  let earliestDate = todayKey;
+  let latestDate = todayKey;
+
+  activeHabits.forEach((h) => {
+    const sDate = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : todayKey);
+    if (sDate < earliestDate) earliestDate = sDate;
+    Object.keys(h.history || {}).forEach((d) => {
+      if (d < earliestDate) earliestDate = d;
+      if (d > latestDate) latestDate = d;
+    });
+  });
+
+  const allDates = getDateRange(earliestDate, latestDate);
+  const validJumboDates: string[] = [];
+
+  allDates.forEach((dateKey) => {
+    const habitsActiveOnDate = activeHabits.filter((h) => {
+      const sDate = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : todayKey);
+      return sDate <= dateKey;
+    });
+
+    if (habitsActiveOnDate.length === 0) return;
+
+    const allPassed = habitsActiveOnDate.every((h) => {
+      const st = h.history?.[dateKey];
+      return st === 'done' || st === 'controlled';
+    });
+
+    if (allPassed) {
+      validJumboDates.push(dateKey);
+    }
+  });
+
+  return validJumboDates;
+}
+
 /**
  * Reconciles Jumbo Points for a given date based on current active habits.
  */
@@ -209,14 +328,19 @@ export function reconcileJumboDate(
   activeHabits: Habit[],
   existingJumboDates: string[]
 ): { updatedJumboDates: string[]; isJumboNow: boolean; wasAwarded: boolean } {
-  const applicableHabits = activeHabits.filter((h) => !h.archived && (!h.startDate || h.startDate <= dateStr));
+  const applicableHabits = activeHabits.filter(
+    (h) => !h.archived && (!h.startDate || h.startDate <= dateStr)
+  );
 
-  if (applicableHabits.length < 3) {
+  if (applicableHabits.length === 0) {
     const updatedJumboDates = existingJumboDates.filter((d) => d !== dateStr);
     return { updatedJumboDates, isJumboNow: false, wasAwarded: false };
   }
 
-  const allDone = applicableHabits.every((h) => h.history[dateStr] === 'done');
+  const allDone = applicableHabits.every((h) => {
+    const st = h.history[dateStr];
+    return st === 'done' || st === 'controlled';
+  });
   const alreadyHad = existingJumboDates.includes(dateStr);
 
   let updatedJumboDates = [...existingJumboDates];
