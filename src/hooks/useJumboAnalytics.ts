@@ -1,16 +1,21 @@
 import { useMemo } from 'react';
 import type { Habit } from '../types/habit';
-import { getTodayString, parseDateString, formatDate, formatDisplayDate } from '../lib/momentum';
+import { getTodayString, parseDateString, formatDate, formatDisplayDate, getDateRange } from '../lib/momentum';
 
 export interface DayJumboStatus {
   dateKey: string;      // YYYY-MM-DD
-  displayDate: string;  // "Sep 7"
+  dayNum: number;       // 28
+  monthShort: string;   // "SEP"
+  weekdayShort: string; // "Mon"
+  displayDate: string;  // "Sep 28"
   isPerfect: boolean;
-  isFuture: boolean;
-  isLogged: boolean;
   isBroken: boolean;
   isIncomplete: boolean;
+  isFuture: boolean;
+  isToday: boolean;
   failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[];
+  completedHabitsCount: number;
+  totalActiveHabitsCount: number;
 }
 
 export interface SaboteurHabitMetric {
@@ -30,15 +35,17 @@ export interface JumboMilestone {
 export interface JumboAnalytics {
   days: DayJumboStatus[];
   cleanRate: number;
-  perfectDaysCount: number;
-  evaluatedDaysCount: number;
+  conqueredCount: number;
+  interruptedCount: number;
+  unloggedCount: number;
   longestFlawlessStreak: number;
   rankedSaboteurs: SaboteurHabitMetric[];
   maxBreaks: number;
   totalPoints: number;
   nextMilestone: JumboMilestone;
-  windowStartDate: string;
-  windowEndDate: string;
+  rangeTitle: string;
+  canGoForward: boolean;
+  canGoBackward: boolean;
 }
 
 const MILESTONE_TIERS = [
@@ -49,14 +56,11 @@ const MILESTONE_TIERS = [
   { target: 100, title: 'Unbreakable Legend Badge', icon: '🏆' },
 ];
 
-export type JumboWindowMode = 'smart' | 'recent' | 'streak';
-
-function computeLongestFlawlessStreak(dates: string[]): { streak: number; endDate: string | null } {
-  if (!dates || dates.length === 0) return { streak: 0, endDate: null };
+function computeLongestFlawlessStreak(dates: string[]): number {
+  if (!dates || dates.length === 0) return 0;
   const sorted = Array.from(new Set(dates)).sort();
   let maxStreak = 1;
   let currentStreak = 1;
-  let bestEnd = sorted[0];
 
   for (let i = 0; i < sorted.length - 1; i++) {
     const d1 = parseDateString(sorted[i]);
@@ -67,20 +71,19 @@ function computeLongestFlawlessStreak(dates: string[]): { streak: number; endDat
       currentStreak++;
       if (currentStreak > maxStreak) {
         maxStreak = currentStreak;
-        bestEnd = sorted[i + 1];
       }
     } else if (diffDays > 1) {
       currentStreak = 1;
     }
   }
 
-  return { streak: maxStreak, endDate: bestEnd };
+  return maxStreak;
 }
 
 export const useJumboAnalytics = (
   habits: Habit[],
   jumboDates: string[] = [],
-  windowMode: JumboWindowMode = 'smart'
+  pageOffset: number = 0
 ): JumboAnalytics => {
   return useMemo(() => {
     const activeHabits = habits.filter((h) => !h.archived);
@@ -95,53 +98,58 @@ export const useJumboAnalytics = (
     });
     allRecordedDates.sort();
 
-    // All-time Flawless Streak
-    const streakResult = computeLongestFlawlessStreak(jumboDates);
-    const longestFlawlessStreak = streakResult.streak;
-
-    // Determine Anchor Date based on windowMode
-    let anchorDateStr = todayStr;
+    // Find smart base anchor date: latest date with user activity or today
     const latestRecordedDate = allRecordedDates.length > 0 ? allRecordedDates[allRecordedDates.length - 1] : todayStr;
+    const baseAnchor = parseDateString(latestRecordedDate);
 
-    if (windowMode === 'streak' && streakResult.endDate) {
-      anchorDateStr = streakResult.endDate;
-    } else if (windowMode === 'smart') {
-      anchorDateStr = latestRecordedDate;
-    } else {
-      anchorDateStr = todayStr;
-    }
+    // Apply 28-day block pagination
+    baseAnchor.setDate(baseAnchor.getDate() + pageOffset * 28);
 
-    const anchorDate = parseDateString(anchorDateStr);
+    // Align 28-day window to Monday – Sunday (4 full weeks = exactly 28 days)
+    const endDayOfWeek = baseAnchor.getDay();
+    const diffToSunday = (7 - endDayOfWeek) % 7;
+    const alignedEnd = new Date(baseAnchor);
+    alignedEnd.setDate(baseAnchor.getDate() + diffToSunday);
 
-    // 2. Build 28-day Window ending at anchorDate
-    const days: DayJumboStatus[] = [];
+    const alignedStart = new Date(alignedEnd);
+    alignedStart.setDate(alignedEnd.getDate() - 27);
+
+    const startStr = formatDate(alignedStart);
+    const endStr = formatDate(alignedEnd);
+    const dateRangeList = getDateRange(startStr, endStr);
+
+    const jumboSet = new Set(jumboDates);
     const saboteurCount: Record<string, { habit: Habit; count: number }> = {};
     activeHabits.forEach((h) => {
       saboteurCount[h.id] = { habit: h, count: 0 };
     });
 
-    const jumboSet = new Set(jumboDates);
+    let conqueredCount = 0;
+    let interruptedCount = 0;
+    let unloggedCount = 0;
 
-    for (let i = 27; i >= 0; i--) {
-      const d = new Date(anchorDate);
-      d.setDate(anchorDate.getDate() - i);
-      const dateKey = formatDate(d);
+    const days: DayJumboStatus[] = dateRangeList.map((dateKey) => {
+      const dateObj = parseDateString(dateKey);
+      const dayNum = dateObj.getDate();
+      const monthShort = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      const weekdayShort = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
       const displayDate = formatDisplayDate(dateKey);
+      const isToday = dateKey === todayStr;
       const isFuture = dateKey > todayStr;
 
       const failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[] = [];
-      let completedCount = 0;
-      let loggedCount = 0;
+      let completedHabitsCount = 0;
+      let loggedHabitsCount = 0;
 
       activeHabits.forEach((habit) => {
         const rawStatus = habit.history?.[dateKey];
         const status = rawStatus as string | undefined;
 
         if (status === 'done' || status === 'controlled') {
-          completedCount++;
-          loggedCount++;
+          completedHabitsCount++;
+          loggedHabitsCount++;
         } else if (status === 'failed' || status === 'missed') {
-          loggedCount++;
+          loggedHabitsCount++;
           failedHabits.push({
             id: habit.id,
             name: habit.name,
@@ -155,41 +163,50 @@ export const useJumboAnalytics = (
         }
       });
 
-      // A day is perfect if recorded in jumboDates OR all active habits were successfully checked without any failures
       const isPerfect =
         jumboSet.has(dateKey) ||
-        (activeHabits.length > 0 && completedCount === activeHabits.length && failedHabits.length === 0);
+        (activeHabits.length > 0 && completedHabitsCount === activeHabits.length && failedHabits.length === 0);
 
       const isBroken = !isPerfect && failedHabits.length > 0;
       const isIncomplete = !isPerfect && !isBroken && !isFuture;
 
-      days.push({
+      if (isPerfect) conqueredCount++;
+      else if (isBroken) interruptedCount++;
+      else if (isIncomplete) unloggedCount++;
+
+      return {
         dateKey,
+        dayNum,
+        monthShort,
+        weekdayShort,
         displayDate,
         isPerfect,
-        isFuture,
-        isLogged: loggedCount > 0 || isPerfect,
         isBroken,
         isIncomplete,
+        isFuture,
+        isToday,
         failedHabits,
-      });
-    }
+        completedHabitsCount,
+        totalActiveHabitsCount: activeHabits.length,
+      };
+    });
 
-    // 4. Metrics & Clean Rate
-    const evaluatedDays = days.filter((d) => !d.isFuture && (d.isLogged || d.isPerfect || d.failedHabits.length > 0));
-    const perfectDaysCount = days.filter((d) => d.isPerfect).length;
-    
-    // Clean rate based on logged activity in the 28-day window (or total evaluated)
+    // All-time Flawless Streak
+    const longestFlawlessStreak = computeLongestFlawlessStreak(jumboDates);
+
+    // Total points (wallet points or max conquered)
+    const totalPoints = Math.max(jumboDates.length, conqueredCount);
+
+    // Clean rate calculation for current window
+    const evaluatedTotal = conqueredCount + interruptedCount;
     const cleanRate =
-      evaluatedDays.length > 0
-        ? Math.round((perfectDaysCount / evaluatedDays.length) * 100)
-        : perfectDaysCount > 0
-        ? Math.round((perfectDaysCount / 28) * 100)
+      evaluatedTotal > 0
+        ? Math.round((conqueredCount / evaluatedTotal) * 100)
+        : conqueredCount > 0
+        ? Math.round((conqueredCount / 28) * 100)
         : 0;
 
-    const totalPoints = Math.max(jumboDates.length, days.filter((d) => d.isPerfect).length);
-
-    // 5. Ranked Saboteurs
+    // Ranked Saboteurs
     const rankedSaboteurs: SaboteurHabitMetric[] = Object.values(saboteurCount)
       .map(({ habit, count }) => ({
         habit,
@@ -204,7 +221,7 @@ export const useJumboAnalytics = (
       rankedSaboteurs[0].isTopSaboteur = true;
     }
 
-    // 6. Next Milestone Reward Calculation
+    // Milestone Reward Track
     const foundTier = MILESTONE_TIERS.find((t) => totalPoints < t.target) || {
       target: totalPoints + 50,
       title: 'Diamond Master Legend',
@@ -219,21 +236,25 @@ export const useJumboAnalytics = (
       rewardIcon: foundTier.icon,
     };
 
-    const windowStartDate = days.length > 0 ? days[0].displayDate : '';
-    const windowEndDate = days.length > 0 ? days[days.length - 1].displayDate : '';
+    // Range display string (e.g. "Sep 28 – Oct 25, 2026")
+    const startFormatted = formatDisplayDate(startStr);
+    const endFormatted = formatDisplayDate(endStr, true);
+    const rangeTitle = `${startFormatted} – ${endFormatted}`;
 
     return {
       days,
       cleanRate,
-      perfectDaysCount,
-      evaluatedDaysCount: evaluatedDays.length || 28,
+      conqueredCount,
+      interruptedCount,
+      unloggedCount,
       longestFlawlessStreak,
       rankedSaboteurs,
       maxBreaks,
       totalPoints,
       nextMilestone,
-      windowStartDate,
-      windowEndDate,
+      rangeTitle,
+      canGoForward: pageOffset < 0 || endStr < todayStr,
+      canGoBackward: true,
     };
-  }, [habits, jumboDates, windowMode]);
+  }, [habits, jumboDates, pageOffset]);
 };
