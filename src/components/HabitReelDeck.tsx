@@ -123,15 +123,18 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
             <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
               {h.name}
             </span>
-            {stats.achievedLevel > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[9px] font-black font-mono flex items-center gap-0.5 shadow-xs flex-shrink-0">
-                <Crown className="w-2.5 h-2.5 fill-amber-500" />
-                <span>Lv.{stats.achievedLevel}</span>
-              </span>
-            )}
           </div>
 
           <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
+            {/* 1. XP */}
+            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Lifetime Score: ${stats.currentScore}`}>
+              <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>{stats.currentScore}</span>
+            </span>
+
+            <span className="text-slate-300 dark:text-slate-600">•</span>
+
+            {/* 2. Streak */}
             <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Current Streak: ${stats.currentStreak} days`}>
               <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
               <span>{stats.currentStreak}</span>
@@ -139,9 +142,10 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
 
             <span className="text-slate-300 dark:text-slate-600">•</span>
 
-            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium" title={`Lifetime Score: ${stats.currentScore}`}>
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              <span>{stats.currentScore}</span>
+            {/* 3. Level */}
+            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Mastery Level ${stats.achievedLevel}`}>
+              <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>{stats.achievedLevel}</span>
             </span>
 
             {isNearGoal && (
@@ -173,29 +177,24 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
           </button>
         )}
 
-        <div className="flex flex-col items-end text-right min-w-[42px] sm:min-w-[48px]">
-          <div className="flex items-baseline gap-0.5 justify-end">
-            <span
-              className={`font-black text-sm font-mono tracking-tight transition-all duration-300 inline-block ${
-                isDone
-                  ? 'text-slate-900 dark:text-slate-100'
-                  : 'text-slate-400 dark:text-slate-500'
-              } ${
-                isExpanded
-                  ? 'scale-100 text-slate-900 dark:text-slate-100'
-                  : isDone
-                  ? 'scale-110 text-emerald-600 dark:text-emerald-400'
-                  : ''
-              }`}
-            >
-              {isDone ? animatedStreak : 0}
-            </span>
-            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 font-mono">
-              /{targetDays} D
-            </span>
-          </div>
-          <span className="text-[9px] font-mono font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tighter">
-            TARGET
+        <div className="flex items-baseline gap-0.5 justify-end font-mono">
+          <span
+            className={`font-black text-sm sm:text-base tracking-tight transition-all duration-300 inline-block ${
+              isDone
+                ? 'text-slate-900 dark:text-slate-100'
+                : 'text-slate-400 dark:text-slate-500'
+            } ${
+              isExpanded
+                ? 'scale-100 text-slate-900 dark:text-slate-100'
+                : isDone
+                ? 'scale-105 text-emerald-600 dark:text-emerald-400'
+                : ''
+            }`}
+          >
+            {isDone ? animatedStreak : 0}
+          </span>
+          <span className="text-xs sm:text-sm font-semibold text-slate-400 dark:text-slate-500">
+            /{targetDays} D
           </span>
         </div>
 
