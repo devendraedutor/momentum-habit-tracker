@@ -8,12 +8,13 @@ import {
   Lock,
   Sparkles,
   Zap,
+  ShieldCheck,
 } from 'lucide-react';
 import type { Habit } from '../../types/habit';
 import { DynamicIcon } from '../DynamicIcon';
 import {
   useJumboAnalytics,
-  type DayConstellationPoint,
+  type DayJumboStatus,
 } from '../../hooks/useJumboAnalytics';
 
 interface JumboPointsVaultModalProps {
@@ -29,18 +30,22 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
   habits,
   jumboDates,
 }) => {
-  const [selectedDay, setSelectedDay] = useState<DayConstellationPoint | null>(null);
+  const [selectedDay, setSelectedDay] = useState<DayJumboStatus | null>(null);
 
   const {
-    totalJumboPoints,
-    perfectDayRate,
-    constellationDays,
-    saboteurRanking,
+    days,
+    cleanRate,
+    perfectDaysCount,
+    evaluatedDaysCount,
+    rankedSaboteurs,
     maxBreaks,
+    totalPoints,
     nextMilestone,
   } = useJumboAnalytics(habits, jumboDates);
 
   if (!isOpen) return null;
+
+  const hasAnySaboteurs = rankedSaboteurs.some((s) => s.count > 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in select-none">
@@ -80,7 +85,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-slate-900 dark:text-white">
-                  {totalJumboPoints}
+                  {totalPoints}
                 </span>
                 <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 font-mono">
                   Jumbo Points
@@ -96,9 +101,11 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           <div className="hidden sm:flex flex-col items-end">
             <span className="bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-mono px-2.5 py-1 rounded-full flex items-center gap-1 shadow-2xs">
               <Zap className="w-3 h-3 fill-emerald-500 text-emerald-500" />
-              <span>{perfectDayRate}% Clean Rate</span>
+              <span>{cleanRate}% Clean Rate</span>
             </span>
-            <span className="text-[10px] font-mono text-slate-400 mt-1">Last 28 Days</span>
+            <span className="text-[10px] font-mono text-slate-400 mt-1">
+              {perfectDaysCount} of {evaluatedDaysCount || 28} Days Conquered
+            </span>
           </div>
         </div>
 
@@ -125,13 +132,13 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           {/* 4x7 Constellation Grid */}
           <div className="bg-slate-50/80 dark:bg-slate-850/60 p-3 rounded-2xl border border-slate-200/70 dark:border-slate-800">
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-              {constellationDays.map((day) => {
-                const isClaimed = day.isPerfectDay;
-                const isSelected = selectedDay?.dateStr === day.dateStr;
+              {days.map((day) => {
+                const isClaimed = day.isPerfect;
+                const isSelected = selectedDay?.dateKey === day.dateKey;
 
                 return (
                   <button
-                    key={day.dateStr}
+                    key={day.dateKey}
                     type="button"
                     onClick={() => setSelectedDay(isSelected ? null : day)}
                     className={`h-8 sm:h-9 rounded-xl flex items-center justify-center relative transition-all duration-200 active:scale-90 cursor-pointer ${
@@ -141,14 +148,14 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                         ? 'border border-dashed border-slate-300 dark:border-slate-700 bg-transparent opacity-40 cursor-default'
                         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 text-slate-400'
                     } ${isSelected ? 'ring-2 ring-amber-500 dark:ring-amber-400 scale-105' : ''}`}
-                    title={`${day.formattedDate}: ${isClaimed ? '💎 Jumbo Claimed' : `${day.brokenHabits.length} Habits Missed`}`}
+                    title={`${day.displayDate}: ${isClaimed ? '💎 Jumbo Claimed' : `${day.failedHabits.length} Habits Missed`}`}
                   >
                     {isClaimed ? (
                       <Gem className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
                     ) : (
                       <div className="relative flex items-center justify-center">
                         <span className="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center">
-                          {day.brokenHabits.length > 0 && (
+                          {day.failedHabits.length > 0 && (
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500/70" />
                           )}
                         </span>
@@ -159,7 +166,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               })}
             </div>
 
-            {/* Interactive Day Details Micro-Card */}
+            {/* Interactive Day Details Micro-Banner */}
             <AnimatePresence>
               {selectedDay && (
                 <motion.div
@@ -168,37 +175,41 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-2.5 pt-2.5 border-t border-slate-200 dark:border-slate-750 flex items-center justify-between text-xs font-mono"
                 >
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1 pr-2">
                     <span className="font-bold text-slate-800 dark:text-slate-200">
-                      {selectedDay.formattedDate}
+                      {selectedDay.displayDate}
                     </span>
                     <span className="text-slate-400">•</span>
-                    {selectedDay.isPerfectDay ? (
+                    {selectedDay.isPerfect ? (
                       <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                        <Gem className="w-3 h-3 fill-amber-400 text-amber-500" />
-                        100% Perfect Day (+1 Jumbo)
+                        <Gem className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                        Perfect Day: All habits conquered (+1 💎)
                       </span>
-                    ) : (
+                    ) : selectedDay.failedHabits.length > 0 ? (
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-rose-600 dark:text-rose-400 font-bold">
                           Missed Jumbo:
                         </span>
-                        {selectedDay.brokenHabits.slice(0, 2).map(({ habit }) => (
+                        {selectedDay.failedHabits.map((h) => (
                           <span
-                            key={habit.id}
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-bold"
+                            key={h.id}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-bold border border-rose-200 dark:border-rose-900/40"
                           >
-                            <DynamicIcon name={habit.icon} className="w-2.5 h-2.5" />
-                            <span>{habit.name}</span>
+                            <DynamicIcon name={h.icon} className="w-2.5 h-2.5" />
+                            <span>{h.name}</span>
                           </span>
                         ))}
                       </div>
+                    ) : (
+                      <span className="text-slate-500 dark:text-slate-400 font-bold">
+                        Incomplete: No check-in recorded
+                      </span>
                     )}
                   </div>
 
                   <button
                     onClick={() => setSelectedDay(null)}
-                    className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
                   >
                     Dismiss
                   </button>
@@ -218,13 +229,14 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           </div>
 
           <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-            {saboteurRanking.length === 0 ? (
-              <div className="text-xs text-slate-400 text-center py-2 font-mono">
-                No active habits to analyze.
+            {!hasAnySaboteurs ? (
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center gap-2 text-xs font-mono text-emerald-700 dark:text-emerald-300">
+                <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <span className="font-bold">Zero Saboteurs: Perfect habit discipline across all fronts.</span>
               </div>
             ) : (
-              saboteurRanking.map(({ habit, breakCount, isTopSaboteur }) => {
-                const barWidth = Math.max(8, Math.round((breakCount / maxBreaks) * 100));
+              rankedSaboteurs.map(({ habit, count, isTopSaboteur }) => {
+                const barWidth = Math.max(8, Math.round((count / maxBreaks) * 100));
 
                 return (
                   <div
@@ -244,35 +256,37 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                       </span>
                     </div>
 
-                    {/* Proportional Bar */}
+                    {/* Proportional Bar (Only when count > 0) */}
                     <div className="flex-1 h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isTopSaboteur
-                            ? 'bg-gradient-to-r from-rose-500 to-rose-400 shadow-xs shadow-rose-500/30'
-                            : breakCount > 0
-                            ? 'bg-slate-400 dark:bg-slate-600'
-                            : 'bg-emerald-400/40'
-                        }`}
-                        style={{ width: `${breakCount > 0 ? barWidth : 0}%` }}
-                      />
+                      {count > 0 ? (
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isTopSaboteur
+                              ? 'bg-gradient-to-r from-rose-500 to-rose-400 shadow-xs shadow-rose-500/30'
+                              : 'bg-rose-500/80 dark:bg-rose-500/70'
+                          }`}
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      ) : (
+                        <div className="h-full rounded-full bg-emerald-400/20 w-full" />
+                      )}
                     </div>
 
                     {/* Count Tag */}
-                    <div className="flex-shrink-0 min-w-[70px] text-right">
+                    <div className="flex-shrink-0 min-w-[85px] text-right">
                       {isTopSaboteur ? (
                         <span className="px-1.5 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-400 font-black text-[10px] inline-flex items-center gap-1">
                           <AlertTriangle className="w-2.5 h-2.5" />
-                          <span>{breakCount} Breaks</span>
+                          <span>{count} {count === 1 ? 'Day' : 'Days'} Interrupted</span>
                         </span>
-                      ) : breakCount > 0 ? (
-                        <span className="text-slate-600 dark:text-slate-400 text-[11px] font-bold">
-                          {breakCount} {breakCount === 1 ? 'Break' : 'Breaks'}
+                      ) : count > 0 ? (
+                        <span className="text-rose-600 dark:text-rose-400 text-[11px] font-bold">
+                          {count} {count === 1 ? 'Day' : 'Days'} Interrupted
                         </span>
                       ) : (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[10px] inline-flex items-center gap-0.5">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 inline-flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" />
-                          <span>Clean</span>
+                          <span>100% Flawless</span>
                         </span>
                       )}
                     </div>

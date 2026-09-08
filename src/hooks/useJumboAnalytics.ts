@@ -2,26 +2,20 @@ import { useMemo } from 'react';
 import type { Habit } from '../types/habit';
 import { getTodayString, parseDateString, formatDate, formatDisplayDate } from '../lib/momentum';
 
-export interface DayConstellationPoint {
-  dateStr: string;
-  formattedDate: string;
-  dayOfWeek: string;
-  dayNumber: number;
-  isToday: boolean;
+export interface DayJumboStatus {
+  dateKey: string;      // YYYY-MM-DD
+  displayDate: string;  // "Sep 7"
+  isPerfect: boolean;
   isFuture: boolean;
-  isPerfectDay: boolean;
   isLogged: boolean;
-  brokenHabits: {
-    habit: Habit;
-    status: string;
-  }[];
-  completedHabitsCount: number;
-  totalActiveHabitsCount: number;
+  completedCount: number;
+  totalActiveCount: number;
+  failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[];
 }
 
 export interface SaboteurHabitMetric {
   habit: Habit;
-  breakCount: number;
+  count: number;
   isTopSaboteur: boolean;
 }
 
@@ -34,11 +28,13 @@ export interface JumboMilestone {
 }
 
 export interface JumboAnalytics {
-  totalJumboPoints: number;
-  perfectDayRate: number;
-  constellationDays: DayConstellationPoint[];
-  saboteurRanking: SaboteurHabitMetric[];
+  days: DayJumboStatus[];
+  cleanRate: number;
+  perfectDaysCount: number;
+  evaluatedDaysCount: number;
+  rankedSaboteurs: SaboteurHabitMetric[];
   maxBreaks: number;
+  totalPoints: number;
   nextMilestone: JumboMilestone;
 }
 
@@ -50,131 +46,136 @@ const MILESTONE_TIERS = [
   { target: 100, title: 'Unbreakable Legend Badge', icon: '🏆' },
 ];
 
-export function useJumboAnalytics(
+export const useJumboAnalytics = (
   habits: Habit[],
   jumboDates: string[] = []
-): JumboAnalytics {
+): JumboAnalytics => {
   return useMemo(() => {
     const activeHabits = habits.filter((h) => !h.archived);
+    const days: DayJumboStatus[] = [];
+    const saboteurCount: Record<string, { habit: Habit; count: number }> = {};
+
+    // Initialize saboteur dictionary
+    activeHabits.forEach((h) => {
+      saboteurCount[h.id] = { habit: h, count: 0 };
+    });
+
     const todayStr = getTodayString();
     const todayDate = parseDateString(todayStr);
-
-    // 1. Generate Last 28 Days (4x7 Grid)
-    const constellationDays: DayConstellationPoint[] = [];
     const jumboSet = new Set(jumboDates);
 
     for (let i = 27; i >= 0; i--) {
       const d = new Date(todayDate);
-      d.setDate(d.getDate() - i);
-      const dateStr = formatDate(d);
-      const isToday = dateStr === todayStr;
-      const isFuture = dateStr > todayStr;
+      d.setDate(todayDate.getDate() - i);
+      const dateKey = formatDate(d); // Accurate local YYYY-MM-DD
+      const displayDate = formatDisplayDate(dateKey);
+      const isFuture = dateKey > todayStr;
 
-      // Active habits on this specific day
-      const activeOnDay = activeHabits.filter((h) => {
+      // Active habits on or before this day
+      const activeHabitsForDay = activeHabits.filter((h) => {
         const start = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : '2000-01-01');
-        return start <= dateStr;
+        return start <= dateKey;
       });
 
+      const failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[] = [];
       let completedCount = 0;
       let loggedCount = 0;
-      const brokenHabits: { habit: Habit; status: string }[] = [];
 
-      activeOnDay.forEach((h) => {
-        const st = h.history?.[dateStr];
-        if (st === 'done') {
+      activeHabitsForDay.forEach((habit) => {
+        const rawStatus = habit.history?.[dateKey];
+        const status = rawStatus as string | undefined;
+        if (status === 'done' || status === 'controlled') {
           completedCount++;
           loggedCount++;
-        } else if (st === 'missed') {
+        } else if (status === 'failed' || status === 'missed') {
           loggedCount++;
-          brokenHabits.push({ habit: h, status: 'Failed' });
+          failedHabits.push({
+            id: habit.id,
+            name: habit.name,
+            icon: habit.icon,
+            color: habit.color,
+            status: 'Failed',
+          });
+          if (saboteurCount[habit.id]) {
+            saboteurCount[habit.id].count += 1;
+          }
         } else {
-          // Unlogged or pending
-          if (!isFuture && activeOnDay.length > 0) {
-            brokenHabits.push({ habit: h, status: 'Missed' });
+          // Unlogged past day
+          if (!isFuture && activeHabitsForDay.length > 0) {
+            failedHabits.push({
+              id: habit.id,
+              name: habit.name,
+              icon: habit.icon,
+              color: habit.color,
+              status: 'Missed',
+            });
           }
         }
       });
 
+      // A day is perfect ONLY if all active habits were successfully checked OR recorded in jumboSet
       const isPerfect =
-        jumboSet.has(dateStr) ||
-        (activeOnDay.length >= 1 && completedCount === activeOnDay.length);
+        jumboSet.has(dateKey) ||
+        (activeHabitsForDay.length > 0 && completedCount === activeHabitsForDay.length);
 
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const dayOfWeek = dayNames[d.getDay()];
-
-      constellationDays.push({
-        dateStr,
-        formattedDate: formatDisplayDate(dateStr),
-        dayOfWeek,
-        dayNumber: d.getDate(),
-        isToday,
+      days.push({
+        dateKey,
+        displayDate,
+        isPerfect,
         isFuture,
-        isPerfectDay: isPerfect,
         isLogged: loggedCount > 0,
-        brokenHabits,
-        completedHabitsCount: completedCount,
-        totalActiveHabitsCount: activeOnDay.length,
+        completedCount,
+        totalActiveCount: activeHabitsForDay.length,
+        failedHabits,
       });
     }
 
-    // 2. Compute Total Jumbo Points and 28-day Clean Rate
-    const totalJumboPoints = Math.max(jumboDates.length, constellationDays.filter((d) => d.isPerfectDay).length);
-    
-    const pastDays = constellationDays.filter((d) => !d.isFuture && d.totalActiveHabitsCount > 0);
-    const perfectPastCount = pastDays.filter((d) => d.isPerfectDay).length;
-    const perfectDayRate = pastDays.length > 0 ? Math.round((perfectPastCount / pastDays.length) * 100) : 0;
+    // Calculate actual clean rate over recorded past days
+    const evaluatedDays = days.filter((d) => !d.isFuture && d.totalActiveCount > 0);
+    const perfectDaysCount = evaluatedDays.filter((d) => d.isPerfect).length;
+    const cleanRate = evaluatedDays.length > 0 ? Math.round((perfectDaysCount / evaluatedDays.length) * 100) : 0;
 
-    // 3. Compute Saboteur Ranking (which habits prevented 100% completion in the 28-day window)
-    const habitBreakMap = new Map<string, number>();
-    activeHabits.forEach((h) => habitBreakMap.set(h.id, 0));
+    const totalPoints = Math.max(jumboDates.length, days.filter((d) => d.isPerfect).length);
 
-    constellationDays.forEach((day) => {
-      if (day.isFuture || day.isPerfectDay) return;
-      
-      // On days where the user had at least one activity, count the habits that failed
-      day.brokenHabits.forEach(({ habit }) => {
-        const currentCount = habitBreakMap.get(habit.id) || 0;
-        habitBreakMap.set(habit.id, currentCount + 1);
-      });
-    });
-
-    const saboteurRanking: SaboteurHabitMetric[] = activeHabits
-      .map((h) => ({
-        habit: h,
-        breakCount: habitBreakMap.get(h.id) || 0,
+    // Sort saboteurs by frequency
+    const rankedSaboteurs: SaboteurHabitMetric[] = Object.values(saboteurCount)
+      .map(({ habit, count }) => ({
+        habit,
+        count,
         isTopSaboteur: false,
       }))
-      .sort((a, b) => b.breakCount - a.breakCount);
+      .sort((a, b) => b.count - a.count);
 
-    const maxBreaks = saboteurRanking.length > 0 ? Math.max(...saboteurRanking.map((s) => s.breakCount), 1) : 1;
+    const maxBreaks = rankedSaboteurs.length > 0 ? Math.max(...rankedSaboteurs.map((s) => s.count), 1) : 1;
 
-    if (saboteurRanking.length > 0 && saboteurRanking[0].breakCount > 0) {
-      saboteurRanking[0].isTopSaboteur = true;
+    if (rankedSaboteurs.length > 0 && rankedSaboteurs[0].count > 0) {
+      rankedSaboteurs[0].isTopSaboteur = true;
     }
 
-    // 4. Next Milestone Reward Calculation
-    const foundTier = MILESTONE_TIERS.find((t) => totalJumboPoints < t.target) || {
-      target: totalJumboPoints + 50,
+    // Next Milestone Reward Calculation
+    const foundTier = MILESTONE_TIERS.find((t) => totalPoints < t.target) || {
+      target: totalPoints + 50,
       title: 'Diamond Master Legend',
       icon: '👑',
     };
 
     const nextMilestone: JumboMilestone = {
-      currentPoints: totalJumboPoints,
+      currentPoints: totalPoints,
       targetPoints: foundTier.target,
-      progressPercent: Math.min(100, Math.round((totalJumboPoints / foundTier.target) * 100)),
+      progressPercent: Math.min(100, Math.round((totalPoints / foundTier.target) * 100)),
       rewardTitle: foundTier.title,
       rewardIcon: foundTier.icon,
     };
 
     return {
-      totalJumboPoints,
-      perfectDayRate,
-      constellationDays,
-      saboteurRanking,
+      days,
+      cleanRate,
+      perfectDaysCount,
+      evaluatedDaysCount: evaluatedDays.length,
+      rankedSaboteurs,
       maxBreaks,
+      totalPoints,
       nextMilestone,
     };
   }, [habits, jumboDates]);
-}
+};
