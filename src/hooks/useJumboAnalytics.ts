@@ -26,6 +26,7 @@ export interface HabitSaboteurItem {
   icon: string;
   color?: string;
   ruinedCount: number;
+  ruinedDates: string[]; // List of YYYY-MM-DD dates where this habit caused a missed Jumbo Point
   leakPercentage: number;
   isTopBoss: boolean;
 }
@@ -38,6 +39,15 @@ export interface JumboAnalytics {
   totalPoints: number;
   rangeTitle: string;
   saboteurRanking: HabitSaboteurItem[];
+}
+
+export function formatRuinedDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const day = date.getDate();
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+  return `${day} ${month}, ${weekday}`;
 }
 
 export const useJumboAnalytics = (
@@ -93,9 +103,9 @@ export const useJumboAnalytics = (
     let failedCount = 0;
     let unloggedCount = 0;
 
-    const habitFailCounts: Record<string, number> = {};
+    const habitRuinedDates: Record<string, string[]> = {};
     activeHabits.forEach((h) => {
-      habitFailCounts[h.id] = 0;
+      habitRuinedDates[h.id] = [];
     });
 
     const days: DayJumboStatus[] = dateRangeList.map((dateKey) => {
@@ -129,7 +139,9 @@ export const useJumboAnalytics = (
             color: habit.color,
             status: 'Failed',
           });
-          habitFailCounts[habit.id] = (habitFailCounts[habit.id] || 0) + 1;
+          if (habitRuinedDates[habit.id]) {
+            habitRuinedDates[habit.id].push(dateKey);
+          }
         }
       });
 
@@ -179,7 +191,8 @@ export const useJumboAnalytics = (
     const totalJumboFailedDaysInWindow = failedCount;
     const saboteurRanking: HabitSaboteurItem[] = activeHabits
       .map((habit) => {
-        const ruinedCount = habitFailCounts[habit.id] || 0;
+        const ruinedDates = habitRuinedDates[habit.id] || [];
+        const ruinedCount = ruinedDates.length;
         const leakPercentage =
           totalJumboFailedDaysInWindow > 0
             ? Math.min(100, Math.round((ruinedCount / totalJumboFailedDaysInWindow) * 100))
@@ -191,6 +204,7 @@ export const useJumboAnalytics = (
           icon: habit.icon,
           color: habit.color,
           ruinedCount,
+          ruinedDates,
           leakPercentage,
           isTopBoss: false,
         };
