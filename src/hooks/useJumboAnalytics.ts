@@ -49,11 +49,14 @@ const MILESTONE_TIERS = [
   { target: 100, title: 'Unbreakable Legend Badge', icon: '🏆' },
 ];
 
-function computeLongestFlawlessStreak(dates: string[]): number {
-  if (!dates || dates.length === 0) return 0;
+export type JumboWindowMode = 'smart' | 'recent' | 'streak';
+
+function computeLongestFlawlessStreak(dates: string[]): { streak: number; endDate: string | null } {
+  if (!dates || dates.length === 0) return { streak: 0, endDate: null };
   const sorted = Array.from(new Set(dates)).sort();
   let maxStreak = 1;
   let currentStreak = 1;
+  let bestEnd = sorted[0];
 
   for (let i = 0; i < sorted.length - 1; i++) {
     const d1 = parseDateString(sorted[i]);
@@ -62,18 +65,22 @@ function computeLongestFlawlessStreak(dates: string[]): number {
 
     if (diffDays === 1) {
       currentStreak++;
-      if (currentStreak > maxStreak) maxStreak = currentStreak;
+      if (currentStreak > maxStreak) {
+        maxStreak = currentStreak;
+        bestEnd = sorted[i + 1];
+      }
     } else if (diffDays > 1) {
       currentStreak = 1;
     }
   }
 
-  return maxStreak;
+  return { streak: maxStreak, endDate: bestEnd };
 }
 
 export const useJumboAnalytics = (
   habits: Habit[],
-  jumboDates: string[] = []
+  jumboDates: string[] = [],
+  windowMode: JumboWindowMode = 'smart'
 ): JumboAnalytics => {
   return useMemo(() => {
     const activeHabits = habits.filter((h) => !h.archived);
@@ -88,15 +95,23 @@ export const useJumboAnalytics = (
     });
     allRecordedDates.sort();
 
-    // Find the smart anchor date: latest date with user activity
-    const latestActiveDate =
-      allRecordedDates.length > 0
-        ? allRecordedDates[allRecordedDates.length - 1] > todayStr
-          ? allRecordedDates[allRecordedDates.length - 1]
-          : todayStr
-        : todayStr;
+    // All-time Flawless Streak
+    const streakResult = computeLongestFlawlessStreak(jumboDates);
+    const longestFlawlessStreak = streakResult.streak;
 
-    const anchorDate = parseDateString(latestActiveDate);
+    // Determine Anchor Date based on windowMode
+    let anchorDateStr = todayStr;
+    const latestRecordedDate = allRecordedDates.length > 0 ? allRecordedDates[allRecordedDates.length - 1] : todayStr;
+
+    if (windowMode === 'streak' && streakResult.endDate) {
+      anchorDateStr = streakResult.endDate;
+    } else if (windowMode === 'smart') {
+      anchorDateStr = latestRecordedDate;
+    } else {
+      anchorDateStr = todayStr;
+    }
+
+    const anchorDate = parseDateString(anchorDateStr);
 
     // 2. Build 28-day Window ending at anchorDate
     const days: DayJumboStatus[] = [];
@@ -160,9 +175,6 @@ export const useJumboAnalytics = (
       });
     }
 
-    // 3. All-time Flawless Streak
-    const longestFlawlessStreak = computeLongestFlawlessStreak(jumboDates);
-
     // 4. Metrics & Clean Rate
     const evaluatedDays = days.filter((d) => !d.isFuture && (d.isLogged || d.isPerfect || d.failedHabits.length > 0));
     const perfectDaysCount = days.filter((d) => d.isPerfect).length;
@@ -223,5 +235,5 @@ export const useJumboAnalytics = (
       windowStartDate,
       windowEndDate,
     };
-  }, [habits, jumboDates]);
+  }, [habits, jumboDates, windowMode]);
 };

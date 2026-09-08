@@ -16,6 +16,7 @@ import { DynamicIcon } from '../DynamicIcon';
 import {
   useJumboAnalytics,
   type DayJumboStatus,
+  type JumboWindowMode,
 } from '../../hooks/useJumboAnalytics';
 
 interface JumboPointsVaultModalProps {
@@ -32,6 +33,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
   jumboDates,
 }) => {
   const [selectedDay, setSelectedDay] = useState<DayJumboStatus | null>(null);
+  const [windowMode, setWindowMode] = useState<JumboWindowMode>('smart');
 
   const {
     days,
@@ -44,7 +46,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
     nextMilestone,
     windowStartDate,
     windowEndDate,
-  } = useJumboAnalytics(habits, jumboDates);
+  } = useJumboAnalytics(habits, jumboDates, windowMode);
 
   // Diagnostic log for historical accomplishments inspection
   React.useEffect(() => {
@@ -151,21 +153,76 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
 
         {/* ZONE 2: THE 28-DAY CONSTELLATION MATRIX */}
         <div className="py-2.5 relative z-10">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black uppercase tracking-wider font-mono text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <span>Constellation Heatmap</span>
-              <span className="text-slate-400 font-normal text-[10px]">({windowStartDate} – {windowEndDate})</span>
-            </span>
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-black uppercase tracking-wider font-mono text-slate-800 dark:text-slate-200">
+                Constellation
+              </span>
+              <span className="text-slate-400 font-normal text-[10px] font-mono">
+                ({windowStartDate} – {windowEndDate})
+              </span>
+            </div>
 
-            <div className="flex items-center gap-2.5 text-[10px] font-mono font-medium text-slate-400">
-              <div className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-500 inline-block" />
-                <span>Claimed</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-full border border-rose-400 inline-block" />
-                <span>Broken</span>
-              </div>
+            {/* Window Mode Selector */}
+            <div className="inline-flex p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-mono font-bold">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDay(null);
+                  setWindowMode('smart');
+                }}
+                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                  windowMode === 'smart'
+                    ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title="Anchor to most recent user activity"
+              >
+                Active Window
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedDay(null);
+                  setWindowMode('recent');
+                }}
+                className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                  windowMode === 'recent'
+                    ? 'bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title="28-day window ending today"
+              >
+                Today
+              </button>
+              {longestFlawlessStreak > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDay(null);
+                    setWindowMode('streak');
+                  }}
+                  className={`px-2 py-0.5 rounded-md transition-all cursor-pointer ${
+                    windowMode === 'streak'
+                      ? 'bg-white dark:bg-slate-700 text-orange-500 shadow-xs'
+                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                  title="28-day window containing longest unbroken run"
+                >
+                  Best Run
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2.5 text-[10px] font-mono font-medium text-slate-400 mb-1.5">
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 border border-amber-500 inline-block" />
+              <span>Claimed</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2.5 h-2.5 rounded-full border border-rose-400 inline-block" />
+              <span>Broken</span>
             </div>
           </div>
 
