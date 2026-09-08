@@ -25,6 +25,7 @@ import { HabitFormModal } from './components/HabitFormModal';
 import { HabitDetailModal } from './components/HabitDetailModal';
 import { AscensionCeremonyModal } from './components/AscensionCeremonyModal';
 import { JumboUnlockModal } from './components/JumboUnlockModal';
+import { JumboPointsVaultModal } from './components/modals/JumboPointsVaultModal';
 import { HabitDirectoryModal } from './components/HabitDirectoryModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AuthGateModal } from './components/AuthGateModal';
@@ -50,9 +51,10 @@ export function App() {
   // Active logging date (defaults to today, switchable for testing multi-day histories)
   const [activeDateStr, setActiveDateStr] = useState<string>(() => getTodayString());
 
-  // Hub, Detail, Directory & Settings Modal states
+  // Hub, Detail, Directory, Vault & Settings Modal states
   const [isDirectoryOpen, setIsDirectoryOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isJumboVaultOpen, setIsJumboVaultOpen] = useState(false);
   const [isHabitFormOpen, setIsHabitFormOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -531,6 +533,7 @@ export function App() {
         onOpenNewHabit={() => openHabitForm(null)}
         onOpenDirectory={openDirectory}
         onOpenSettings={openSettings}
+        onOpenJumboVault={() => setIsJumboVaultOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -590,6 +593,14 @@ export function App() {
         isOpen={isJumboUnlockModalOpen}
         onClose={closeJumboUnlockModal}
         activeHabitsCount={habits.filter((h) => !h.archived).length}
+      />
+
+      {/* Gamified Jumbo Points Vault & Analytics Modal */}
+      <JumboPointsVaultModal
+        isOpen={isJumboVaultOpen}
+        onClose={() => setIsJumboVaultOpen(false)}
+        habits={habits}
+        jumboDates={jumboDates}
       />
 
       {/* Dedicated Habit Directory & Management Modal (No Settings / Analytics clutter) */}

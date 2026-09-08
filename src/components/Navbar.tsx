@@ -10,6 +10,7 @@ interface NavbarProps {
   onOpenNewHabit: () => void;
   onOpenDirectory: () => void;
   onOpenSettings: () => void;
+  onOpenJumboVault?: () => void;
   onLogout: () => void;
 }
 
@@ -20,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenNewHabit,
   onOpenDirectory,
   onOpenSettings,
+  onOpenJumboVault,
   onLogout,
 }) => {
   const activeHabitsCount = habits.filter((h) => !h.archived).length;
@@ -51,15 +53,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
           {/* 1. Gamified Jumbo Point Badge (Prestige Currency Capsule - Unlocked at >= 3 habits) */}
           {activeHabitsCount >= 3 && (
-            <div
-              className="relative px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/30 text-amber-700 dark:bg-amber-500/15 dark:border-amber-400/30 dark:text-amber-300 flex items-center gap-1.5 font-mono shadow-xs select-none cursor-default animate-fade-in"
-              title={`Total Jumbo Points: ${jumboPointsCount} (Conquered Perfect Days)`}
+            <button
+              type="button"
+              onClick={onOpenJumboVault}
+              className="relative px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-500/35 text-amber-700 dark:bg-amber-500/15 dark:border-amber-400/40 dark:text-amber-300 flex items-center gap-1.5 font-mono shadow-xs select-none cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-amber-500/60 dark:hover:border-amber-400/70 hover:shadow-amber-500/20 animate-fade-in group"
+              title={`Total Jumbo Points: ${jumboPointsCount} • Click to open Jumbo Vault Analytics`}
+              aria-label="Open Jumbo Points Vault"
             >
-              <Gem className="w-4 h-4 fill-amber-400 text-amber-500" />
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/0 via-amber-300/20 to-amber-400/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <Gem className="w-4 h-4 fill-amber-400 text-amber-500 group-hover:scale-110 transition-transform flex-shrink-0" />
               <span className="text-xs font-black font-mono">
                 {jumboPointsCount}
               </span>
-            </div>
+            </button>
           )}
 
           {/* 2. New Habit Action Button */}
