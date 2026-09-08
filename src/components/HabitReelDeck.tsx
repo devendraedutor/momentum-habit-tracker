@@ -675,7 +675,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   const pendingCount = unloggedHabits.length;
   const safeIndex = pendingCount > 0 ? Math.max(0, Math.min(pendingCount - 1, deckIndex)) : 0;
   const currentCard = unloggedHabits[safeIndex];
-  const currentCardOverallIndex = currentCard ? activeHabits.findIndex((h) => h.id === currentCard.id) : -1;
 
   // Keep deckIndex in valid range if pendingCount decreases
   React.useEffect(() => {
@@ -849,9 +848,9 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {currentView === 'deck' && totalHabitsCount > 1 && currentCardOverallIndex >= 0 && (
+          {currentView === 'deck' && pendingCount > 0 && (
             <div className="text-xs font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/20 dark:border-emerald-500/40 shadow-xs">
-              {currentCardOverallIndex + 1}/{totalHabitsCount}
+              {safeIndex + 1}/{pendingCount}
             </div>
           )}
         </div>
