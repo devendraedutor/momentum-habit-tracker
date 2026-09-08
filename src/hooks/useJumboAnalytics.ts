@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import type { Habit } from '../types/habit';
 import { getTodayString, parseDateString, formatDate, formatDisplayDate, getDateRange } from '../lib/momentum';
 
+export type JumboHistoryRange = '30d' | '60d' | '90d';
+
 export interface DayJumboStatus {
   dateKey: string;      // YYYY-MM-DD
   dayNum: number;       // 28
@@ -18,72 +20,20 @@ export interface DayJumboStatus {
   totalActiveHabitsCount: number;
 }
 
-export interface SaboteurHabitMetric {
-  habit: Habit;
-  count: number;
-  isTopSaboteur: boolean;
-}
-
-export interface JumboMilestone {
-  currentPoints: number;
-  targetPoints: number;
-  progressPercent: number;
-  rewardTitle: string;
-  rewardIcon: string;
-}
-
 export interface JumboAnalytics {
   days: DayJumboStatus[];
-  cleanRate: number;
   conqueredCount: number;
-  interruptedCount: number;
+  failedCount: number;
   unloggedCount: number;
-  longestFlawlessStreak: number;
-  rankedSaboteurs: SaboteurHabitMetric[];
-  maxBreaks: number;
   totalPoints: number;
-  nextMilestone: JumboMilestone;
   rangeTitle: string;
-  canGoForward: boolean;
-  canGoBackward: boolean;
-}
-
-const MILESTONE_TIERS = [
-  { target: 7, title: 'Starter Gem Vault', icon: '💎' },
-  { target: 14, title: 'Silver Constellation', icon: '🌟' },
-  { target: 30, title: 'Golden Vault Crown', icon: '👑' },
-  { target: 60, title: 'Prestige Diamond Theme', icon: '💠' },
-  { target: 100, title: 'Unbreakable Legend Badge', icon: '🏆' },
-];
-
-function computeLongestFlawlessStreak(dates: string[]): number {
-  if (!dates || dates.length === 0) return 0;
-  const sorted = Array.from(new Set(dates)).sort();
-  let maxStreak = 1;
-  let currentStreak = 1;
-
-  for (let i = 0; i < sorted.length - 1; i++) {
-    const d1 = parseDateString(sorted[i]);
-    const d2 = parseDateString(sorted[i + 1]);
-    const diffDays = Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-      currentStreak++;
-      if (currentStreak > maxStreak) {
-        maxStreak = currentStreak;
-      }
-    } else if (diffDays > 1) {
-      currentStreak = 1;
-    }
-  }
-
-  return maxStreak;
 }
 
 export const useJumboAnalytics = (
   habits: Habit[],
   jumboDates: string[] = [],
-  pageOffset: number = 0
+  historyRange: JumboHistoryRange = '30d',
+  weekOffset: number = 0
 ): JumboAnalytics => {
   return useMemo(() => {
     const activeHabits = habits.filter((h) => !h.archived);
@@ -100,32 +50,36 @@ export const useJumboAnalytics = (
 
     // Find smart base anchor date: latest date with user activity or today
     const latestRecordedDate = allRecordedDates.length > 0 ? allRecordedDates[allRecordedDates.length - 1] : todayStr;
-    const baseAnchor = parseDateString(latestRecordedDate);
+    const anchorDate = parseDateString(latestRecordedDate);
 
-    // Apply 28-day block pagination
-    baseAnchor.setDate(baseAnchor.getDate() + pageOffset * 28);
+    // Apply week offset pagination
+    anchorDate.setDate(anchorDate.getDate() + weekOffset * 7);
 
-    // Align 28-day window to Monday – Sunday (4 full weeks = exactly 28 days)
-    const endDayOfWeek = baseAnchor.getDay();
+    // Determine calendar span based on range filter
+    const daysSpan = historyRange === '90d' ? 91 : historyRange === '60d' ? 63 : 28;
+
+    const start = new Date(anchorDate);
+    start.setDate(anchorDate.getDate() - (daysSpan - 1));
+
+    // Align start to the nearest Monday
+    const startDayOfWeek = start.getDay();
+    const diffToMonday = (startDayOfWeek + 6) % 7;
+    start.setDate(start.getDate() - diffToMonday);
+
+    // Align end date to the nearest Sunday
+    const endDayOfWeek = anchorDate.getDay();
     const diffToSunday = (7 - endDayOfWeek) % 7;
-    const alignedEnd = new Date(baseAnchor);
-    alignedEnd.setDate(baseAnchor.getDate() + diffToSunday);
+    const alignedEnd = new Date(anchorDate);
+    alignedEnd.setDate(alignedEnd.getDate() + diffToSunday);
 
-    const alignedStart = new Date(alignedEnd);
-    alignedStart.setDate(alignedEnd.getDate() - 27);
-
-    const startStr = formatDate(alignedStart);
+    const startStr = formatDate(start);
     const endStr = formatDate(alignedEnd);
     const dateRangeList = getDateRange(startStr, endStr);
 
     const jumboSet = new Set(jumboDates);
-    const saboteurCount: Record<string, { habit: Habit; count: number }> = {};
-    activeHabits.forEach((h) => {
-      saboteurCount[h.id] = { habit: h, count: 0 };
-    });
 
     let conqueredCount = 0;
-    let interruptedCount = 0;
+    let failedCount = 0;
     let unloggedCount = 0;
 
     const days: DayJumboStatus[] = dateRangeList.map((dateKey) => {
@@ -139,7 +93,6 @@ export const useJumboAnalytics = (
 
       const failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[] = [];
       let completedHabitsCount = 0;
-      let loggedHabitsCount = 0;
 
       activeHabits.forEach((habit) => {
         const rawStatus = habit.history?.[dateKey];
@@ -147,9 +100,7 @@ export const useJumboAnalytics = (
 
         if (status === 'done' || status === 'controlled') {
           completedHabitsCount++;
-          loggedHabitsCount++;
         } else if (status === 'failed' || status === 'missed') {
-          loggedHabitsCount++;
           failedHabits.push({
             id: habit.id,
             name: habit.name,
@@ -157,9 +108,6 @@ export const useJumboAnalytics = (
             color: habit.color,
             status: 'Failed',
           });
-          if (saboteurCount[habit.id]) {
-            saboteurCount[habit.id].count += 1;
-          }
         }
       });
 
@@ -171,7 +119,7 @@ export const useJumboAnalytics = (
       const isIncomplete = !isPerfect && !isBroken && !isFuture;
 
       if (isPerfect) conqueredCount++;
-      else if (isBroken) interruptedCount++;
+      else if (isBroken) failedCount++;
       else if (isIncomplete) unloggedCount++;
 
       return {
@@ -191,50 +139,7 @@ export const useJumboAnalytics = (
       };
     });
 
-    // All-time Flawless Streak
-    const longestFlawlessStreak = computeLongestFlawlessStreak(jumboDates);
-
-    // Total points (wallet points or max conquered)
     const totalPoints = Math.max(jumboDates.length, conqueredCount);
-
-    // Clean rate calculation for current window
-    const evaluatedTotal = conqueredCount + interruptedCount;
-    const cleanRate =
-      evaluatedTotal > 0
-        ? Math.round((conqueredCount / evaluatedTotal) * 100)
-        : conqueredCount > 0
-        ? Math.round((conqueredCount / 28) * 100)
-        : 0;
-
-    // Ranked Saboteurs
-    const rankedSaboteurs: SaboteurHabitMetric[] = Object.values(saboteurCount)
-      .map(({ habit, count }) => ({
-        habit,
-        count,
-        isTopSaboteur: false,
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    const maxBreaks = rankedSaboteurs.length > 0 ? Math.max(...rankedSaboteurs.map((s) => s.count), 1) : 1;
-
-    if (rankedSaboteurs.length > 0 && rankedSaboteurs[0].count > 0) {
-      rankedSaboteurs[0].isTopSaboteur = true;
-    }
-
-    // Milestone Reward Track
-    const foundTier = MILESTONE_TIERS.find((t) => totalPoints < t.target) || {
-      target: totalPoints + 50,
-      title: 'Diamond Master Legend',
-      icon: '👑',
-    };
-
-    const nextMilestone: JumboMilestone = {
-      currentPoints: totalPoints,
-      targetPoints: foundTier.target,
-      progressPercent: Math.min(100, Math.round((totalPoints / foundTier.target) * 100)),
-      rewardTitle: foundTier.title,
-      rewardIcon: foundTier.icon,
-    };
 
     // Range display string (e.g. "Sep 28 – Oct 25, 2026")
     const startFormatted = formatDisplayDate(startStr);
@@ -243,18 +148,11 @@ export const useJumboAnalytics = (
 
     return {
       days,
-      cleanRate,
       conqueredCount,
-      interruptedCount,
+      failedCount,
       unloggedCount,
-      longestFlawlessStreak,
-      rankedSaboteurs,
-      maxBreaks,
       totalPoints,
-      nextMilestone,
       rangeTitle,
-      canGoForward: pageOffset < 0 || endStr < todayStr,
-      canGoBackward: true,
     };
-  }, [habits, jumboDates, pageOffset]);
+  }, [habits, jumboDates, historyRange, weekOffset]);
 };
