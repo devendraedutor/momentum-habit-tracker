@@ -8,8 +8,6 @@ export interface DayJumboStatus {
   isPerfect: boolean;
   isFuture: boolean;
   isLogged: boolean;
-  completedCount: number;
-  totalActiveCount: number;
   failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[];
 }
 
@@ -61,29 +59,24 @@ export const useJumboAnalytics = (
     });
 
     const todayStr = getTodayString();
-    const todayDate = parseDateString(todayStr);
+    const today = parseDateString(todayStr);
     const jumboSet = new Set(jumboDates);
 
     for (let i = 27; i >= 0; i--) {
-      const d = new Date(todayDate);
-      d.setDate(todayDate.getDate() - i);
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
       const dateKey = formatDate(d); // Accurate local YYYY-MM-DD
       const displayDate = formatDisplayDate(dateKey);
       const isFuture = dateKey > todayStr;
-
-      // Active habits on or before this day
-      const activeHabitsForDay = activeHabits.filter((h) => {
-        const start = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : '2000-01-01');
-        return start <= dateKey;
-      });
 
       const failedHabits: { id: string; name: string; icon: string; color?: string; status: string }[] = [];
       let completedCount = 0;
       let loggedCount = 0;
 
-      activeHabitsForDay.forEach((habit) => {
+      activeHabits.forEach((habit) => {
         const rawStatus = habit.history?.[dateKey];
         const status = rawStatus as string | undefined;
+
         if (status === 'done' || status === 'controlled') {
           completedCount++;
           loggedCount++;
@@ -99,24 +92,13 @@ export const useJumboAnalytics = (
           if (saboteurCount[habit.id]) {
             saboteurCount[habit.id].count += 1;
           }
-        } else {
-          // Unlogged past day
-          if (!isFuture && activeHabitsForDay.length > 0) {
-            failedHabits.push({
-              id: habit.id,
-              name: habit.name,
-              icon: habit.icon,
-              color: habit.color,
-              status: 'Missed',
-            });
-          }
         }
       });
 
-      // A day is perfect ONLY if all active habits were successfully checked OR recorded in jumboSet
+      // A day is perfect if recorded in jumboDates OR all active habits were successfully checked without any failures
       const isPerfect =
         jumboSet.has(dateKey) ||
-        (activeHabitsForDay.length > 0 && completedCount === activeHabitsForDay.length);
+        (activeHabits.length > 0 && completedCount === activeHabits.length && failedHabits.length === 0);
 
       days.push({
         dateKey,
@@ -124,17 +106,16 @@ export const useJumboAnalytics = (
         isPerfect,
         isFuture,
         isLogged: loggedCount > 0,
-        completedCount,
-        totalActiveCount: activeHabitsForDay.length,
         failedHabits,
       });
     }
 
-    // Calculate actual clean rate over recorded past days
-    const evaluatedDays = days.filter((d) => !d.isFuture && d.totalActiveCount > 0);
+    // Calculate actual clean rate over past 28 days
+    const evaluatedDays = days.filter((d) => !d.isFuture);
     const perfectDaysCount = evaluatedDays.filter((d) => d.isPerfect).length;
     const cleanRate = evaluatedDays.length > 0 ? Math.round((perfectDaysCount / evaluatedDays.length) * 100) : 0;
 
+    // Total points (from jumbo wallet or counted perfect days)
     const totalPoints = Math.max(jumboDates.length, days.filter((d) => d.isPerfect).length);
 
     // Sort saboteurs by frequency
@@ -166,6 +147,14 @@ export const useJumboAnalytics = (
       rewardTitle: foundTier.title,
       rewardIcon: foundTier.icon,
     };
+
+    console.log('Jumbo Analytics Debug:', {
+      evaluatedDaysCount: days.length,
+      perfectDaysFound: days.filter((d) => d.isPerfect).length,
+      totalPoints,
+      jumboDatesCount: jumboDates.length,
+      rawHabitsSample: habits.map((h) => ({ name: h.name, historyKeys: Object.keys(h.history || {}) })),
+    });
 
     return {
       days,

@@ -36,7 +36,6 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
     days,
     cleanRate,
     perfectDaysCount,
-    evaluatedDaysCount,
     rankedSaboteurs,
     maxBreaks,
     totalPoints,
@@ -104,7 +103,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               <span>{cleanRate}% Clean Rate</span>
             </span>
             <span className="text-[10px] font-mono text-slate-400 mt-1">
-              {perfectDaysCount} of {evaluatedDaysCount || 28} Days Conquered
+              {perfectDaysCount} of 28 Days Conquered
             </span>
           </div>
         </div>
@@ -135,6 +134,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               {days.map((day) => {
                 const isClaimed = day.isPerfect;
                 const isSelected = selectedDay?.dateKey === day.dateKey;
+                const hasFailures = day.failedHabits.length > 0;
 
                 return (
                   <button
@@ -148,15 +148,15 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                         ? 'border border-dashed border-slate-300 dark:border-slate-700 bg-transparent opacity-40 cursor-default'
                         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 text-slate-400'
                     } ${isSelected ? 'ring-2 ring-amber-500 dark:ring-amber-400 scale-105' : ''}`}
-                    title={`${day.displayDate}: ${isClaimed ? '💎 Jumbo Claimed' : `${day.failedHabits.length} Habits Missed`}`}
+                    title={`${day.displayDate}: ${isClaimed ? '💎 Jumbo Claimed' : hasFailures ? `${day.failedHabits.length} Habits Missed` : 'Incomplete'}`}
                   >
                     {isClaimed ? (
                       <Gem className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-400 text-amber-500 drop-shadow-xs" />
                     ) : (
                       <div className="relative flex items-center justify-center">
                         <span className="w-3.5 h-3.5 rounded-full border border-slate-300 dark:border-slate-600 flex items-center justify-center">
-                          {day.failedHabits.length > 0 && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500/70" />
+                          {hasFailures && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500/80" />
                           )}
                         </span>
                       </div>
@@ -209,7 +209,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
 
                   <button
                     onClick={() => setSelectedDay(null)}
-                    className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0"
+                    className="text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0 cursor-pointer"
                   >
                     Dismiss
                   </button>
@@ -268,7 +268,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                           style={{ width: `${barWidth}%` }}
                         />
                       ) : (
-                        <div className="h-full rounded-full bg-emerald-400/20 w-full" />
+                        <div className="h-full rounded-full bg-transparent w-full" />
                       )}
                     </div>
 
