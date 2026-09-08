@@ -193,13 +193,13 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           </div>
         ) : (
           /* FULL UNLOCKED 30D/60D/90D ANALYTICS VIEW */
-          <div className="overflow-y-auto flex-1 pr-2 scrollbar-thin space-y-6 pt-2 pb-4">
+          <div className="overflow-y-auto flex-1 pr-2 scrollbar-thin space-y-6 pb-4">
             {/* 2. CALENDAR BLOCK WRAPPER (Defines the boundary of contextual sticky positioning) */}
             <section className="relative">
-              {/* PINNED CONTROLS ASSEMBLY (Sticky strictly while calendar is in view) */}
-              <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pb-2 pt-1 border-b border-slate-100 dark:border-slate-800">
+              {/* PINNED CONTROLS ASSEMBLY (Sticky strictly while calendar is in view, 100% solid with edge occlusion) */}
+              <div className="sticky top-0 z-20 bg-white dark:bg-slate-900 pt-3 pb-2.5 border-b border-slate-100 dark:border-slate-800 -mx-6 px-6 sm:-mx-8 sm:px-8 shadow-xs">
                 {/* 1. Date Range + Filter + Navigation Arrows */}
-                <div className="flex items-center justify-between gap-3 py-1.5 w-full flex-wrap sm:flex-nowrap">
+                <div className="flex items-center justify-between gap-3 py-1 w-full flex-wrap sm:flex-nowrap bg-white dark:bg-slate-900">
                   {/* Left: Date Range */}
                   <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 text-sm font-mono flex-shrink-0">
                     <Calendar className="w-4 h-4 text-amber-500 flex-shrink-0" />
@@ -209,7 +209,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   {/* Right: Inline Filter + Pagination Group */}
                   <div className="flex items-center gap-2 ml-auto">
                     {/* Duration Segment Pill */}
-                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
                       {RANGE_OPTIONS.map((range) => {
                         const isActive = historyRange === range;
                         return (
@@ -263,7 +263,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                 </div>
 
                 {/* 2. 7-Column Weekday Headers */}
-                <div className="grid grid-cols-7 gap-x-3 sm:gap-x-4 text-center px-1 pt-2">
+                <div className="grid grid-cols-7 gap-x-3 sm:gap-x-4 text-center px-1 pt-2 bg-white dark:bg-slate-900">
                   {WEEKDAYS.map((dayName) => (
                     <div
                       key={dayName}

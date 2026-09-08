@@ -450,6 +450,9 @@ export function App() {
 
   // Save / Update Habit
   const handleSaveHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'history'> & { id?: string; startDate?: string }) => {
+    const today = getTodayString();
+    const validatedStartDate = habitData.startDate && habitData.startDate > today ? today : habitData.startDate;
+
     if (habitData.id) {
       // Update existing habit
       setHabits((prev) =>
@@ -463,7 +466,7 @@ export function App() {
                 icon: habitData.icon,
                 color: habitData.color,
                 type: habitData.type || h.type || 'BUILD',
-                startDate: habitData.startDate || h.startDate || getTodayString(),
+                startDate: validatedStartDate || h.startDate || today,
               }
             : h
         )
@@ -484,8 +487,8 @@ export function App() {
         currentTier: 1,
         tierStartStreak: 0,
         milestonesCompleted: 0,
-        startDate: habitData.startDate || getTodayString(),
-        createdAt: habitData.startDate || getTodayString(),
+        startDate: validatedStartDate || today,
+        createdAt: validatedStartDate || today,
         archived: false,
         history: {},
       };

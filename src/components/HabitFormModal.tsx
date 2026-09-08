@@ -183,6 +183,9 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       return;
     }
 
+    const today = getTodayString();
+    const resolvedStartDate = startDate && startDate > today ? today : (startDate || today);
+
     onSave({
       ...(initialHabit ? { id: initialHabit.id } : {}),
       name: name.trim(),
@@ -191,7 +194,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       category: selectedCategory,
       icon,
       color,
-      startDate: startDate || getTodayString(),
+      startDate: resolvedStartDate,
       targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : DEFAULT_START_TARGET_DAYS,
     });
   };
@@ -202,6 +205,9 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       return;
     }
 
+    const today = getTodayString();
+    const resolvedStartDate = startDate && startDate > today ? today : (startDate || today);
+
     onSave({
       name: name.trim(),
       description: description.trim() || undefined,
@@ -209,7 +215,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
       category: selectedCategory,
       icon,
       color,
-      startDate: startDate || getTodayString(),
+      startDate: resolvedStartDate,
       targetGoalDays: targetGoalDays > 0 ? Number(targetGoalDays) : DEFAULT_START_TARGET_DAYS,
     });
   };
@@ -340,8 +346,13 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   <div className="flex items-center gap-2">
                     <input
                       type="date"
+                      max={getTodayString()}
                       value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const today = getTodayString();
+                        setStartDate(val > today ? today : val);
+                      }}
                       className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white text-xs sm:text-sm font-mono font-bold transition-all shadow-2xs"
                     />
                     {startDate !== getTodayString() && (
