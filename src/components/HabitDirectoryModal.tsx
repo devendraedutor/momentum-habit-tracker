@@ -266,7 +266,7 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                     >
                       <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-500 flex-shrink-0" />
                       <span className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-400 tracking-tight">
-                        L{stats.achievedLevel}
+                        {stats.achievedLevel}
                       </span>
                     </div>
 
