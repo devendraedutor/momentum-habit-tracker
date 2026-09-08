@@ -227,7 +227,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   key={day.dateKey}
                   type="button"
                   onClick={() => setSelectedDay(isSelected ? null : day)}
-                  className={`max-w-[48px] sm:max-w-[54px] w-full mx-auto aspect-square rounded-2xl border p-1 sm:p-1.5 flex flex-col justify-between items-center transition-all cursor-pointer select-none text-center hover:scale-[1.05] active:scale-95 ${tileStyle} ${
+                  className={`w-full max-w-[62px] sm:max-w-[70px] mx-auto aspect-[1.35/1] rounded-2xl border p-1 sm:p-1.5 flex flex-col justify-between items-center transition-all cursor-pointer select-none text-center hover:scale-[1.05] active:scale-95 ${tileStyle} ${
                     isSelected ? 'ring-2 ring-amber-500 scale-105 z-10 shadow-md' : ''
                   }`}
                   title={`${day.displayDate}: ${
