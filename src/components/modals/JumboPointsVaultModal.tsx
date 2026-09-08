@@ -193,87 +193,90 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           </div>
         ) : (
           /* FULL UNLOCKED 30D/60D/90D ANALYTICS VIEW */
-          <div className="overflow-y-auto flex-1 pr-1.5 pt-4 pb-4 space-y-6 scrollbar-thin">
-            {/* 2. CALENDAR SECTION (Decoupled & naturally scrolls with content) */}
-            <div className="space-y-3 bg-white dark:bg-slate-900 pb-2">
-              {/* Sub-Header Control Bar: Date Range (Left) + Inline Filter & Pagination (Right) */}
-              <div className="flex items-center justify-between gap-3 w-full flex-wrap sm:flex-nowrap pb-1">
-                {/* Left: Date Range */}
-                <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 text-sm font-mono flex-shrink-0">
-                  <Calendar className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                  <span>{rangeTitle}</span>
-                </div>
-
-                {/* Right: Inline Filter + Pagination Group */}
-                <div className="flex items-center gap-2 ml-auto">
-                  {/* Duration Segment Pill */}
-                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-                    {RANGE_OPTIONS.map((range) => {
-                      const isActive = historyRange === range;
-                      return (
-                        <button
-                          key={range}
-                          type="button"
-                          onClick={() => setHistoryRange(range)}
-                          className={`font-mono text-xs px-3 py-1 rounded-lg transition-all cursor-pointer font-bold ${
-                            isActive
-                              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs shadow-amber-500/20'
-                              : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          {range === '30d' ? '30 D' : range === '60d' ? '60 D' : '90 D'}
-                        </button>
-                      );
-                    })}
+          <div className="overflow-y-auto flex-1 pr-2 scrollbar-thin space-y-6 pt-2 pb-4">
+            {/* 2. CALENDAR BLOCK WRAPPER (Defines the boundary of contextual sticky positioning) */}
+            <section className="relative">
+              {/* PINNED CONTROLS ASSEMBLY (Sticky strictly while calendar is in view) */}
+              <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md pb-2 pt-1 border-b border-slate-100 dark:border-slate-800">
+                {/* 1. Date Range + Filter + Navigation Arrows */}
+                <div className="flex items-center justify-between gap-3 py-1.5 w-full flex-wrap sm:flex-nowrap">
+                  {/* Left: Date Range */}
+                  <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 text-sm font-mono flex-shrink-0">
+                    <Calendar className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    <span>{rangeTitle}</span>
                   </div>
 
-                  {/* Pagination Arrows (< and >) */}
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setWeekOffset((prev) => prev - stepWeeks)}
-                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs active:scale-95"
-                      aria-label="Previous Period"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
+                  {/* Right: Inline Filter + Pagination Group */}
+                  <div className="flex items-center gap-2 ml-auto">
+                    {/* Duration Segment Pill */}
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                      {RANGE_OPTIONS.map((range) => {
+                        const isActive = historyRange === range;
+                        return (
+                          <button
+                            key={range}
+                            type="button"
+                            onClick={() => setHistoryRange(range)}
+                            className={`font-mono text-xs px-3 py-1 rounded-lg transition-all cursor-pointer font-bold ${
+                              isActive
+                                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs shadow-amber-500/20'
+                                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+                            }`}
+                          >
+                            {range === '30d' ? '30 D' : range === '60d' ? '60 D' : '90 D'}
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                    {weekOffset !== 0 && (
+                    {/* Navigation Arrows */}
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => setWeekOffset(0)}
-                        className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-mono font-bold transition-colors cursor-pointer border border-amber-500/20"
+                        onClick={() => setWeekOffset((prev) => prev - stepWeeks)}
+                        className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                        aria-label="Previous Period"
                       >
-                        Current
+                        <ChevronLeft className="w-4 h-4" />
                       </button>
-                    )}
 
-                    <button
-                      type="button"
-                      onClick={() => setWeekOffset((prev) => prev + stepWeeks)}
-                      className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs active:scale-95"
-                      aria-label="Next Period"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                      {weekOffset !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setWeekOffset(0)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-mono font-bold transition-colors cursor-pointer border border-amber-500/20"
+                        >
+                          Current
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setWeekOffset((prev) => prev + stepWeeks)}
+                        className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs active:scale-95"
+                        aria-label="Next Period"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
+                </div>
+
+                {/* 2. 7-Column Weekday Headers */}
+                <div className="grid grid-cols-7 gap-x-3 sm:gap-x-4 text-center px-1 pt-2">
+                  {WEEKDAYS.map((dayName) => (
+                    <div
+                      key={dayName}
+                      className="text-xs font-bold text-slate-400 dark:text-slate-500 font-mono tracking-wider text-center uppercase"
+                    >
+                      {dayName}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* 7 Weekday Column Headers (MON - SUN) */}
-              <div className="grid grid-cols-7 gap-x-3 sm:gap-x-4 text-center px-1">
-                {WEEKDAYS.map((dayName) => (
-                  <div
-                    key={dayName}
-                    className="text-xs font-bold text-slate-400 dark:text-slate-500 font-mono tracking-wider text-center uppercase"
-                  >
-                    {dayName}
-                  </div>
-                ))}
-              </div>
-
-              {/* Calendar Day Tiles Grid */}
-              <div className="grid grid-cols-7 gap-x-3 sm:gap-x-4 gap-y-3 sm:gap-y-4 px-1 relative">
+              {/* CALENDAR TILES GRID */}
+              <div className="grid grid-cols-7 gap-x-3 sm:gap-x-4 gap-y-3 sm:gap-y-4 px-1 pt-3 relative">
                 {days.map((day) => {
                   const isConquered = day.isPerfect;
                   const isMissed = day.isBroken;
@@ -362,8 +365,8 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                 })}
               </div>
 
-              {/* Calendar Legend Summary */}
-              <div className="pt-3 pb-1 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-8 text-xs font-mono text-slate-600 dark:text-slate-400 flex-wrap">
+              {/* CALENDAR LEGEND SUMMARY */}
+              <div className="pt-4 pb-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-8 text-xs font-mono text-slate-600 dark:text-slate-400 flex-wrap">
                 <div className="flex items-center gap-2 font-bold">
                   <span className="w-4 h-4 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 flex items-center justify-center text-white font-black text-[9px] shadow-xs shadow-amber-500/30">
                     <Gem className="w-2.5 h-2.5 fill-white text-white" />
@@ -382,207 +385,209 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   </span>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* 3. EXPANDED HABIT SABOTEUR RANKING (Ranked Boss List) */}
-            <div className="p-5 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-3.5">
-              {/* Header */}
-              <div className="text-xs font-mono font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <span>👾 HABIT SABOTEUR RANKING</span>
-                </span>
-                <span>IMPACT SHARE</span>
-              </div>
+            {/* 3. LOWER SECTION: HABIT SABOTEUR RANKING */}
+            <section className="pt-2">
+              <div className="p-5 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-3.5">
+                {/* Header */}
+                <div className="text-xs font-mono font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span>👾 HABIT SABOTEUR RANKING</span>
+                  </span>
+                  <span>IMPACT SHARE</span>
+                </div>
 
-              {/* List of Habits */}
-              <div className="space-y-2.5">
-                {saboteurRanking.length === 0 ? (
-                  <div className="p-4 text-center text-xs font-mono text-slate-400">
-                    No active habits found for this time range.
-                  </div>
-                ) : (
-                  saboteurRanking.map((item, idx) => {
-                    const isTopBoss = idx === 0 && item.ruinedCount > 0;
-                    const isHabitHovered = hoveredHabitId === item.id;
+                {/* List of Habits */}
+                <div className="space-y-2.5">
+                  {saboteurRanking.length === 0 ? (
+                    <div className="p-4 text-center text-xs font-mono text-slate-400">
+                      No active habits found for this time range.
+                    </div>
+                  ) : (
+                    saboteurRanking.map((item, idx) => {
+                      const isTopBoss = idx === 0 && item.ruinedCount > 0;
+                      const isHabitHovered = hoveredHabitId === item.id;
 
-                    // 1. Rank 1: Active Boss
-                    if (isTopBoss) {
-                      return (
-                        <div
-                          key={item.id}
-                          className="relative"
-                          onMouseEnter={() => setHoveredHabitId(item.id)}
-                          onMouseLeave={() => setHoveredHabitId(null)}
-                        >
-                          <div className="bg-rose-500/10 border border-rose-200 dark:border-rose-900/40 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-4 shadow-2xs cursor-default">
-                            {/* Left: Icon + Name + Active Boss tag adjacent on right */}
-                            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                              <div
-                                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{
-                                  backgroundColor: `${item.color || '#f43f5e'}25`,
-                                  color: item.color || '#f43f5e',
-                                }}
-                              >
-                                <DynamicIcon name={item.icon} className="w-4 h-4 sm:w-5 sm:h-5" />
+                      // 1. Rank 1: Active Boss
+                      if (isTopBoss) {
+                        return (
+                          <div
+                            key={item.id}
+                            className="relative"
+                            onMouseEnter={() => setHoveredHabitId(item.id)}
+                            onMouseLeave={() => setHoveredHabitId(null)}
+                          >
+                            <div className="bg-rose-500/10 border border-rose-200 dark:border-rose-900/40 p-3.5 sm:p-4 rounded-2xl flex items-center justify-between gap-4 shadow-2xs cursor-default">
+                              {/* Left: Icon + Name + Active Boss tag adjacent on right */}
+                              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                <div
+                                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                                  style={{
+                                    backgroundColor: `${item.color || '#f43f5e'}25`,
+                                    color: item.color || '#f43f5e',
+                                  }}
+                                >
+                                  <DynamicIcon name={item.icon} className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </div>
+
+                                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                  <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate">
+                                    {item.name}
+                                  </span>
+                                  <span className="bg-rose-500 text-white font-black text-[9px] px-2 py-0.5 rounded tracking-wider uppercase inline-flex items-center gap-1 flex-shrink-0 shadow-xs">
+                                    <Swords className="w-2.5 h-2.5" />
+                                    <span>Active Boss</span>
+                                  </span>
+                                </div>
                               </div>
 
-                              <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                <span className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate">
+                              {/* Right: Ruined count & Impact Share */}
+                              <div className="flex-shrink-0 text-right font-mono">
+                                <div className="font-black text-rose-600 dark:text-rose-400 text-xs sm:text-sm">
+                                  💔 Ruined {item.ruinedCount} {item.ruinedCount === 1 ? 'Day' : 'Days'}
+                                </div>
+                                <div className="text-[10px] text-slate-400 uppercase tracking-tight">
+                                  {item.leakPercentage}% of all leaks
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Hover Breakdown Popover (Up to 15 days + scrollable clamp) */}
+                            <AnimatePresence>
+                              {isHabitHovered && item.ruinedDates.length > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 4, scale: 0.96 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 2, scale: 0.96 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="absolute bottom-full mb-2 right-4 sm:right-6 z-50 pointer-events-none bg-slate-900/95 dark:bg-slate-950 text-white text-xs p-3.5 rounded-2xl shadow-2xl border border-slate-700/60 min-w-[210px] max-w-[300px]"
+                                >
+                                  <div className="font-mono font-bold text-rose-400 mb-2 text-xs flex items-center gap-1.5">
+                                    <span>💔 Ruined Days ({item.ruinedCount}):</span>
+                                  </div>
+                                  <div className="space-y-1 font-mono text-[11px] text-slate-200 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+                                    {item.ruinedDates.slice(0, 15).map((d) => (
+                                      <div key={d} className="flex items-center gap-1.5 text-slate-300">
+                                        <span className="text-rose-400">•</span>
+                                        <span>{formatRuinedDate(d)}</span>
+                                      </div>
+                                    ))}
+                                    {item.ruinedDates.length > 15 && (
+                                      <div className="text-[10px] text-slate-400 font-mono italic pt-1">
+                                        +{item.ruinedDates.length - 15} more days
+                                      </div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      }
+
+                      // 2. Remaining Habits with Breaks (ruinedCount > 0)
+                      if (item.ruinedCount > 0) {
+                        return (
+                          <div
+                            key={item.id}
+                            className="relative"
+                            onMouseEnter={() => setHoveredHabitId(item.id)}
+                            onMouseLeave={() => setHoveredHabitId(null)}
+                          >
+                            <div className="p-3 sm:p-3.5 rounded-xl bg-white/70 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3 cursor-default hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                                <div
+                                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                  style={{
+                                    backgroundColor: `${item.color || '#64748b'}20`,
+                                    color: item.color || '#64748b',
+                                  }}
+                                >
+                                  <DynamicIcon name={item.icon} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                </div>
+                                <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
                                   {item.name}
                                 </span>
-                                <span className="bg-rose-500 text-white font-black text-[9px] px-2 py-0.5 rounded tracking-wider uppercase inline-flex items-center gap-1 flex-shrink-0 shadow-xs">
-                                  <Swords className="w-2.5 h-2.5" />
-                                  <span>Active Boss</span>
+                              </div>
+
+                              <div className="flex items-center gap-3 flex-shrink-0 text-right font-mono">
+                                <span className="text-xs font-bold text-rose-500/90">
+                                  Ruined {item.ruinedCount} {item.ruinedCount === 1 ? 'Day' : 'Days'}
+                                </span>
+                                <span className="text-[11px] font-bold text-slate-400 min-w-[36px]">
+                                  {item.leakPercentage}%
                                 </span>
                               </div>
                             </div>
 
-                            {/* Right: Ruined count & Impact Share */}
-                            <div className="flex-shrink-0 text-right font-mono">
-                              <div className="font-black text-rose-600 dark:text-rose-400 text-xs sm:text-sm">
-                                💔 Ruined {item.ruinedCount} {item.ruinedCount === 1 ? 'Day' : 'Days'}
-                              </div>
-                              <div className="text-[10px] text-slate-400 uppercase tracking-tight">
-                                {item.leakPercentage}% of all leaks
-                              </div>
-                            </div>
+                            {/* Hover Breakdown Popover (Up to 15 days + scrollable clamp) */}
+                            <AnimatePresence>
+                              {isHabitHovered && item.ruinedDates.length > 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 4, scale: 0.96 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 2, scale: 0.96 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="absolute bottom-full mb-2 right-4 sm:right-6 z-50 pointer-events-none bg-slate-900/95 dark:bg-slate-950 text-white text-xs p-3.5 rounded-2xl shadow-2xl border border-slate-700/60 min-w-[210px] max-w-[300px]"
+                                >
+                                  <div className="font-mono font-bold text-rose-400 mb-2 text-xs flex items-center gap-1.5">
+                                    <span>💔 Ruined Days ({item.ruinedCount}):</span>
+                                  </div>
+                                  <div className="space-y-1 font-mono text-[11px] text-slate-200 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+                                    {item.ruinedDates.slice(0, 15).map((d) => (
+                                      <div key={d} className="flex items-center gap-1.5 text-slate-300">
+                                        <span className="text-rose-400">•</span>
+                                        <span>{formatRuinedDate(d)}</span>
+                                      </div>
+                                    ))}
+                                    {item.ruinedDates.length > 15 && (
+                                      <div className="text-[10px] text-slate-400 font-mono italic pt-1">
+                                        +{item.ruinedDates.length - 15} more days
+                                      </div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
+                        );
+                      }
 
-                          {/* Hover Breakdown Popover */}
-                          <AnimatePresence>
-                            {isHabitHovered && item.ruinedDates.length > 0 && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 4, scale: 0.96 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 2, scale: 0.96 }}
-                                transition={{ duration: 0.15 }}
-                                className="absolute bottom-full mb-2 right-4 sm:right-6 z-50 pointer-events-none bg-slate-900/95 dark:bg-slate-950 text-white text-xs p-3.5 rounded-2xl shadow-2xl border border-slate-700/60 min-w-[200px] max-w-[280px]"
-                              >
-                                <div className="font-mono font-bold text-rose-400 mb-2 text-xs flex items-center gap-1.5">
-                                  <span>💔 Ruined Days ({item.ruinedCount}):</span>
-                                </div>
-                                <div className="space-y-1 font-mono text-[11px] text-slate-200">
-                                  {item.ruinedDates.slice(0, 5).map((d) => (
-                                    <div key={d} className="flex items-center gap-1.5 text-slate-300">
-                                      <span className="text-rose-400">•</span>
-                                      <span>{formatRuinedDate(d)}</span>
-                                    </div>
-                                  ))}
-                                  {item.ruinedDates.length > 5 && (
-                                    <div className="text-[10px] text-slate-400 font-bold pt-0.5">
-                                      +{item.ruinedDates.length - 5} more days
-                                    </div>
-                                  )}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                    }
-
-                    // 2. Remaining Habits with Breaks (ruinedCount > 0)
-                    if (item.ruinedCount > 0) {
+                      // 3. Habits with Zero Breaks (ruinedCount === 0)
                       return (
                         <div
                           key={item.id}
-                          className="relative"
-                          onMouseEnter={() => setHoveredHabitId(item.id)}
-                          onMouseLeave={() => setHoveredHabitId(null)}
+                          className="p-3 sm:p-3.5 rounded-xl bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-3"
                         >
-                          <div className="p-3 sm:p-3.5 rounded-xl bg-white/70 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-3 cursor-default hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-                            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                              <div
-                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{
-                                  backgroundColor: `${item.color || '#64748b'}20`,
-                                  color: item.color || '#64748b',
-                                }}
-                              >
-                                <DynamicIcon name={item.icon} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                              </div>
-                              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
-                                {item.name}
-                              </span>
+                          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                            <div
+                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{
+                                backgroundColor: `${item.color || '#10b981'}20`,
+                                color: item.color || '#10b981',
+                              }}
+                            >
+                              <DynamicIcon name={item.icon} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </div>
-
-                            <div className="flex items-center gap-3 flex-shrink-0 text-right font-mono">
-                              <span className="text-xs font-bold text-rose-500/90">
-                                Ruined {item.ruinedCount} {item.ruinedCount === 1 ? 'Day' : 'Days'}
-                              </span>
-                              <span className="text-[11px] font-bold text-slate-400 min-w-[36px]">
-                                {item.leakPercentage}%
-                              </span>
-                            </div>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
+                              {item.name}
+                            </span>
                           </div>
 
-                          {/* Hover Breakdown Popover */}
-                          <AnimatePresence>
-                            {isHabitHovered && item.ruinedDates.length > 0 && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 4, scale: 0.96 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 2, scale: 0.96 }}
-                                transition={{ duration: 0.15 }}
-                                className="absolute bottom-full mb-2 right-4 sm:right-6 z-50 pointer-events-none bg-slate-900/95 dark:bg-slate-950 text-white text-xs p-3.5 rounded-2xl shadow-2xl border border-slate-700/60 min-w-[200px] max-w-[280px]"
-                              >
-                                <div className="font-mono font-bold text-rose-400 mb-2 text-xs flex items-center gap-1.5">
-                                  <span>💔 Ruined Days ({item.ruinedCount}):</span>
-                                </div>
-                                <div className="space-y-1 font-mono text-[11px] text-slate-200">
-                                  {item.ruinedDates.slice(0, 5).map((d) => (
-                                    <div key={d} className="flex items-center gap-1.5 text-slate-300">
-                                      <span className="text-rose-400">•</span>
-                                      <span>{formatRuinedDate(d)}</span>
-                                    </div>
-                                  ))}
-                                  {item.ruinedDates.length > 5 && (
-                                    <div className="text-[10px] text-slate-400 font-bold pt-0.5">
-                                      +{item.ruinedDates.length - 5} more days
-                                    </div>
-                                  )}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          <div className="flex-shrink-0 text-right">
+                            <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold inline-flex items-center gap-1.5">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                              <span>100% Flawless (0 Leaks)</span>
+                            </span>
+                          </div>
                         </div>
                       );
-                    }
-
-                    // 3. Habits with Zero Breaks (ruinedCount === 0)
-                    return (
-                      <div
-                        key={item.id}
-                        className="p-3 sm:p-3.5 rounded-xl bg-white/40 dark:bg-slate-900/30 border border-slate-100 dark:border-slate-800/50 flex items-center justify-between gap-3"
-                      >
-                        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                          <div
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{
-                              backgroundColor: `${item.color || '#10b981'}20`,
-                              color: item.color || '#10b981',
-                            }}
-                          >
-                            <DynamicIcon name={item.icon} className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          </div>
-                          <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
-                            {item.name}
-                          </span>
-                        </div>
-
-                        <div className="flex-shrink-0 text-right">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold inline-flex items-center gap-1.5">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>100% Flawless (0 Leaks)</span>
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+                    })
+                  )}
+                </div>
               </div>
-            </div>
+            </section>
           </div>
         )}
       </motion.div>
