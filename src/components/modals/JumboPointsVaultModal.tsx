@@ -6,6 +6,11 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Flame,
+  Trophy,
+  Zap,
+  Swords,
+  ShieldCheck,
 } from 'lucide-react';
 import type { Habit } from '../../types/habit';
 import { DynamicIcon } from '../DynamicIcon';
@@ -41,6 +46,9 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
     failedCount,
     totalPoints,
     rangeTitle,
+    streakStats,
+    deficitStats,
+    bossHabit,
   } = useJumboAnalytics(habits, jumboDates, historyRange, weekOffset);
 
   // Diagnostic log for historical accomplishments inspection
@@ -199,8 +207,9 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           </div>
         </div>
 
-        {/* 3. SCROLLABLE GRID CONTAINER */}
-        <div className="overflow-y-auto max-h-[52vh] pr-1 pt-3 pb-3 scrollbar-thin">
+        {/* 3. SCROLLABLE BODY (Calendar Grid + Legend + 3 Insight Modules) */}
+        <div className="overflow-y-auto max-h-[60vh] pr-1 pt-3 pb-3 space-y-4 scrollbar-thin">
+          {/* Calendar Day Tiles Grid */}
           <div className="grid grid-cols-7 gap-x-2.5 sm:gap-x-3.5 gap-y-3 sm:gap-y-3.5 px-1">
             {days.map((day) => {
               const isConquered = day.isPerfect;
@@ -315,27 +324,142 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
 
-        {/* 4. BOTTOM LEGEND SUMMARY (Centered) */}
-        <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-8 text-xs font-mono text-slate-600 dark:text-slate-400 flex-wrap relative z-10">
-          <div className="flex items-center gap-2 font-bold">
-            <span className="w-4 h-4 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 flex items-center justify-center text-white font-black text-[9px] shadow-xs shadow-amber-500/30">
-              <Gem className="w-2.5 h-2.5 fill-white text-white" />
-            </span>
-            <span className="text-slate-700 dark:text-slate-300">
-              Conquered ({conqueredCount})
-            </span>
+          {/* Calendar Bottom Legend Summary */}
+          <div className="pt-2 pb-1 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-8 text-xs font-mono text-slate-600 dark:text-slate-400 flex-wrap">
+            <div className="flex items-center gap-2 font-bold">
+              <span className="w-4 h-4 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 flex items-center justify-center text-white font-black text-[9px] shadow-xs shadow-amber-500/30">
+                <Gem className="w-2.5 h-2.5 fill-white text-white" />
+              </span>
+              <span className="text-slate-700 dark:text-slate-300">
+                Conquered ({conqueredCount})
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 font-bold">
+              <span className="w-4 h-4 rounded-full bg-rose-500 flex items-center justify-center text-white font-black text-[9px] shadow-xs">
+                <X className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+              <span className="text-slate-700 dark:text-slate-300">
+                Failed ({failedCount})
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 font-bold">
-            <span className="w-4 h-4 rounded-full bg-rose-500 flex items-center justify-center text-white font-black text-[9px] shadow-xs">
-              <X className="w-2.5 h-2.5 stroke-[3]" />
-            </span>
-            <span className="text-slate-700 dark:text-slate-300">
-              Failed ({failedCount})
-            </span>
+          {/* ═════════════════════════════════════════════════════════════════ */}
+          {/* POST-CALENDAR VISUAL GAMIFIED INSIGHT MODULES                   */}
+          {/* ═════════════════════════════════════════════════════════════════ */}
+
+          {/* MODULE 1: CURRENT VS. BEST FLAWLESS RUN (Micro Rail) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-700/30 space-y-2">
+            <div className="flex items-center justify-between font-mono font-bold text-xs">
+              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500 flex-shrink-0" />
+                <span>Current: {streakStats.currentStreak}d</span>
+                {streakStats.isNewRecord && (
+                  <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-amber-500 text-white animate-pulse shadow-xs ml-1">
+                    👑 NEW RECORD
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                <Trophy className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                <span>Best: {streakStats.bestStreak}d</span>
+              </div>
+            </div>
+
+            <div className="h-2.5 rounded-full bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-700"
+                style={{ width: `${streakStats.progressRatio}%` }}
+              />
+            </div>
           </div>
+
+          {/* MODULE 2: THE "CLEAN SHEET" DEFICIT BAR (Single Slip-Up Reality) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-2.5">
+            <div className="h-3 rounded-full flex overflow-hidden gap-0.5 bg-slate-200 dark:bg-slate-800">
+              <div
+                className="bg-amber-400 h-full transition-all duration-500 rounded-l-full"
+                style={{ width: `${deficitStats.cleanPercent}%` }}
+                title={`Clean: ${deficitStats.cleanCount} days (${deficitStats.cleanPercent}%)`}
+              />
+              <div
+                className="bg-amber-200 dark:bg-amber-700 h-full transition-all duration-500"
+                style={{ width: `${deficitStats.nearMissPercent}%` }}
+                title={`Missed by 1: ${deficitStats.nearMissCount} days (${deficitStats.nearMissPercent}%)`}
+              />
+              <div
+                className="bg-rose-500 h-full transition-all duration-500 rounded-r-full"
+                style={{ width: `${deficitStats.collapsePercent}%` }}
+                title={`Collapsed: ${deficitStats.collapseCount} days (${deficitStats.collapsePercent}%)`}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] font-mono font-bold flex-wrap gap-2">
+              <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <Gem className="w-3 h-3 fill-amber-400 text-amber-500" />
+                <span>{deficitStats.cleanCount} Clean</span>
+              </span>
+              <span className="text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+                <span>{deficitStats.nearMissCount} Missed by 1</span>
+              </span>
+              <span className="text-rose-500 flex items-center gap-1">
+                <X className="w-3 h-3 stroke-[3]" />
+                <span>{deficitStats.collapseCount} Collapsed</span>
+              </span>
+            </div>
+          </div>
+
+          {/* MODULE 3: HABIT BOSS FIGHT (The "Final Boss" Target) */}
+          {bossHabit ? (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-rose-500/5 to-transparent border border-rose-200/60 dark:border-rose-900/40 flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <span className="bg-rose-500 text-white font-black text-[9px] px-2 py-0.5 rounded tracking-wider uppercase inline-flex items-center gap-1">
+                  <Swords className="w-2.5 h-2.5" />
+                  <span>ACTIVE BOSS</span>
+                </span>
+                <div className="flex items-center gap-2 mt-1.5 truncate">
+                  <div
+                    className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${bossHabit.color || '#f43f5e'}25`, color: bossHabit.color || '#f43f5e' }}
+                  >
+                    <DynamicIcon name={bossHabit.icon} className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
+                    {bossHabit.name}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 text-right">
+                <div className="font-mono font-black text-rose-600 dark:text-rose-400 text-xs sm:text-sm">
+                  💔 Ruined {bossHabit.fails} {bossHabit.fails === 1 ? 'Day' : 'Days'}
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-tight mt-0.5">
+                  {bossHabit.ruinShare}% of all leaks
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 dark:border-emerald-500/20 flex items-center justify-between gap-4">
+              <div>
+                <span className="bg-emerald-500 text-white font-black text-[9px] px-2 py-0.5 rounded tracking-wider uppercase inline-flex items-center gap-1">
+                  <ShieldCheck className="w-2.5 h-2.5" />
+                  <span>BOSS DEFEATED</span>
+                </span>
+                <div className="text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 mt-1">
+                  100% Realm Defense • Zero active saboteurs
+                </div>
+              </div>
+
+              <div className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <Trophy className="w-4 h-4 text-emerald-500" />
+                <span>Flawless Victory</span>
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
