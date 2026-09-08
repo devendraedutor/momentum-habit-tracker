@@ -334,7 +334,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Single Floating Tooltip for Failed Days Only */}
+                      {/* Single Floating Tooltip for Failed Days Only (Clean Vertical Stack) */}
                       <AnimatePresence>
                         {isHovered && isMissed && (
                           <motion.div
@@ -342,18 +342,14 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 2, scale: 0.96 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-40 pointer-events-none bg-slate-900/95 dark:bg-slate-950 text-white rounded-xl py-2 px-3 shadow-xl border border-slate-700 text-xs whitespace-nowrap min-w-max max-w-[240px]"
+                            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-40 pointer-events-none bg-slate-900/95 dark:bg-slate-950 text-white text-xs font-semibold px-3 py-2.5 rounded-xl shadow-xl border border-slate-700/60 flex flex-col gap-1.5 min-w-[130px] whitespace-nowrap"
                           >
-                            <div className="font-mono font-bold text-rose-400 text-xs flex items-center gap-1 mb-0.5">
-                              <X className="w-3 h-3 stroke-[3]" />
-                              <span>{day.displayDate}: ✕ Jumbo Lost</span>
-                            </div>
-                            <div className="text-[11px] text-slate-300 font-mono flex items-start gap-1 flex-wrap">
-                              <span className="text-slate-400 font-semibold">Leaked by:</span>
-                              <span className="text-rose-300 font-bold truncate max-w-[180px]">
-                                {day.failedHabits.map((h) => `${h.name}`).join(', ')}
-                              </span>
-                            </div>
+                            {day.failedHabits.map((h) => (
+                              <div key={h.id} className="flex items-center gap-2 text-rose-300">
+                                <DynamicIcon name={h.icon} className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span className="font-medium text-slate-100">{h.name}</span>
+                              </div>
+                            ))}
 
                             {/* Tooltip Arrow */}
                             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-slate-900/95 dark:border-t-slate-950" />
