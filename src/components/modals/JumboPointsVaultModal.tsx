@@ -187,7 +187,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           </div>
 
           {/* 7 Weekday Column Headers (MON - SUN) */}
-          <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center px-0.5">
+          <div className="grid grid-cols-7 gap-x-2.5 sm:gap-x-3.5 text-center px-1">
             {WEEKDAYS.map((dayName) => (
               <div
                 key={dayName}
@@ -200,8 +200,8 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         </div>
 
         {/* 3. SCROLLABLE GRID CONTAINER */}
-        <div className="overflow-y-auto max-h-[52vh] pr-1 pt-2 pb-2 scrollbar-thin">
-          <div className="grid grid-cols-7 gap-1 sm:gap-1.5 px-0.5">
+        <div className="overflow-y-auto max-h-[52vh] pr-1 pt-3 pb-3 scrollbar-thin">
+          <div className="grid grid-cols-7 gap-x-2.5 sm:gap-x-3.5 gap-y-3 sm:gap-y-3.5 px-1">
             {days.map((day) => {
               const isConquered = day.isPerfect;
               const isMissed = day.isBroken;
@@ -227,7 +227,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   key={day.dateKey}
                   type="button"
                   onClick={() => setSelectedDay(isSelected ? null : day)}
-                  className={`rounded-xl border p-1 sm:p-1.5 flex flex-col justify-between items-center h-11 sm:h-13 transition-all cursor-pointer select-none text-center hover:scale-[1.04] active:scale-95 ${tileStyle} ${
+                  className={`max-w-[48px] sm:max-w-[54px] w-full mx-auto aspect-square rounded-2xl border p-1 sm:p-1.5 flex flex-col justify-between items-center transition-all cursor-pointer select-none text-center hover:scale-[1.05] active:scale-95 ${tileStyle} ${
                     isSelected ? 'ring-2 ring-amber-500 scale-105 z-10 shadow-md' : ''
                   }`}
                   title={`${day.displayDate}: ${
@@ -241,7 +241,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   {/* Top Day Number + Month Label */}
                   <div className="flex items-center justify-between w-full px-0.5 text-[8.5px] font-mono leading-none">
                     <span className="font-mono text-[10px] sm:text-[11px] font-black">{day.dayNum}</span>
-                    <span className="text-[7.5px] sm:text-[8px] font-bold text-slate-400 uppercase opacity-75">
+                    <span className="text-[7px] sm:text-[7.5px] font-bold text-slate-400 uppercase opacity-75">
                       {day.monthShort}
                     </span>
                   </div>
@@ -272,7 +272,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-2.5 p-3 rounded-2xl bg-amber-500/5 dark:bg-slate-800/80 border border-amber-200/60 dark:border-slate-750 flex items-center justify-between text-xs font-mono"
+                className="mt-3 p-3 rounded-2xl bg-amber-500/5 dark:bg-slate-800/80 border border-amber-200/60 dark:border-slate-750 flex items-center justify-between text-xs font-mono"
               >
                 <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1 pr-2">
                   <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -324,7 +324,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               <Gem className="w-2.5 h-2.5 fill-white text-white" />
             </span>
             <span className="text-slate-700 dark:text-slate-300">
-              💎 Conquered ({conqueredCount})
+              Conquered ({conqueredCount})
             </span>
           </div>
 
@@ -333,7 +333,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               <X className="w-2.5 h-2.5 stroke-[3]" />
             </span>
             <span className="text-slate-700 dark:text-slate-300">
-              ✕ Failed ({failedCount})
+              Failed ({failedCount})
             </span>
           </div>
         </div>
