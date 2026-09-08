@@ -354,8 +354,14 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
   // Dynamic values for the 3-Slot Metric Badge: XP — Streak — Level
   const displayXP = isIncremented
     ? currentStats.currentScore + 1
+    : isFailed
+    ? (floorAtZero ? Math.max(0, currentStats.currentScore - 1) : currentStats.currentScore - 1)
     : currentStats.currentScore;
-  const xpDelta = isIncremented ? '+1 ⚡' : null;
+  const xpDelta = isIncremented
+    ? '+1 ⚡'
+    : isFailed
+    ? '-1 ⚡'
+    : null;
 
   const displayOverallStreak = isIncremented
     ? currentStats.currentStreak + 1
@@ -453,7 +459,8 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
             icon={<Zap className="w-4 h-4 fill-amber-500 text-amber-500" />}
             value={displayXP}
             delta={xpDelta}
-            deltaColor="text-emerald-500 dark:text-emerald-400"
+            deltaColor={isFailed ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-500 dark:text-emerald-400'}
+            isShaking={isFailed}
           />
 
           <span className="text-slate-300 dark:text-slate-600 select-none font-mono">|</span>
