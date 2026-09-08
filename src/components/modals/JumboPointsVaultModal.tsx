@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Gem,
-  Check,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -75,8 +74,8 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         className="relative z-10 max-w-3xl w-full mx-auto p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden max-h-[92vh] flex flex-col"
       >
         {/* Ambient Top Glow */}
-        <div className="absolute -top-24 -left-24 w-60 h-60 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -top-24 -right-24 w-60 h-60 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -left-24 w-60 h-60 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-60 h-60 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* TOP HEADER: JUMBO POINTS + DURATION FILTERS + CLOSE BUTTON */}
         <div className="flex items-center justify-between pb-5 border-b border-slate-100 dark:border-slate-800 relative z-10 flex-wrap gap-4">
@@ -111,7 +110,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                     }}
                     className={`font-mono text-xs px-3.5 py-1.5 rounded-xl transition-all cursor-pointer font-bold ${
                       isActive
-                        ? 'bg-cyan-500 text-white shadow-sm'
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm shadow-amber-500/20'
                         : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
                     }`}
                   >
@@ -138,7 +137,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           {/* Sub-Header Navigation: Date Range & Pagination */}
           <div className="flex items-center justify-between px-1 text-xs font-mono">
             <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 text-xs sm:text-sm">
-              <Calendar className="w-4 h-4 text-cyan-500 flex-shrink-0" />
+              <Calendar className="w-4 h-4 text-amber-500 flex-shrink-0" />
               <span>{rangeTitle}</span>
             </div>
 
@@ -163,7 +162,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                     setSelectedDay(null);
                     setWeekOffset(0);
                   }}
-                  className="px-2.5 py-1 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20 text-xs font-mono font-bold transition-colors cursor-pointer border border-cyan-500/20"
+                  className="px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-mono font-bold transition-colors cursor-pointer border border-amber-500/20"
                 >
                   Current
                 </button>
@@ -199,23 +198,23 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           {/* 7-Column Day Tiles Grid */}
           <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5 px-0.5">
             {days.map((day) => {
-              const isEarned = day.isPerfect;
+              const isConquered = day.isPerfect;
               const isMissed = day.isBroken;
               const isSelected = selectedDay?.dateKey === day.dateKey;
 
               let tileStyle =
                 'bg-slate-50/40 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 text-slate-400';
 
-              if (isEarned) {
+              if (isConquered) {
                 tileStyle =
-                  'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-300 shadow-xs hover:border-emerald-400';
+                  'bg-amber-500/10 border border-amber-300/60 dark:bg-amber-950/20 dark:border-amber-500/30 text-amber-900/80 dark:text-amber-200/80 shadow-2xs hover:border-amber-400';
               } else if (isMissed) {
                 tileStyle =
-                  'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-300 hover:border-rose-400';
+                  'bg-rose-500/10 border border-rose-200/60 dark:bg-rose-950/20 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 hover:border-rose-400';
               }
 
               if (day.isToday) {
-                tileStyle += ' ring-2 ring-cyan-500 border-cyan-500 shadow-xs';
+                tileStyle += ' ring-2 ring-amber-500 dark:ring-amber-400 border-amber-500 shadow-xs';
               }
 
               return (
@@ -224,32 +223,32 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   type="button"
                   onClick={() => setSelectedDay(isSelected ? null : day)}
                   className={`rounded-2xl border p-1.5 sm:p-2 flex flex-col justify-between aspect-square transition-all cursor-pointer select-none text-center hover:scale-[1.04] active:scale-95 ${tileStyle} ${
-                    isSelected ? 'ring-2 ring-cyan-500 scale-105 z-10 shadow-md' : ''
+                    isSelected ? 'ring-2 ring-amber-500 scale-105 z-10 shadow-md' : ''
                   }`}
                   title={`${day.displayDate}: ${
-                    isEarned
-                      ? '💎 Jumbo Earned (All Habits Conquered)'
+                    isConquered
+                      ? '💎 Jumbo Conquered (All Habits Conquered)'
                       : isMissed
-                      ? `✕ Jumbo Missed (${day.failedHabits.length} Failed)`
+                      ? `✕ Jumbo Failed (${day.failedHabits.length} Missed)`
                       : 'Unlogged / Rest Day'
                   }`}
                 >
                   {/* Top Day Number + Month Label */}
                   <div className="flex items-center justify-between w-full px-0.5 text-[9px] font-mono leading-none">
                     <span className="font-mono text-xs font-black">{day.dayNum}</span>
-                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase text-slate-400">
+                    <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase opacity-70">
                       {day.monthShort}
                     </span>
                   </div>
 
                   {/* Center Badge */}
                   <div className="my-auto flex items-center justify-center">
-                    {isEarned ? (
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-black shadow-sm">
-                        <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
+                    {isConquered ? (
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 text-white flex items-center justify-center shadow-sm shadow-amber-500/40">
+                        <Gem className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-white text-white drop-shadow-xs" />
                       </div>
                     ) : isMissed ? (
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-sm">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black shadow-sm shadow-rose-500/20">
                         <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[3]" />
                       </div>
                     ) : (
@@ -268,7 +267,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-750 flex items-center justify-between text-xs font-mono"
+                className="mt-2.5 p-3 rounded-2xl bg-amber-500/5 dark:bg-slate-800/80 border border-amber-200/60 dark:border-slate-750 flex items-center justify-between text-xs font-mono"
               >
                 <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1 pr-2">
                   <span className="font-bold text-slate-800 dark:text-slate-200">
@@ -276,14 +275,14 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                   </span>
                   <span className="text-slate-400">•</span>
                   {selectedDay.isPerfect ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                      <Gem className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
                       Conquered: All active habits completed flawlessly (+1 Jumbo Point 💎)
                     </span>
                   ) : selectedDay.failedHabits.length > 0 ? (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-rose-600 dark:text-rose-400 font-bold">
-                        Missed Habits:
+                        Failed Habits:
                       </span>
                       {selectedDay.failedHabits.map((h) => (
                         <span
@@ -315,11 +314,11 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
           {/* Bottom Legend Summary (Centered) */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center gap-8 text-xs font-mono text-slate-600 dark:text-slate-400 flex-wrap">
             <div className="flex items-center gap-2 font-bold">
-              <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-white font-black text-[9px] shadow-xs">
-                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              <span className="w-4 h-4 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 flex items-center justify-center text-white font-black text-[9px] shadow-xs shadow-amber-500/30">
+                <Gem className="w-2.5 h-2.5 fill-white text-white" />
               </span>
               <span className="text-slate-700 dark:text-slate-300">
-                Conquered ({conqueredCount})
+                💎 Conquered ({conqueredCount})
               </span>
             </div>
 
@@ -328,7 +327,7 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
                 <X className="w-2.5 h-2.5 stroke-[3]" />
               </span>
               <span className="text-slate-700 dark:text-slate-300">
-                Failed ({failedCount})
+                ✕ Failed ({failedCount})
               </span>
             </div>
           </div>
