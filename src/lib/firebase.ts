@@ -22,21 +22,17 @@ import {
 export { getFirestore, doc, setDoc, getDoc, onSnapshot, type Firestore, type Unsubscribe };
 
 const firebaseConfig = {
-  apiKey:
-    import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyC-e0yNcG_hu2_S3_WYHZjIklr6798KZCM",
-  authDomain:
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "flux-habit.firebaseapp.com",
-  projectId:
-    import.meta.env.VITE_FIREBASE_PROJECT_ID || "flux-habit",
-  storageBucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "flux-habit.firebasestorage.app",
-  messagingSenderId:
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "380205132195",
-  appId:
-    import.meta.env.VITE_FIREBASE_APP_ID || "1:380205132195:web:04b796fd2707c6b8e85216",
-  measurementId:
-    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-P6V0YFV37K",
+  apiKey: "AIzaSyC-e0yNcG_hu2_S3_WYHZjIklr6798KZCM",
+  authDomain: "flux-habit.firebaseapp.com",
+  projectId: "flux-habit",
+  storageBucket: "flux-habit.firebasestorage.app",
+  messagingSenderId: "380205132195",
+  appId: "1:380205132195:web:04b796fd2707c6b8e85216",
+  measurementId: "G-P6V0YFV37K",
 };
+
+// Log at startup to verify live build in browser DevTools
+console.log("[Firebase Init] Target Project ID:", firebaseConfig.projectId);
 
 // Initialize Firebase App instance
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
