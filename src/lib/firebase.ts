@@ -22,7 +22,7 @@ import {
 export { getFirestore, doc, setDoc, getDoc, onSnapshot, type Firestore, type Unsubscribe };
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC-e0yNcG_hu2_S3_WYHZjIklr6798KZCM",
+  apiKey: "AIzaSyC-e0yNcG_hu2_S3_WYHZjlKlr6798KZCM",
   authDomain: "flux-habit.firebaseapp.com",
   projectId: "flux-habit",
   storageBucket: "flux-habit.firebasestorage.app",
