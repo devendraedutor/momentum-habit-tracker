@@ -21,15 +21,21 @@ import {
 
 export { getFirestore, doc, setDoc, getDoc, onSnapshot, type Firestore, type Unsubscribe };
 
-const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+const apiKey =
+  import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyC-e0yNcG_hu2_S3_WYHZjlKlr6798KZCM";
 
 const firebaseConfig = {
-  apiKey: apiKey || "",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+  apiKey: apiKey,
+  authDomain:
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "flux-habit.firebaseapp.com",
+  projectId:
+    import.meta.env.VITE_FIREBASE_PROJECT_ID || "flux-habit",
+  storageBucket:
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "flux-habit.firebasestorage.app",
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "380205132195",
+  appId:
+    import.meta.env.VITE_FIREBASE_APP_ID || "1:380205132195:web:04b796fd2707c6b8e85216",
 };
 
 export const isFirebaseConfigured = Boolean(
