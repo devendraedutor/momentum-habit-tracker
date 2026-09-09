@@ -21,6 +21,7 @@ import { sound } from './lib/audio';
 import { getTodayString } from './lib/momentum';
 import { evaluateCheckInProgression, LEVEL_REQUIREMENTS } from './config/progression';
 import { Navbar } from './components/Navbar';
+import { useFirebaseAuth } from './hooks/useFirebaseAuth';
 import { HabitReelDeck } from './components/HabitReelDeck';
 
 import { HabitFormModal } from './components/HabitFormModal';
@@ -30,7 +31,7 @@ import { JumboUnlockModal } from './components/JumboUnlockModal';
 import { JumboPointsVaultModal } from './components/modals/JumboPointsVaultModal';
 import { HabitDirectoryModal } from './components/HabitDirectoryModal';
 import { SettingsModal } from './components/SettingsModal';
-import { AuthGateModal } from './components/AuthGateModal';
+import { AuthLandingGate } from './components/AuthLandingGate';
 import { HabitLaunchCelebration } from './components/HabitLaunchCelebration';
 import confetti from 'canvas-confetti';
 
@@ -74,22 +75,29 @@ export function App() {
   // Compute pending historical check-in backlog for Audit Lockout
   const pendingBacklog = useMemo(() => getHistoricalPendingBacklog(habits), [habits]);
 
+  // Real Firebase Google Auth & Firestore Cloud State
+  const {
+    user: firebaseUser,
+    isLoading: isAuthLoading,
+    isSigningIn,
+    syncState,
+    migrationToast,
+    loginWithGoogle: handleGoogleSignIn,
+    logout: handleGoogleSignOut,
+  } = useFirebaseAuth({
+    habits,
+    setHabits,
+    jumboDates,
+    setJumboDates,
+    settings,
+    setSettings,
+  });
+
   // Recalculate pure mathematical Jumbo Points whenever habits are added, edited, or checked-in
   useEffect(() => {
     const pureJumboDates = recalculateAllJumboPoints(habits);
     setJumboDates(pureJumboDates);
   }, [habits]);
-
-  // Login handler when passkey is validated in AuthGateModal
-  const handleLogin = useCallback((tester: Tester) => {
-    setActiveTester(tester);
-    setHabits(loadHabitsFromStorage(tester.id));
-    setSettings(loadSettingsFromStorage(tester.id));
-    setJumboDates(loadJumboDatesFromStorage(tester.id));
-    if (settings.soundEffects) {
-      sound.playMilestone();
-    }
-  }, [settings.soundEffects]);
 
   // Logout / Switch Profile handler
   const handleLogout = useCallback(() => {
@@ -101,7 +109,8 @@ export function App() {
     setIsDetailModalOpen(false);
     setEditingHabit(null);
     setSelectedDetailHabit(null);
-  }, []);
+    handleGoogleSignOut();
+  }, [handleGoogleSignOut]);
 
   // Theme synchronization
   useEffect(() => {
@@ -530,26 +539,55 @@ export function App() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
-      {/* Closed Beta Access Gate Modal */}
-      <AuthGateModal
-        key={activeTester ? `session-${activeTester.id}` : 'auth-gate-logged-out'}
-        isOpen={!activeTester}
-        onSuccess={handleLogin}
-      />
+  // 1. Initial Firebase Auth Loading Screen
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-800">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-0.5 shadow-sm flex items-center justify-center text-emerald-600 animate-pulse mb-4">
+          <span className="font-mono text-xl font-black">⚡</span>
+        </div>
+        <span className="text-xs font-mono font-medium text-slate-500 tracking-wider animate-pulse">
+          INITIALIZING FLUX...
+        </span>
+      </div>
+    );
+  }
 
-      {/* Top Navigation with glowing Jumbo Points Counter */}
+  // 2. Mandatory Auth Wall (Gated Landing Screen)
+  if (!firebaseUser) {
+    return (
+      <AuthLandingGate
+        onLoginGoogle={handleGoogleSignIn}
+        isSigningIn={isSigningIn}
+      />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200 relative">
+      {/* Zero-Loss Beta Migration Toast Banner */}
+      {migrationToast && (
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white text-xs sm:text-sm font-semibold py-2.5 px-4 text-center shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-4 duration-300">
+          <span>{migrationToast}</span>
+        </div>
+      )}
+
+      {/* Top Navigation with glowing Jumbo Points Counter & Google Auth */}
       <Navbar
         habits={habits}
         jumboPointsCount={jumboDates.length}
         hasPendingBacklog={pendingBacklog.length > 0}
         tester={activeTester}
+        user={firebaseUser}
+        isSigningIn={isSigningIn}
+        syncState={syncState}
         onOpenNewHabit={() => openHabitForm(null)}
         onOpenDirectory={openDirectory}
         onOpenSettings={openSettings}
         onOpenJumboVault={() => setIsJumboVaultOpen(true)}
         onLogout={handleLogout}
+        onLoginGoogle={handleGoogleSignIn}
+        onLogoutGoogle={handleGoogleSignOut}
       />
 
       {/* Main Reel Card Deck Showcase */}
@@ -571,7 +609,7 @@ export function App() {
       {/* Habit Create / Edit Modal (Mounts fresh instance with today's date) */}
       {isHabitFormOpen && (
         <HabitFormModal
-          key={editingHabit ? `edit-${editingHabit.id}` : `new-habit-${Date.now()}`}
+          key={editingHabit ? `edit-${editingHabit.id}` : 'new-habit-form'}
           isOpen={isHabitFormOpen}
           onClose={closeHabitForm}
           onSave={handleSaveHabit}

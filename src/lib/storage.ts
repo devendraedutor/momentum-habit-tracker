@@ -113,11 +113,93 @@ export function loadHabitsFromStorage(userId?: string): Habit[] {
   }
 }
 
+/**
+ * Scans localStorage across all possible beta keys ('guest__habits', 'momentum_habits_v1', 'devendra__habits', etc.)
+ * to ensure zero data loss during cloud migration.
+ */
+export function getAllLocalBetaHabits(): Habit[] {
+  if (typeof window === 'undefined') return [];
+  const candidateKeys = [
+    'habits',
+    'flux_habits',
+    'devendra__habits',
+    'guest__habits',
+    'momentum_habits_v1',
+    'rohit__habits',
+    'ananya__habits',
+    'vikram__habits',
+  ];
+
+  for (const key of candidateKeys) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const loaded = key.includes('__habits')
+            ? loadHabitsFromStorage(key.replace('__habits', ''))
+            : parsed;
+          if (loaded.length > 0) return loaded;
+        }
+      }
+    } catch {
+      // Continue searching
+    }
+  }
+
+  // Generic fallback: check any key ending in __habits
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.endsWith('__habits')) {
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const loaded = loadHabitsFromStorage(k.replace('__habits', ''));
+            if (loaded.length > 0) return loaded;
+          }
+        }
+      }
+    }
+  } catch {}
+
+  return [];
+}
+
+export function getAllLocalBetaJumboDates(): string[] {
+  if (typeof window === 'undefined') return [];
+  const candidateKeys = [
+    'jumboDates',
+    'flux_jumboDates',
+    'devendra__jumbo_wallet',
+    'guest__jumbo_wallet',
+    'momentum_jumbo_wallet',
+    'rohit__jumbo_wallet',
+    'ananya__jumbo_wallet',
+  ];
+
+  for (const key of candidateKeys) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+  return [];
+}
+
 export function saveHabitsToStorage(habits: Habit[], userId?: string): void {
   if (typeof window === 'undefined') return;
   try {
     const key = getStorageKey('habits', userId);
-    localStorage.setItem(key, JSON.stringify(habits));
+    const serialized = JSON.stringify(habits);
+    localStorage.setItem(key, serialized);
+    localStorage.setItem('habits', serialized);
   } catch (err) {
     console.error('Failed to save habits to storage:', err);
   }
@@ -202,9 +284,11 @@ export function saveJumboDatesToStorage(dates: string[], userId?: string): void 
   if (typeof window === 'undefined') return;
   try {
     const key = getStorageKey('jumbo_wallet', userId);
-    localStorage.setItem(key, JSON.stringify(dates));
+    const serialized = JSON.stringify(dates);
+    localStorage.setItem(key, serialized);
+    localStorage.setItem('jumboDates', serialized);
   } catch (err) {
-    console.error('Failed to save jumbo dates:', err);
+    console.error('Failed to save jumbo wallet dates:', err);
   }
 }
 
