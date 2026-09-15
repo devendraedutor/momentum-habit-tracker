@@ -16,7 +16,7 @@ import {
   Crown,
   Search,
   Check,
-  Share2,
+  Handshake,
 } from 'lucide-react';
 
 interface HabitDirectoryModalProps {
@@ -85,10 +85,10 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
                   onOpenShareHabits();
                 }}
                 className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold font-mono flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs"
-                title="Share Habits with Buddy"
+                title="Commit Habits with Buddy"
               >
-                <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="hidden sm:inline">Share Habits</span>
+                <Handshake className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mr-0.5" />
+                <span className="hidden sm:inline">Commit</span>
               </button>
             )}
 
