@@ -29,6 +29,7 @@ export interface Habit {
   startDate?: string; // Date (YYYY-MM-DD) from which tracking begins
   createdAt: string;
   archived?: boolean;
+  sharedWithBuddy?: boolean; // Whether this habit is shared with accountability partner
   history: Record<string, CheckInStatus>;
 }
 

@@ -62,6 +62,9 @@ interface HabitDetailModalProps {
   activeDateStr?: string;
   floorAtZero?: boolean;
   theme?: 'dark' | 'light';
+  isReadOnly?: boolean;
+  sharedByBuddyName?: string;
+  onToggleShare?: (habitId: string, shared: boolean) => void;
 }
 
 const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -75,6 +78,9 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   activeDateStr,
   floorAtZero = false,
   theme = 'dark',
+  isReadOnly = false,
+  sharedByBuddyName,
+  onToggleShare,
 }) => {
   const [timeRange, setTimeRange] = useState<ChartTimeRange>('30d');
   const [historyRange, setHistoryRange] = useState<'30d' | '60d' | '90d'>('30d');
@@ -392,6 +398,36 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
           </div>
         </div>
 
+        {/* Optional Partner Read-Only Banner / Share Toggle */}
+        {isReadOnly ? (
+          <div className="px-4 sm:px-5 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-300">
+            <div className="flex items-center gap-2 font-mono font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Shared by {sharedByBuddyName || 'Partner'} • Live Analytics</span>
+            </div>
+            <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+              Read-Only
+            </span>
+          </div>
+        ) : onToggleShare ? (
+          <div className="px-4 sm:px-5 py-2 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+            <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+              Accountability Partner Sharing:
+            </span>
+            <button
+              type="button"
+              onClick={() => onToggleShare(habit.id, !habit.sharedWithBuddy)}
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                habit.sharedWithBuddy
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              }`}
+            >
+              {habit.sharedWithBuddy ? '✓ Shared with Partner' : '+ Share with Partner'}
+            </button>
+          </div>
+        ) : null}
+
         {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 relative z-10">
           {/* 2. Redesigned Decluttered 4-Pillar Stat Grid (Ultra-Minimalist Game Stats) */}
@@ -605,13 +641,15 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                     key={d.dateStr}
                     type="button"
                     onClick={() => {
-                      if (onSelectDate) {
+                      if (!isReadOnly && onSelectDate) {
                         onSelectDate(d.dateStr);
+                        onClose();
                       }
-                      onClose();
                     }}
-                    className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-between min-h-[48px] sm:min-h-[52px] transition-all cursor-pointer select-none text-center hover:scale-[1.03] active:scale-95 ${cardStyle}`}
-                    title={`${d.formatted}: ${isDone ? (isBreak ? 'Controlled ✓' : 'Done ✓') : isMissed ? (isBreak ? 'Failed ✕' : 'Missed ✕') : 'Untracked'} (Click to jump to date)`}
+                    className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-between min-h-[48px] sm:min-h-[52px] transition-all select-none text-center ${
+                      isReadOnly ? 'cursor-default' : 'cursor-pointer hover:scale-[1.03] active:scale-95'
+                    } ${cardStyle}`}
+                    title={`${d.formatted}: ${isDone ? (isBreak ? 'Controlled ✓' : 'Done ✓') : isMissed ? (isBreak ? 'Failed ✕' : 'Missed ✕') : 'Untracked'}${isReadOnly ? '' : ' (Click to jump to date)'}`}
                   >
                     {/* Top Day / Month Tag */}
                     <div className="flex items-center justify-between w-full px-0.5 text-[9px] font-mono leading-none">

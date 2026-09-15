@@ -22,6 +22,8 @@ import { getTodayString } from './lib/momentum';
 import { evaluateCheckInProgression, LEVEL_REQUIREMENTS } from './config/progression';
 import { Navbar } from './components/Navbar';
 import { useFirebaseAuth } from './hooks/useFirebaseAuth';
+import { useNotifications } from './hooks/useNotifications';
+import { useBuddySystem } from './hooks/useBuddySystem';
 import { HabitReelDeck } from './components/HabitReelDeck';
 
 import { HabitFormModal } from './components/HabitFormModal';
@@ -33,6 +35,12 @@ import { HabitDirectoryModal } from './components/HabitDirectoryModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AuthLandingGate } from './components/AuthLandingGate';
 import { HabitLaunchCelebration } from './components/HabitLaunchCelebration';
+import { BuddyHubModal } from './components/buddies/BuddyHubModal';
+import { GranularShareModal } from './components/buddies/GranularShareModal';
+import { PartnershipDetailsModal } from './components/buddies/PartnershipDetailsModal';
+import { syncHabitProgressToSharedHabits } from './lib/firestoreService';
+import type { BuddyMemberSummary, SharedHabitRecord } from './types/buddy';
+import { Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export function App() {
@@ -92,6 +100,87 @@ export function App() {
     settings,
     setSettings,
   });
+
+  // Centralized Notifications Center
+  const {
+    notifications,
+    unreadCount,
+    isActionLoading: isNotificationActionLoading,
+    markAllAsRead,
+    acceptInvite: handleAcceptInvite,
+    declineInvite: handleDeclineInvite,
+  } = useNotifications({
+    user: firebaseUser,
+  });
+
+  // Multi-Buddy & Granular Habit Sharing System
+  const {
+    buddies,
+    friendships: _friendships,
+    isSearching: isBuddySearching,
+    searchResult: buddySearchResult,
+    searchError: buddySearchError,
+    isInviteSending,
+    inviteSuccessToast,
+    nudgeCooldowns,
+    searchBuddy,
+    sendInvite: sendBuddyInvite,
+    unfriend: unfriendBuddy,
+    shareHabits,
+    revokeHabit,
+    nudgeBuddy,
+    clearSearch: clearBuddySearch,
+  } = useBuddySystem({
+    user: firebaseUser,
+  });
+
+  // Multi-Buddy Modal & Selection States
+  const [isBuddyHubOpen, setIsBuddyHubOpen] = useState(false);
+  const [isGranularShareModalOpen, setIsGranularShareModalOpen] = useState(false);
+  const [preselectedBuddyUid, setPreselectedBuddyUid] = useState<string | null>(null);
+  const [selectedBuddyForDetails, setSelectedBuddyForDetails] = useState<BuddyMemberSummary | null>(null);
+  const [inspectingSharedHabit, setInspectingSharedHabit] = useState<SharedHabitRecord | null>(null);
+
+  // Helper converting inspectingSharedHabit into a read-only Habit object
+  const inspectingHabitAsHabit = useMemo<Habit | null>(() => {
+    if (!inspectingSharedHabit) return null;
+    return {
+      id: inspectingSharedHabit.habitId,
+      name: inspectingSharedHabit.habitTitle,
+      description: '',
+      category: inspectingSharedHabit.habitCategory || 'Shared',
+      icon: inspectingSharedHabit.habitIcon || 'Sparkles',
+      color: inspectingSharedHabit.habitColor || '#10b981',
+      type: 'BUILD',
+      currentLevel: inspectingSharedHabit.currentLevel || 0,
+      levelProgress: 0,
+      targetGoalDays: 21,
+      currentTier: (inspectingSharedHabit.currentLevel || 0) + 1,
+      tierStartStreak: 0,
+      milestonesCompleted: inspectingSharedHabit.currentLevel || 0,
+      startDate: getTodayString(),
+      createdAt: getTodayString(),
+      archived: false,
+      history: (inspectingSharedHabit.history as Record<string, CheckInStatus>) || {},
+    };
+  }, [inspectingSharedHabit]);
+
+  // Granular Habit Sharing Flow Triggers
+  const handleOpenShareWizard = useCallback((buddyUid?: string) => {
+    setPreselectedBuddyUid(buddyUid || null);
+    setIsGranularShareModalOpen(true);
+  }, []);
+
+  const handleShareConfirmed = useCallback(
+    async (selectedHabits: Habit[], targetBuddyUids: string[]) => {
+      const ok = await shareHabits(selectedHabits, targetBuddyUids);
+      if (ok) {
+        setIsGranularShareModalOpen(false);
+      }
+      return ok;
+    },
+    [shareHabits]
+  );
 
   // Recalculate pure mathematical Jumbo Points whenever habits are added, edited, or checked-in
   useEffect(() => {
@@ -358,6 +447,14 @@ export function App() {
           return updatedJumboDates;
         });
 
+        // Real-time Cloud Sync for Granular Shared Habits
+        if (firebaseUser) {
+          const updatedHabit = nextHabits.find((h) => h.id === habitId);
+          if (updatedHabit) {
+            syncHabitProgressToSharedHabits(firebaseUser.uid, updatedHabit);
+          }
+        }
+
         return nextHabits;
       });
 
@@ -380,57 +477,69 @@ export function App() {
         });
       }
     },
-    [activeDateStr, settings, openAscendModal]
+    [activeDateStr, settings, openAscendModal, firebaseUser]
   );
 
   // Batch commit multiple modifications at once
-  const handleBatchSave = useCallback((updates: Record<string, CheckInStatus>, dateStr: string) => {
-    setHabits((prev) => {
-      const nextHabits = prev.map((h) => {
-        const newStatus = updates[h.id];
-        if (!newStatus) return h;
-        const prevStatus = h.history[dateStr] || 'none';
-        const newHistory = { ...h.history };
-        if (newStatus === 'none') {
-          delete newHistory[dateStr];
-        } else {
-          newHistory[dateStr] = newStatus;
+  const handleBatchSave = useCallback(
+    (updates: Record<string, CheckInStatus>, dateStr: string) => {
+      setHabits((prev) => {
+        const nextHabits = prev.map((h) => {
+          const newStatus = updates[h.id];
+          if (!newStatus) return h;
+          const prevStatus = h.history[dateStr] || 'none';
+          const newHistory = { ...h.history };
+          if (newStatus === 'none') {
+            delete newHistory[dateStr];
+          } else {
+            newHistory[dateStr] = newStatus;
+          }
+
+          const prog = evaluateCheckInProgression(
+            h,
+            newStatus === 'done' ? 'done' : newStatus === 'missed' ? 'missed' : 'none',
+            prevStatus === 'done' ? 'done' : prevStatus === 'missed' ? 'missed' : 'none'
+          );
+
+          return {
+            ...h,
+            history: newHistory,
+            currentLevel: prog.newCurrentLevel,
+            levelProgress: prog.newLevelProgress,
+            targetGoalDays: prog.targetDays,
+            currentTier: prog.newCurrentLevel + 1,
+            milestonesCompleted: prog.newCurrentLevel,
+          };
+        });
+
+        const activeOnly = nextHabits.filter((h) => !h.archived);
+        setJumboDates((prevJumbo) => {
+          const { updatedJumboDates, wasAwarded } = reconcileJumboDate(dateStr, activeOnly, prevJumbo);
+          if (wasAwarded) {
+            confetti({
+              particleCount: 80,
+              spread: 90,
+              origin: { y: 0.5 },
+              colors: ['#f59e0b', '#fbbf24', '#10b981'],
+            });
+          }
+          return updatedJumboDates;
+        });
+
+        // Real-time Cloud Sync for Granular Shared Habits
+        if (firebaseUser) {
+          for (const h of nextHabits) {
+            if (updates[h.id]) {
+              syncHabitProgressToSharedHabits(firebaseUser.uid, h);
+            }
+          }
         }
 
-        const prog = evaluateCheckInProgression(
-          h,
-          newStatus === 'done' ? 'done' : newStatus === 'missed' ? 'missed' : 'none',
-          prevStatus === 'done' ? 'done' : prevStatus === 'missed' ? 'missed' : 'none'
-        );
-
-        return {
-          ...h,
-          history: newHistory,
-          currentLevel: prog.newCurrentLevel,
-          levelProgress: prog.newLevelProgress,
-          targetGoalDays: prog.targetDays,
-          currentTier: prog.newCurrentLevel + 1,
-          milestonesCompleted: prog.newCurrentLevel,
-        };
+        return nextHabits;
       });
-
-      const activeOnly = nextHabits.filter((h) => !h.archived);
-      setJumboDates((prevJumbo) => {
-        const { updatedJumboDates, wasAwarded } = reconcileJumboDate(dateStr, activeOnly, prevJumbo);
-        if (wasAwarded) {
-          confetti({
-            particleCount: 80,
-            spread: 90,
-            origin: { y: 0.5 },
-            colors: ['#f59e0b', '#fbbf24', '#10b981'],
-          });
-        }
-        return updatedJumboDates;
-      });
-
-      return nextHabits;
-    });
-  }, []);
+    },
+    [firebaseUser]
+  );
 
   // Granular Reset Options:
   // 1. Clear check-in history only (keeps habits intact)
@@ -572,7 +681,15 @@ export function App() {
         </div>
       )}
 
-      {/* Top Navigation with glowing Jumbo Points Counter & Google Auth */}
+      {/* Buddy Invite Dispatched Success Toast */}
+      {inviteSuccessToast && (
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white text-xs sm:text-sm font-semibold py-2.5 px-4 text-center shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-4 duration-300">
+          <Sparkles className="w-4 h-4" />
+          <span>{inviteSuccessToast}</span>
+        </div>
+      )}
+
+      {/* Top Navigation with glowing Jumbo Points Counter, Notifications & Google Auth */}
       <Navbar
         habits={habits}
         jumboPointsCount={jumboDates.length}
@@ -581,6 +698,14 @@ export function App() {
         user={firebaseUser}
         isSigningIn={isSigningIn}
         syncState={syncState}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        buddyCount={buddies.length}
+        isActionLoading={isNotificationActionLoading}
+        onMarkAllAsRead={markAllAsRead}
+        onAcceptInvite={handleAcceptInvite}
+        onDeclineInvite={handleDeclineInvite}
+        onOpenBuddyModal={() => setIsBuddyHubOpen(true)}
         onOpenNewHabit={() => openHabitForm(null)}
         onOpenDirectory={openDirectory}
         onOpenSettings={openSettings}
@@ -591,7 +716,7 @@ export function App() {
       />
 
       {/* Main Reel Card Deck Showcase */}
-      <main className="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-center items-center py-3 sm:py-6 px-2 sm:px-4">
+      <main className="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-start items-center py-3 sm:py-6 px-2 sm:px-4">
         <HabitReelDeck
           habits={habits}
           activeDateStr={activeDateStr}
@@ -606,6 +731,64 @@ export function App() {
         />
       </main>
 
+      {/* Multi-Buddy Hub Modal */}
+      <BuddyHubModal
+        isOpen={isBuddyHubOpen}
+        onClose={() => setIsBuddyHubOpen(false)}
+        buddies={buddies}
+        onSearchBuddy={searchBuddy}
+        onSendInvite={sendBuddyInvite}
+        isSearching={isBuddySearching}
+        searchResult={buddySearchResult}
+        searchError={buddySearchError}
+        isInviteSending={isInviteSending}
+        onClearSearch={clearBuddySearch}
+        onOpenShareWizard={() => {
+          setIsBuddyHubOpen(false);
+          handleOpenShareWizard();
+        }}
+        onSelectBuddy={(b) => {
+          setIsBuddyHubOpen(false);
+          setSelectedBuddyForDetails(b);
+        }}
+        onUnfriendBuddy={unfriendBuddy}
+      />
+
+      {/* Granular Habit Sharing Wizard Modal */}
+      <GranularShareModal
+        isOpen={isGranularShareModalOpen}
+        onClose={() => {
+          setIsGranularShareModalOpen(false);
+          setPreselectedBuddyUid(null);
+        }}
+        habits={habits}
+        buddies={buddies}
+        preselectedBuddyUid={preselectedBuddyUid}
+        onShareConfirmed={handleShareConfirmed}
+        onOpenBuddyHub={() => setIsBuddyHubOpen(true)}
+      />
+
+      {/* Partnership Details View Modal (Tabs for Received vs Sent & Live Nudge) */}
+      <PartnershipDetailsModal
+        isOpen={!!selectedBuddyForDetails}
+        onClose={() => setSelectedBuddyForDetails(null)}
+        currentUserUid={firebaseUser.uid}
+        buddy={selectedBuddyForDetails}
+        nudgeCooldownRemaining={
+          selectedBuddyForDetails ? nudgeCooldowns[selectedBuddyForDetails.uid] || 0 : 0
+        }
+        onNudge={nudgeBuddy}
+        onUnfriend={unfriendBuddy}
+        onRevokeHabit={revokeHabit}
+        onOpenShareWizardForBuddy={(bUid) => {
+          setSelectedBuddyForDetails(null);
+          handleOpenShareWizard(bUid);
+        }}
+        onInspectSharedHabit={(record) => {
+          setInspectingSharedHabit(record);
+        }}
+      />
+
       {/* Habit Create / Edit Modal (Mounts fresh instance with today's date) */}
       {isHabitFormOpen && (
         <HabitFormModal
@@ -618,7 +801,7 @@ export function App() {
         />
       )}
 
-      {/* Single Habit Detail View */}
+      {/* Single Habit Detail View (Own Habit) */}
       <HabitDetailModal
         habit={selectedDetailHabit}
         isOpen={isDetailModalOpen}
@@ -629,6 +812,17 @@ export function App() {
         onArchive={handleArchiveHabit}
         onDelete={handleDeleteHabit}
         activeDateStr={activeDateStr}
+        floorAtZero={settings.floorAtZero}
+        theme={settings.theme}
+      />
+
+      {/* Partner Shared Habit Detail View (Read-Only Analytics) */}
+      <HabitDetailModal
+        habit={inspectingHabitAsHabit}
+        isOpen={!!inspectingHabitAsHabit}
+        onClose={() => setInspectingSharedHabit(null)}
+        isReadOnly={true}
+        sharedByBuddyName={inspectingSharedHabit?.ownerName}
         floorAtZero={settings.floorAtZero}
         theme={settings.theme}
       />
@@ -669,6 +863,10 @@ export function App() {
         onEditHabit={handleEditHabitFromDirectory}
         onDeleteHabit={handleDeleteHabit}
         onSelectHabitProfile={handleSelectHabitFromDirectory}
+        onOpenShareHabits={() => {
+          closeDirectory();
+          handleOpenShareWizard();
+        }}
         floorAtZero={settings.floorAtZero}
       />
 

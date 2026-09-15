@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Habit } from '../types/habit';
 import type { Tester } from '../config/testers';
-import { Zap, Plus, ListChecks, Gem, Settings, LogOut } from 'lucide-react';
+import { Zap, Plus, ListChecks, Gem, Settings, LogOut, Bell, Users } from 'lucide-react';
 import type { User } from '../lib/firebase';
+import type { AppNotification } from '../types/buddy';
 import type { CloudSyncState } from '../hooks/useFirebaseAuth';
+import { NotificationDropdown } from './NotificationDropdown';
 
 interface NavbarProps {
   habits: Habit[];
@@ -13,6 +15,14 @@ interface NavbarProps {
   user: User | null;
   isSigningIn?: boolean;
   syncState?: CloudSyncState;
+  notifications?: AppNotification[];
+  unreadCount?: number;
+  buddyCount?: number;
+  isActionLoading?: string | null;
+  onMarkAllAsRead?: () => void;
+  onAcceptInvite?: (notification: AppNotification) => void;
+  onDeclineInvite?: (notification: AppNotification) => void;
+  onOpenBuddyModal?: () => void;
   onOpenNewHabit: () => void;
   onOpenDirectory: () => void;
   onOpenSettings: () => void;
@@ -29,6 +39,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   tester,
   user,
   isSigningIn = false,
+  syncState,
+  notifications = [],
+  unreadCount = 0,
+  buddyCount = 0,
+  isActionLoading = null,
+  onMarkAllAsRead = () => {},
+  onAcceptInvite = () => {},
+  onDeclineInvite = () => {},
+  onOpenBuddyModal,
   onOpenNewHabit,
   onOpenDirectory,
   onOpenSettings,
@@ -39,6 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const activeHabitsCount = habits.filter((h) => !h.archived).length;
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,7 +99,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Header Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {/* 1. Gamified Jumbo Point Badge (Unlocked at >= 3 habits) */}
           {activeHabitsCount >= 3 && (
             <button
@@ -108,30 +128,94 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* 2. Consumer-Grade User Profile & Navigation Pill */}
+          {/* 2. Notification Center Bell Icon with Unread Counter */}
+          {user && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsNotificationsOpen((prev) => !prev)}
+                className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+                title={`Notifications (${unreadCount} unread)`}
+                aria-label="Open Notifications"
+              >
+                <Bell className="w-4 h-4 text-slate-700 dark:text-slate-200" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold font-mono ring-2 ring-white dark:ring-slate-900 animate-pulse">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Centralized Notifications Popover */}
+              <NotificationDropdown
+                isOpen={isNotificationsOpen}
+                onClose={() => setIsNotificationsOpen(false)}
+                notifications={notifications}
+                unreadCount={unreadCount}
+                isActionLoading={isActionLoading}
+                onMarkAllAsRead={onMarkAllAsRead}
+                onAcceptInvite={onAcceptInvite}
+                onDeclineInvite={onDeclineInvite}
+              />
+            </div>
+          )}
+
+          {/* 3. Buddy Pairing Shortcut Button */}
+          {user && onOpenBuddyModal && (
+            <button
+              type="button"
+              onClick={onOpenBuddyModal}
+              className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+              title="Pair with Accountability Buddy"
+              aria-label="Pair with Buddy"
+            >
+              <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              {buddyCount > 0 && (
+                <span className="absolute -bottom-1 -right-1 px-1 rounded-full bg-emerald-600 text-white font-bold text-[9px] font-mono flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
+                  {buddyCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* 4. Consumer-Grade User Profile & Navigation Pill */}
           {user ? (
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 shadow-xs transition active:scale-95 cursor-pointer"
+                className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 shadow-xs transition active:scale-95 cursor-pointer"
               >
-                {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt={user.displayName || 'Google User'}
-                    className="w-7 h-7 rounded-full object-cover ring-1 ring-emerald-500/40"
-                  />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white font-bold text-xs flex items-center justify-center font-mono">
-                    {user.displayName
-                      ? user.displayName.charAt(0).toUpperCase()
-                      : user.email
-                      ? user.email.charAt(0).toUpperCase()
-                      : 'U'}
-                  </div>
-                )}
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 max-w-[120px] sm:max-w-[160px] truncate">
+                <div className="relative">
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || 'Google User'}
+                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-1 ring-emerald-500/40"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-500 text-white font-bold text-xs flex items-center justify-center font-mono">
+                      {user.displayName
+                        ? user.displayName.charAt(0).toUpperCase()
+                        : user.email
+                        ? user.email.charAt(0).toUpperCase()
+                        : 'U'}
+                    </div>
+                  )}
+                  {syncState && (
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-slate-900 ${
+                        syncState === 'syncing'
+                          ? 'bg-amber-400 animate-pulse'
+                          : syncState === 'error'
+                          ? 'bg-rose-500'
+                          : 'bg-emerald-500'
+                      }`}
+                      title={`Cloud Sync: ${syncState}`}
+                    />
+                  )}
+                </div>
+                <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 max-w-[90px] sm:max-w-[140px] truncate">
                   {user.displayName || user.email?.split('@')[0] || 'Account'}
                 </span>
               </button>
@@ -146,6 +230,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <p className="text-xs text-slate-400 font-mono truncate">
                       {user.email}
                     </p>
+                    {syncState && (
+                      <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1 capitalize flex items-center gap-1">
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            syncState === 'syncing'
+                              ? 'bg-amber-400 animate-pulse'
+                              : syncState === 'error'
+                              ? 'bg-rose-500'
+                              : 'bg-emerald-500'
+                          }`}
+                        />
+                        Sync: {syncState}
+                      </p>
+                    )}
                   </div>
 
                   <div className="pt-1">
@@ -204,41 +302,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             )
           )}
 
-          {/* 3. New Habit Action Button */}
+          {/* 5. New Habit Action Button */}
           <button
             onClick={onOpenNewHabit}
-            className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
             title="Add New Habit"
             aria-label="Add New Habit"
           >
             <Plus className="w-4 h-4 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
           </button>
 
-          {/* 4. Habit Directory Button */}
+          {/* 6. Habit Directory Button */}
           <button
             onClick={onOpenDirectory}
-            className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
             title="Habit Directory & Management"
             aria-label="Habit Directory & Management"
           >
             <ListChecks className="w-4 h-4 text-cyan-500" />
           </button>
 
-          {/* 5. System Settings Button */}
+          {/* 7. System Settings Button */}
           <button
             onClick={onOpenSettings}
-            className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
             title="Settings & Data Management"
             aria-label="Settings & Data Management"
           >
             <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" />
           </button>
 
-          {/* 6. Exit Session / Switch Profile Button */}
+          {/* 8. Exit Session / Switch Profile Button */}
           {tester && (
             <button
               onClick={onLogout}
-              className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-900/50 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+              className="p-2 sm:p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-900/50 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
               title={`Exit Session (Logged in as ${tester.name})`}
               aria-label="Exit Session"
             >

@@ -16,6 +16,7 @@ import {
   Crown,
   Search,
   Check,
+  Share2,
 } from 'lucide-react';
 
 interface HabitDirectoryModalProps {
@@ -26,6 +27,7 @@ interface HabitDirectoryModalProps {
   onEditHabit: (habit: Habit) => void;
   onDeleteHabit: (habitId: string) => void;
   onSelectHabitProfile: (habit: Habit) => void;
+  onOpenShareHabits?: () => void;
   floorAtZero?: boolean;
 }
 
@@ -37,6 +39,7 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
   onEditHabit,
   onDeleteHabit,
   onSelectHabitProfile,
+  onOpenShareHabits,
   floorAtZero = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,6 +78,20 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {onOpenShareHabits && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenShareHabits();
+                }}
+                className="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold font-mono flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs"
+                title="Share Habits with Buddy"
+              >
+                <Share2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden sm:inline">Share Habits</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 onOpenNewHabit();

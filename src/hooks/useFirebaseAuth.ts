@@ -43,6 +43,7 @@ export function useFirebaseAuth({
   setSettings,
 }: UseFirebaseAuthProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [activeBuddyUid, setActiveBuddyUid] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [syncState, setSyncState] = useState<CloudSyncState>('idle');
@@ -71,7 +72,7 @@ export function useFirebaseAuth({
     currentSettingsRef.current = settings;
   }, [settings]);
 
-  // 1. Firebase Auth listener & Firestore Initial Sync / Beta Migration
+  // 1. Firebase Auth listener & Firestore Initial Sync / Beta Migration / Profile Indexing
   useEffect(() => {
     let unsubscribeSnapshot: (() => void) | null = null;
 
@@ -109,11 +110,32 @@ export function useFirebaseAuth({
             const userDocRef = doc(db, 'users', currentUser.uid);
             const docSnap = await getDoc(userDocRef);
 
+            const normalizedEmail = (currentUser.email || '').toLowerCase();
+            const normalizedDisplayName = currentUser.displayName || 'Anonymous';
+            const normalizedPhotoURL = currentUser.photoURL || '';
+
             if (docSnap.exists()) {
               const data = docSnap.data();
               const cloudHabits = Array.isArray(data.habits) ? data.habits : [];
               const cloudJumbo = Array.isArray(data.jumboDates) ? data.jumboDates : [];
               const cloudSettings = (data.settings && typeof data.settings === 'object') ? data.settings : {};
+              const cloudActiveBuddyUid = data.activeBuddyUid ?? null;
+
+              setActiveBuddyUid(cloudActiveBuddyUid);
+
+              // Update user profile metadata (for email lookup & search)
+              await setDoc(
+                userDocRef,
+                sanitizeForFirestore({
+                  uid: currentUser.uid,
+                  email: normalizedEmail,
+                  displayName: normalizedDisplayName,
+                  photoURL: normalizedPhotoURL,
+                  activeBuddyUid: cloudActiveBuddyUid,
+                  updatedAt: new Date().toISOString(),
+                }),
+                { merge: true }
+              );
 
               if (cloudHabits.length > 0) {
                 // Cloud document has populated data: Hydrate state
@@ -144,8 +166,11 @@ export function useFirebaseAuth({
                 console.log(`[Sync] Empty cloud habits detected. Migrating ${localHabits.length} local habits to Firestore for UID: ${currentUser.uid}`);
 
                 const payload = {
-                  email: currentUser.email ?? '',
-                  displayName: currentUser.displayName ?? '',
+                  uid: currentUser.uid,
+                  email: normalizedEmail,
+                  displayName: normalizedDisplayName,
+                  photoURL: normalizedPhotoURL,
+                  activeBuddyUid: cloudActiveBuddyUid,
                   habits: localHabits,
                   jumboDates: localJumbo,
                   settings: localSettings ?? {},
@@ -186,8 +211,11 @@ export function useFirebaseAuth({
               );
 
               const payload = {
-                email: currentUser.email ?? '',
-                displayName: currentUser.displayName ?? '',
+                uid: currentUser.uid,
+                email: normalizedEmail,
+                displayName: normalizedDisplayName,
+                photoURL: normalizedPhotoURL,
+                activeBuddyUid: null,
                 habits: localHabits ?? [],
                 jumboDates: localJumbo ?? [],
                 settings: localSettings ?? {},
@@ -196,6 +224,7 @@ export function useFirebaseAuth({
               const cleanPayload = sanitizeForFirestore(payload);
 
               await setDoc(userDocRef, cleanPayload);
+              setActiveBuddyUid(null);
 
               lastSavedJsonRef.current = JSON.stringify({
                 habits: localHabits ?? [],
@@ -234,6 +263,10 @@ export function useFirebaseAuth({
           const unsub = subscribeToUserCloudData(currentUser.uid, (incoming) => {
             if (!isCloudHydratedRef.current) return;
 
+            if (incoming.activeBuddyUid !== undefined) {
+              setActiveBuddyUid(incoming.activeBuddyUid);
+            }
+
             const incomingPayloadJson = JSON.stringify({
               habits: incoming.habits || [],
               jumboDates: incoming.jumboDates || [],
@@ -268,6 +301,7 @@ export function useFirebaseAuth({
         isCloudHydratedRef.current = false;
         lastSavedJsonRef.current = '';
         isSyncingFromCloudRef.current = false;
+        setActiveBuddyUid(null);
         setSyncState('idle');
       }
     });
@@ -324,8 +358,11 @@ export function useFirebaseAuth({
         const timestamp = new Date().toISOString();
 
         const payload = {
-          email: user.email ?? '',
+          uid: user.uid,
+          email: (user.email ?? '').toLowerCase(),
           displayName: user.displayName ?? '',
+          photoURL: user.photoURL ?? '',
+          activeBuddyUid: activeBuddyUid ?? null,
           habits: habits ?? [],
           jumboDates: jumboDates ?? [],
           settings: settings ?? {},
@@ -390,6 +427,7 @@ export function useFirebaseAuth({
     try {
       await logoutUser();
       setUser(null);
+      setActiveBuddyUid(null);
       hydratedUserIdRef.current = null;
       isCloudHydratedRef.current = false;
       lastSavedJsonRef.current = '';
@@ -403,6 +441,8 @@ export function useFirebaseAuth({
 
   return {
     user,
+    activeBuddyUid,
+    setActiveBuddyUid,
     isLoading,
     isSigningIn,
     syncState,

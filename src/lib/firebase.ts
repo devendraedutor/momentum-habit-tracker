@@ -15,11 +15,41 @@ import {
   setDoc,
   getDoc,
   onSnapshot,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  writeBatch,
+  orderBy,
+  limit,
+  deleteDoc,
+  serverTimestamp,
   type Firestore,
   type Unsubscribe,
 } from "firebase/firestore";
 
-export { getFirestore, doc, setDoc, getDoc, onSnapshot, type Firestore, type Unsubscribe };
+export {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  writeBatch,
+  orderBy,
+  limit,
+  deleteDoc,
+  serverTimestamp,
+  type Firestore,
+  type Unsubscribe,
+};
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-e0yNcG_hu2_S3_WYHZjlKlr6798KZCM",
