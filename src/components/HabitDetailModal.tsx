@@ -356,7 +356,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                   {habit.name}
                 </h2>
                 {isReadOnly && (
-                  <span className="text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                  <span className="text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400 font-sans">
                     ({sharedByBuddyName ? `${sharedByBuddyName.split(' ')[0]}'s Habit` : "Partner's Habit"})
                   </span>
                 )}
