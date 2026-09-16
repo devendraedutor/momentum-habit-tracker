@@ -253,7 +253,7 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
                 ? (currentHabit ? currentHabit.notes?.[pt.date] : undefined) || reflections?.[pt.date]
                 : undefined;
               if (note) {
-                changeStr += `\n📝 Note: “${note}”`;
+                changeStr += `\n📝 “${note}”`;
               }
               return changeStr;
             }

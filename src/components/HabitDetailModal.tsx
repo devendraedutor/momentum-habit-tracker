@@ -263,7 +263,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
               const isBreak = habit?.type === 'BREAK';
               const habitNote = point?.date ? habit?.notes?.[point.date] : undefined;
               if (habitNote) {
-                return `📝 Note: “${habitNote}”`;
+                return `📝 “${habitNote}”`;
               }
               const statusLabel =
                 point?.status === 'done'
@@ -627,11 +627,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                 }
 
                 const habitNote = habit.notes?.[d.dateStr];
-                const statusText = isDone
-                  ? (isBreak ? 'Controlled (+1 XP)' : 'Done (+1 XP)')
-                  : isMissed
-                  ? (isBreak ? 'Failed (-1 XP)' : 'Missed (-1 XP)')
-                  : 'Untracked';
+                const shouldShowTooltip = isMissed && !!habitNote;
 
                 return (
                   <div key={d.dateStr} className="relative group/tile flex flex-col">
@@ -674,48 +670,44 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                       </div>
                     </button>
 
-                    {/* Instant Custom Hover Tooltip Matching Graph */}
-                    <div
-                      className={`pointer-events-none absolute bottom-full mb-2 w-max max-w-[200px] sm:max-w-[240px] opacity-0 group-hover/tile:opacity-100 group-hover/tile:scale-100 scale-95 transition-all duration-75 ease-out z-50 origin-bottom bg-white/98 dark:bg-slate-900/98 backdrop-blur-md border border-slate-200 dark:border-slate-750 shadow-xl rounded-2xl p-2.5 sm:p-3 text-left ${
-                        d.weekdayShort === 'Mon'
-                          ? 'left-0'
-                          : d.weekdayShort === 'Sun'
-                          ? 'right-0'
-                          : 'left-1/2 -translate-x-1/2'
-                      }`}
-                    >
-                      <div className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono leading-tight">
-                        {d.formatted}
-                      </div>
-                      {habitNote ? (
+                    {/* Instant Custom Hover Tooltip (Only on failed/missed days with user notes) */}
+                    {shouldShowTooltip && (
+                      <div
+                        className={`pointer-events-none absolute bottom-full mb-2 w-max max-w-[200px] sm:max-w-[240px] opacity-0 group-hover/tile:opacity-100 group-hover/tile:scale-100 scale-95 transition-all duration-75 ease-out z-50 origin-bottom bg-white/98 dark:bg-slate-900/98 backdrop-blur-md border border-slate-200 dark:border-slate-750 shadow-xl rounded-2xl p-2.5 sm:p-3 text-left ${
+                          d.weekdayShort === 'Mon'
+                            ? 'left-0'
+                            : d.weekdayShort === 'Sun'
+                            ? 'right-0'
+                            : 'left-1/2 -translate-x-1/2'
+                        }`}
+                      >
+                        <div className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono leading-tight">
+                          {d.formatted}
+                        </div>
                         <div className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-sans italic flex items-start gap-1">
-                          <span className="leading-snug">📝 Note: “{habitNote}”</span>
+                          <span className="leading-snug">📝 “{habitNote}”</span>
                         </div>
-                      ) : (
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-sans">
-                          Status: {statusText}
-                        </div>
-                      )}
-                      {/* Caret Triangle */}
-                      <div
-                        className={`absolute top-full -mt-px border-4 border-transparent border-t-slate-200 dark:border-t-slate-750 ${
-                          d.weekdayShort === 'Mon'
-                            ? 'left-4'
-                            : d.weekdayShort === 'Sun'
-                            ? 'right-4'
-                            : 'left-1/2 -translate-x-1/2'
-                        }`}
-                      />
-                      <div
-                        className={`absolute top-full -mt-[2px] border-4 border-transparent border-t-white dark:border-t-slate-900 ${
-                          d.weekdayShort === 'Mon'
-                            ? 'left-4'
-                            : d.weekdayShort === 'Sun'
-                            ? 'right-4'
-                            : 'left-1/2 -translate-x-1/2'
-                        }`}
-                      />
-                    </div>
+                        {/* Caret Triangle */}
+                        <div
+                          className={`absolute top-full -mt-px border-4 border-transparent border-t-slate-200 dark:border-t-slate-750 ${
+                            d.weekdayShort === 'Mon'
+                              ? 'left-4'
+                              : d.weekdayShort === 'Sun'
+                              ? 'right-4'
+                              : 'left-1/2 -translate-x-1/2'
+                          }`}
+                        />
+                        <div
+                          className={`absolute top-full -mt-[2px] border-4 border-transparent border-t-white dark:border-t-slate-900 ${
+                            d.weekdayShort === 'Mon'
+                              ? 'left-4'
+                              : d.weekdayShort === 'Sun'
+                              ? 'right-4'
+                              : 'left-1/2 -translate-x-1/2'
+                          }`}
+                        />
+                      </div>
+                    )}
                   </div>
                 );
               })}
