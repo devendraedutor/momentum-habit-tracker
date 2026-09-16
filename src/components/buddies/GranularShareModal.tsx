@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   X,
   Check,
@@ -192,13 +193,6 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
               <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {step === 1 ? 'Select Habits' : 'Select Buddies'}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {step === 1
-                  ? isDirectBuddyFlow
-                    ? 'Choose habits to commit with partner'
-                    : 'Step 1 of 2: Pick habits to commit'
-                  : 'Step 2 of 2: Pick accountability partners'}
-              </p>
             </div>
           </div>
         </div>
@@ -286,51 +280,54 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
               )}
             </div>
 
-            {/* Share Data Starting Point Selector */}
-            {selectedHabitIds.size > 0 && (
-              <div className="mt-3 p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-scale-in">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                      Share Data From
-                    </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                      {shareScope === 'starting' ? 'Full history from beginning' : 'Tracked from today onward'}
-                    </p>
-                  </div>
-                </div>
+            {/* Share Data Starting Point Selector with Smooth Animated Transition */}
+            <AnimatePresence initial={false}>
+              {selectedHabitIds.size > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="overflow-hidden flex-shrink-0"
+                >
+                  <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-750 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                        Share Data From
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">
+                        {shareScope === 'starting' ? 'Full history' : 'Starting today'}
+                      </p>
+                    </div>
 
-                <div className="flex items-center p-1 bg-slate-200/90 dark:bg-slate-800 rounded-xl gap-1 flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setShareScope('starting')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      shareScope === 'starting'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {shareScope === 'starting' && <Check className="w-3 h-3 stroke-[3]" />}
-                    <span>From Starting</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShareScope('today')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      shareScope === 'today'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {shareScope === 'today' && <Check className="w-3 h-3 stroke-[3]" />}
-                    <span>From Today</span>
-                  </button>
-                </div>
-              </div>
-            )}
+                    <div className="bg-slate-100 dark:bg-slate-800/70 p-1 rounded-xl flex items-center gap-1 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShareScope('starting')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                          shareScope === 'starting'
+                            ? 'bg-emerald-500 text-white font-medium shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                        }`}
+                      >
+                        From Starting
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShareScope('today')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                          shareScope === 'today'
+                            ? 'bg-emerald-500 text-white font-medium shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                        }`}
+                      >
+                        Today
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Error Banner for Direct Flow */}
             {submitError && isDirectBuddyFlow && (
@@ -340,20 +337,14 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
               </div>
             )}
 
-            {/* Footer Step 1: Selected Count + Next/Commit Button */}
-            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-              <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">
-                {selectedHabitIds.size === 0
-                  ? 'Select habits to commit'
-                  : `${selectedHabitIds.size} habit${selectedHabitIds.size > 1 ? 's' : ''} selected`}
-              </span>
-
+            {/* Footer Step 1: Next/Commit Button */}
+            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end flex-shrink-0">
               {isDirectBuddyFlow ? (
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting || selectedHabitIds.size === 0}
-                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -369,10 +360,10 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={selectedHabitIds.size === 0}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Next: Select Buddies"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Next"
                 >
-                  <span>Next: Choose Buddies</span>
+                  <span>Next</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               )}
