@@ -17,21 +17,23 @@ export function useNotifications({ user, onBuddyPartnerLinked }: UseNotification
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isActionLoading, setIsActionLoading] = useState<string | null>(null);
 
+  const userUid = user?.uid || null;
+
   // Real-time notification subscription
   useEffect(() => {
-    if (!user) {
+    if (!userUid) {
       setNotifications([]);
       return;
     }
 
-    const unsubscribe = subscribeToNotifications(user.uid, (incoming) => {
-      setNotifications(incoming);
+    const unsubscribe = subscribeToNotifications(userUid, (incoming) => {
+      setNotifications(incoming || []);
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [user]);
+  }, [userUid]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

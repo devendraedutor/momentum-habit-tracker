@@ -75,8 +75,9 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
           <div className="flex items-center gap-2">
             {onOpenShareHabits && (
               <button
-                onClick={() => {
-                  onClose();
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
                   onOpenShareHabits();
                 }}
                 className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-bold font-mono flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs"
@@ -88,7 +89,9 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
             )}
 
             <button
-              onClick={() => {
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
                 onOpenNewHabit();
               }}
               className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
@@ -106,7 +109,9 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
             <div className="text-center py-12 text-slate-400">
               <p className="text-sm sm:text-base font-medium">No habits found.</p>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
                   onOpenNewHabit();
                 }}
                 className="mt-4 px-6 py-3 rounded-2xl bg-emerald-500 text-slate-950 text-sm sm:text-base font-bold font-mono shadow-md cursor-pointer hover:bg-emerald-400 transition-all"

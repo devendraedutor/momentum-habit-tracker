@@ -40,54 +40,56 @@ export function useBuddySystem({ user }: UseBuddySystemProps) {
   // Nudge cooldown timers map: { [buddyUid]: remainingSeconds }
   const [nudgeCooldowns, setNudgeCooldowns] = useState<Record<string, number>>({});
 
+  const userUid = user?.uid || null;
+
   // 1. Subscribe to real-time Friendships
   useEffect(() => {
-    if (!user) {
+    if (!userUid) {
       setFriendships([]);
       return;
     }
 
-    const unsub = subscribeToFriendships(user.uid, (incoming) => {
-      setFriendships(incoming);
+    const unsub = subscribeToFriendships(userUid, (incoming) => {
+      setFriendships(incoming || []);
     });
 
     return () => {
       if (unsub) unsub();
     };
-  }, [user]);
+  }, [userUid]);
 
   // 2. Subscribe to all shared habits for summary counts
   useEffect(() => {
-    if (!user) {
+    if (!userUid) {
       setAllIncomingHabits([]);
       setAllOutgoingHabits([]);
       return;
     }
 
-    const unsub = subscribeToAllSharedHabitsForUser(user.uid, ({ incoming, outgoing }) => {
-      setAllIncomingHabits(incoming);
-      setAllOutgoingHabits(outgoing);
+    const unsub = subscribeToAllSharedHabitsForUser(userUid, ({ incoming, outgoing }) => {
+      setAllIncomingHabits(incoming || []);
+      setAllOutgoingHabits(outgoing || []);
     });
 
     return () => {
       if (unsub) unsub();
     };
-  }, [user]);
+  }, [userUid]);
 
   // 3. Compute structured BuddyMemberSummary list
   const buddies: BuddyMemberSummary[] = useMemo(() => {
-    if (!user) return [];
+    if (!userUid) return [];
 
-    return friendships.map((f) => {
-      const partnerUid = f.members.find((m) => m !== user.uid) || '';
+    return (friendships || []).map((f) => {
+      const partnerUid = (f.members || []).find((m) => m !== userUid) || '';
       const details = f.memberDetails?.[partnerUid] || {
         displayName: 'Flux Buddy',
         email: '',
         photoURL: '',
       };
 
-      const sharedWithMe = allIncomingHabits.filter((h) => h.ownerUid === partnerUid).length;
-      const sharedByMe = allOutgoingHabits.filter((h) => h.targetBuddyUid === partnerUid).length;
+      const sharedWithMe = (allIncomingHabits || []).filter((h) => h?.ownerUid === partnerUid).length;
+      const sharedByMe = (allOutgoingHabits || []).filter((h) => h?.targetBuddyUid === partnerUid).length;
 
       return {
         uid: partnerUid,
@@ -99,17 +101,18 @@ export function useBuddySystem({ user }: UseBuddySystemProps) {
         sharedByMeCount: sharedByMe,
       };
     });
-  }, [friendships, allIncomingHabits, allOutgoingHabits, user]);
+  }, [friendships, allIncomingHabits, allOutgoingHabits, userUid]);
 
   // 4. Update Nudge Cooldowns timer interval
   useEffect(() => {
-    if (buddies.length === 0) return;
+    if (!buddies || buddies.length === 0) return;
 
     const checkCooldowns = () => {
       const now = Date.now();
       const updated: Record<string, number> = {};
 
       for (const b of buddies) {
+        if (!b?.uid) continue;
         const storageKey = `flux_nudge_${b.uid}`;
         const lastNudgeTime = parseInt(localStorage.getItem(storageKey) || '0', 10);
         const diff = lastNudgeTime + NUDGE_COOLDOWN_MS - now;
@@ -120,7 +123,15 @@ export function useBuddySystem({ user }: UseBuddySystemProps) {
         }
       }
 
-      setNudgeCooldowns(updated);
+      setNudgeCooldowns((prev) => {
+        const prevKeys = Object.keys(prev);
+        const nextKeys = Object.keys(updated);
+        if (prevKeys.length !== nextKeys.length) return updated;
+        for (const k of nextKeys) {
+          if (prev[k] !== updated[k]) return updated;
+        }
+        return prev;
+      });
     };
 
     checkCooldowns();

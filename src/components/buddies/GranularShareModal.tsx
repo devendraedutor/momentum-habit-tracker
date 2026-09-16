@@ -79,7 +79,6 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
       setInviteSuccessMessage(null);
       setShowSearchForm(false);
       setShareScope('starting');
-      onClearSearch?.();
       setSelectedHabitIds(new Set());
 
       if (preselectedBuddyUid) {
@@ -88,7 +87,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
         setSelectedBuddyUids(new Set());
       }
     }
-  }, [isOpen, activeHabits.length, (buddies || []).length, preselectedBuddyUid]);
+  }, [isOpen, preselectedBuddyUid]);
 
   if (!isOpen) return null;
 
@@ -112,8 +111,8 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
     });
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchAction = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
     if (!emailInput.trim() || !onSearchBuddy) return;
     setInviteSuccessMessage(null);
     onSearchBuddy(emailInput.trim());
@@ -423,7 +422,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                         </button>
                       </div>
 
-                      <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+                      <div className="relative flex items-center">
                         <div className="absolute left-3 text-slate-400 pointer-events-none">
                           <Search className="w-3.5 h-3.5" />
                         </div>
@@ -435,12 +434,19 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                             setInviteSuccessMessage(null);
                             if (searchError || searchResult) onClearSearch?.();
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSearchAction();
+                            }
+                          }}
                           placeholder="Enter partner's email..."
                           autoFocus
                           className="w-full pl-9 pr-20 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-750 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 font-mono transition"
                         />
                         <button
-                          type="submit"
+                          type="button"
+                          onClick={() => handleSearchAction()}
                           disabled={isSearching || !emailInput.trim()}
                           className="absolute right-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
@@ -450,7 +456,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                             <span>Search</span>
                           )}
                         </button>
-                      </form>
+                      </div>
 
                       {/* Error Banner */}
                       {searchError && (
