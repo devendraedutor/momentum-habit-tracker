@@ -124,6 +124,10 @@ export function subscribeToUserCloudData(
     return onSnapshot(
       userDocRef,
       (docSnap) => {
+        // Ignore uncommitted local writes to avoid race conditions with local state
+        if (docSnap.metadata.hasPendingWrites) {
+          return;
+        }
         if (docSnap.exists()) {
           const data = docSnap.data() as UserCloudData;
           onUpdate({
@@ -146,6 +150,51 @@ export function subscribeToUserCloudData(
   } catch (error) {
     console.warn('[Sync] Error establishing snapshot listener:', error);
     return null;
+  }
+}
+
+/**
+ * Deletes all shared habit records for a specific habit owned by a user
+ */
+export async function deleteSharedHabitsForHabit(ownerUid: string, habitId: string): Promise<void> {
+  if (!db || !ownerUid || !habitId) return;
+  try {
+    const sharedHabitsRef = collection(db, COLLECTION_SHARED_HABITS);
+    const q = query(
+      sharedHabitsRef,
+      where('ownerUid', '==', ownerUid),
+      where('habitId', '==', habitId)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+    const batch = writeBatch(db);
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    console.log(`✅ [SharedHabits] Cleaned up shared habit records for habit: ${habitId}`);
+  } catch (err) {
+    console.warn('[SharedHabits] Error deleting shared habits for habit:', err);
+  }
+}
+
+/**
+ * Deletes all shared habit records owned by a user (used for factory reset)
+ */
+export async function deleteAllSharedHabitsForUser(ownerUid: string): Promise<void> {
+  if (!db || !ownerUid) return;
+  try {
+    const sharedHabitsRef = collection(db, COLLECTION_SHARED_HABITS);
+    const q = query(
+      sharedHabitsRef,
+      where('ownerUid', '==', ownerUid)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return;
+    const batch = writeBatch(db);
+    snap.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    console.log(`✅ [SharedHabits] Deleted all shared habits for user: ${ownerUid}`);
+  } catch (err) {
+    console.warn('[SharedHabits] Error deleting all shared habits for user:', err);
   }
 }
 

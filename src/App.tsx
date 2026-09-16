@@ -42,6 +42,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import {
   syncHabitProgressToSharedHabits,
   saveHabitLogNote,
+  deleteSharedHabitsForHabit,
 } from './lib/firestoreService';
 import type { BuddyMemberSummary, SharedHabitRecord } from './types/buddy';
 import { Sparkles } from 'lucide-react';
@@ -96,6 +97,8 @@ export function App() {
     migrationToast,
     loginWithGoogle: handleGoogleSignIn,
     logout: handleGoogleSignOut,
+    saveImmediately,
+    factoryResetCloudData,
   } = useFirebaseAuth({
     habits,
     setHabits,
@@ -600,27 +603,25 @@ export function App() {
   // Granular Reset Options:
   // 1. Clear check-in history only (keeps habits intact)
   const handleClearHistoryOnly = useCallback(() => {
-    setHabits((prev) =>
-      prev.map((h) => ({
-        ...h,
-        history: {},
-        currentLevel: 0,
-        levelProgress: 0,
-        currentTier: 1,
-        milestonesCompleted: 0,
-        targetGoalDays: LEVEL_REQUIREMENTS[1],
-      }))
-    );
+    const clearedHabits = habits.map((h) => ({
+      ...h,
+      history: {},
+      currentLevel: 0,
+      levelProgress: 0,
+      currentTier: 1,
+      milestonesCompleted: 0,
+      targetGoalDays: LEVEL_REQUIREMENTS[1],
+    }));
+    setHabits(clearedHabits);
     setJumboDates([]);
     if (settings.soundEffects) sound.playUndo();
-  }, [settings]);
+    saveImmediately(clearedHabits, [], settings);
+  }, [habits, settings, saveImmediately]);
 
-  // 3. Factory Reset (clears everything)
-  const handleFactoryReset = useCallback(() => {
-    setHabits([]);
-    setJumboDates([]);
-    localStorage.clear();
-  }, []);
+  // 3. Factory Reset (clears everything locally and in cloud)
+  const handleFactoryReset = useCallback(async () => {
+    await factoryResetCloudData();
+  }, [factoryResetCloudData]);
 
   // Save / Update Habit
   const handleSaveHabit = (habitData: Omit<Habit, 'id' | 'createdAt' | 'history'> & { id?: string; startDate?: string }) => {
@@ -692,17 +693,41 @@ export function App() {
   };
 
   const handleArchiveHabit = (habitId: string) => {
-    setHabits((prev) =>
-      prev.map((h) => (h.id === habitId ? { ...h, archived: !h.archived } : h))
-    );
+    const updated = habits.map((h) => (h.id === habitId ? { ...h, archived: !h.archived } : h));
+    setHabits(updated);
+    saveImmediately(updated, jumboDates, settings);
   };
 
   const handleDeleteHabit = (habitId: string) => {
-    setHabits((prev) => prev.filter((h) => h.id !== habitId));
+    const updatedHabits = habits.filter((h) => h.id !== habitId);
+    setHabits(updatedHabits);
     if (selectedDetailHabit?.id === habitId) {
       closeDetailModal();
     }
+    // Save to local & cloud immediately to avoid race conditions with snapshot listeners
+    saveImmediately(updatedHabits, jumboDates, settings);
+
+    // Clean up shared records in Firestore
+    if (firebaseUser?.uid) {
+      deleteSharedHabitsForHabit(firebaseUser.uid, habitId);
+    }
   };
+
+  const handleRestoreHabits = useCallback(
+    (restoredHabits: Habit[]) => {
+      setHabits(restoredHabits);
+      saveImmediately(restoredHabits, jumboDates, settings);
+    },
+    [jumboDates, settings, saveImmediately]
+  );
+
+  const handleRestoreJumboDates = useCallback(
+    (restoredJumbo: string[]) => {
+      setJumboDates(restoredJumbo);
+      saveImmediately(habits, restoredJumbo, settings);
+    },
+    [habits, settings, saveImmediately]
+  );
 
   // 1. Initial Firebase Auth Loading Screen
   if (isAuthLoading) {
@@ -953,8 +978,8 @@ export function App() {
           onLogout={handleLogout}
           jumboDates={jumboDates}
           onUpdateSettings={setSettings}
-          onRestoreHabits={setHabits}
-          onRestoreJumboDates={setJumboDates}
+          onRestoreHabits={handleRestoreHabits}
+          onRestoreJumboDates={handleRestoreJumboDates}
           onClearHistoryOnly={handleClearHistoryOnly}
           onFactoryReset={handleFactoryReset}
         />

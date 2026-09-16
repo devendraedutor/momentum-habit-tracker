@@ -13,14 +13,17 @@ import {
 import {
   subscribeToUserCloudData,
   sanitizeForFirestore,
+  deleteAllSharedHabitsForUser,
 } from '../lib/firestoreService';
 import type { Habit, UserSettings } from '../types/habit';
 import {
   saveHabitsToStorage,
   saveSettingsToStorage,
   saveJumboDatesToStorage,
+  loadHabitsFromStorage,
   getAllLocalBetaHabits,
   getAllLocalBetaJumboDates,
+  DEFAULT_SETTINGS,
 } from '../lib/storage';
 
 export type CloudSyncState = 'idle' | 'syncing' | 'synced' | 'error';
@@ -55,6 +58,7 @@ export function useFirebaseAuth({
   const isCloudHydratedRef = useRef(false);
   const isSyncingFromCloudRef = useRef(false);
   const lastSavedJsonRef = useRef<string>('');
+  const lastLocalMutationTimeRef = useRef<number>(0);
 
   const currentHabitsRef = useRef(habits);
   const currentJumboDatesRef = useRef(jumboDates);
@@ -94,19 +98,6 @@ export function useFirebaseAuth({
           try {
             console.log(`[Sync] Reading from Firestore for UID: ${currentUser.uid}`);
 
-            // 1. Inspect localStorage for existing habits BEFORE processing Firestore
-            const localHabits =
-              currentHabitsRef.current.length > 0
-                ? currentHabitsRef.current
-                : getAllLocalBetaHabits();
-
-            const localJumbo =
-              currentJumboDatesRef.current.length > 0
-                ? currentJumboDatesRef.current
-                : getAllLocalBetaJumboDates();
-
-            const localSettings = currentSettingsRef.current;
-
             const userDocRef = doc(db, 'users', currentUser.uid);
             const docSnap = await getDoc(userDocRef);
 
@@ -115,6 +106,7 @@ export function useFirebaseAuth({
             const normalizedPhotoURL = currentUser.photoURL || '';
 
             if (docSnap.exists()) {
+              // Existing user profile: respect their cloud data exactly as stored
               const data = docSnap.data();
               const cloudHabits = Array.isArray(data.habits) ? data.habits : [];
               const cloudJumbo = Array.isArray(data.jumboDates) ? data.jumboDates : [];
@@ -137,77 +129,44 @@ export function useFirebaseAuth({
                 { merge: true }
               );
 
-              if (cloudHabits.length > 0) {
-                // Cloud document has populated data: Hydrate state
-                lastSavedJsonRef.current = JSON.stringify({
-                  habits: cloudHabits,
-                  jumboDates: cloudJumbo,
-                  settings: cloudSettings,
-                });
-                isSyncingFromCloudRef.current = true;
+              // Cloud document is authoritative (even if habits array is empty because user deleted/erased all)
+              lastSavedJsonRef.current = JSON.stringify({
+                habits: cloudHabits,
+                jumboDates: cloudJumbo,
+                settings: cloudSettings,
+              });
+              isSyncingFromCloudRef.current = true;
 
-                setHabits(cloudHabits);
-                setJumboDates(cloudJumbo);
-                if (Object.keys(cloudSettings).length > 0) {
-                  setSettings((prev) => ({ ...prev, ...cloudSettings }));
-                }
-
-                saveHabitsToStorage(cloudHabits, currentUser.uid);
-                saveJumboDatesToStorage(cloudJumbo, currentUser.uid);
-                if (Object.keys(cloudSettings).length > 0) {
-                  saveSettingsToStorage(cloudSettings, currentUser.uid);
-                }
-
-                console.log('✅ [Sync] Cloud data loaded successfully from Firestore for UID:', currentUser.uid);
-                setSyncState('synced');
-              } else if (localHabits.length > 0) {
-                // Cloud document exists but has 0 habits, while localStorage HAS habits:
-                // Migrate local habits into cloud to prevent data loss (NEVER call setHabits([]))
-                console.log(`[Sync] Empty cloud habits detected. Migrating ${localHabits.length} local habits to Firestore for UID: ${currentUser.uid}`);
-
-                const payload = {
-                  uid: currentUser.uid,
-                  email: normalizedEmail,
-                  displayName: normalizedDisplayName,
-                  photoURL: normalizedPhotoURL,
-                  activeBuddyUid: cloudActiveBuddyUid,
-                  habits: localHabits,
-                  jumboDates: localJumbo,
-                  settings: localSettings ?? {},
-                  updatedAt: new Date().toISOString(),
-                };
-                const cleanPayload = sanitizeForFirestore(payload);
-                await setDoc(userDocRef, cleanPayload, { merge: true });
-
-                lastSavedJsonRef.current = JSON.stringify({
-                  habits: localHabits,
-                  jumboDates: localJumbo,
-                  settings: localSettings ?? {},
-                });
-
-                isSyncingFromCloudRef.current = true;
-                setHabits(localHabits);
-                setJumboDates(localJumbo);
-                saveHabitsToStorage(localHabits, currentUser.uid);
-                saveJumboDatesToStorage(localJumbo, currentUser.uid);
-
-                localStorage.setItem('flux_migrated', 'true');
-                setMigrationToast('✨ Beta data successfully linked to your Google Account!');
-                setTimeout(() => setMigrationToast(null), 5000);
-                setSyncState('synced');
-              } else {
-                // Both cloud and local are empty: Fresh state
-                lastSavedJsonRef.current = JSON.stringify({
-                  habits: [],
-                  jumboDates: [],
-                  settings: cloudSettings,
-                });
-                setSyncState('synced');
+              setHabits(cloudHabits);
+              setJumboDates(cloudJumbo);
+              if (Object.keys(cloudSettings).length > 0) {
+                setSettings((prev) => ({ ...prev, ...cloudSettings }));
               }
+
+              saveHabitsToStorage(cloudHabits, currentUser.uid);
+              saveJumboDatesToStorage(cloudJumbo, currentUser.uid);
+              if (Object.keys(cloudSettings).length > 0) {
+                saveSettingsToStorage(cloudSettings, currentUser.uid);
+              }
+
+              console.log('✅ [Sync] Cloud data loaded successfully from Firestore for UID:', currentUser.uid, `(${cloudHabits.length} habits)`);
+              setSyncState('synced');
             } else {
-              // 2. Brand new user profile: Migrate all localStorage habits into Firestore
+              // 2. Brand new user profile (first login ever): Check local storage to migrate beta data
+              const localHabits =
+                currentHabitsRef.current.length > 0
+                  ? currentHabitsRef.current
+                  : getAllLocalBetaHabits();
+
+              const localJumbo =
+                currentJumboDatesRef.current.length > 0
+                  ? currentJumboDatesRef.current
+                  : getAllLocalBetaJumboDates();
+
+              const localSettings = currentSettingsRef.current;
+
               console.log(
-                `[Sync] No cloud document for UID: ${currentUser.uid}. Migrating local data (${localHabits.length} habits)...`
+                `[Sync] No cloud document for UID: ${currentUser.uid}. Initializing new profile (${localHabits.length} local habits)...`
               );
 
               const payload = {
@@ -248,10 +207,10 @@ export function useFirebaseAuth({
             }
           } catch (err) {
             console.error('[Sync] Error during initial Firestore hydration:', err);
-            // Fallback to local habits if network fails - NEVER set habits to empty
-            const localFallback = getAllLocalBetaHabits();
-            if (localFallback.length > 0) {
-              setHabits(localFallback);
+            // Fallback to this user's cached storage only
+            const cachedHabits = loadHabitsFromStorage(currentUser.uid);
+            if (cachedHabits.length > 0) {
+              setHabits(cachedHabits);
             }
             setSyncState('error');
           } finally {
@@ -262,6 +221,11 @@ export function useFirebaseAuth({
           // Real-time Firestore snapshot listener across tabs/devices
           const unsub = subscribeToUserCloudData(currentUser.uid, (incoming) => {
             if (!isCloudHydratedRef.current) return;
+
+            // If a local mutation was made very recently (< 1500ms), don't let a stale remote snapshot clobber it
+            if (Date.now() - lastLocalMutationTimeRef.current < 1500) {
+              return;
+            }
 
             if (incoming.activeBuddyUid !== undefined) {
               setActiveBuddyUid(incoming.activeBuddyUid);
@@ -281,15 +245,15 @@ export function useFirebaseAuth({
             isSyncingFromCloudRef.current = true;
             lastSavedJsonRef.current = incomingPayloadJson;
 
-            if (incoming.habits) {
+            if (incoming.habits !== undefined) {
               setHabits(incoming.habits);
               saveHabitsToStorage(incoming.habits, currentUser.uid);
             }
-            if (incoming.jumboDates) {
+            if (incoming.jumboDates !== undefined) {
               setJumboDates(incoming.jumboDates);
               saveJumboDatesToStorage(incoming.jumboDates, currentUser.uid);
             }
-            if (incoming.settings) {
+            if (incoming.settings !== undefined) {
               setSettings((prev) => ({ ...prev, ...incoming.settings }));
               saveSettingsToStorage(incoming.settings, currentUser.uid);
             }
@@ -312,7 +276,138 @@ export function useFirebaseAuth({
     };
   }, [setHabits, setJumboDates, setSettings]);
 
-  // 2. Debounced (1000ms) Autosave to Firestore on Habit / Jumbo / Settings change
+  // 2. Immediate Save Helper (bypasses debounce for immediate operations like delete, reset, restore)
+  const saveImmediately = useCallback(
+    async (
+      newHabits?: Habit[],
+      newJumboDates?: string[],
+      newSettings?: UserSettings
+    ) => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+
+      const h = newHabits !== undefined ? newHabits : currentHabitsRef.current;
+      const j = newJumboDates !== undefined ? newJumboDates : currentJumboDatesRef.current;
+      const s = newSettings !== undefined ? newSettings : currentSettingsRef.current;
+
+      const currentPayloadJson = JSON.stringify({
+        habits: h,
+        jumboDates: j,
+        settings: s,
+      });
+
+      lastSavedJsonRef.current = currentPayloadJson;
+      lastLocalMutationTimeRef.current = Date.now();
+
+      if (user) {
+        saveHabitsToStorage(h, user.uid);
+        saveJumboDatesToStorage(j, user.uid);
+        saveSettingsToStorage(s, user.uid);
+      }
+
+      if (user && db && isCloudHydratedRef.current) {
+        try {
+          setSyncState('syncing');
+          const userDocRef = doc(db, 'users', user.uid);
+          const timestamp = new Date().toISOString();
+
+          const payload = {
+            uid: user.uid,
+            email: (user.email ?? '').toLowerCase(),
+            displayName: user.displayName ?? '',
+            photoURL: user.photoURL ?? '',
+            activeBuddyUid: activeBuddyUid ?? null,
+            habits: h ?? [],
+            jumboDates: j ?? [],
+            settings: s ?? {},
+            updatedAt: timestamp,
+          };
+          const cleanPayload = sanitizeForFirestore(payload);
+
+          await setDoc(userDocRef, cleanPayload, { merge: true });
+          console.log('⚡ [Sync] Immediate Firestore write completed:', {
+            habitsCount: h.length,
+            jumboDatesCount: j.length,
+          });
+          setSyncState('synced');
+        } catch (err) {
+          console.error('❌ [Sync] Immediate Firestore write error:', err);
+          setSyncState('error');
+        }
+      }
+    },
+    [user, activeBuddyUid]
+  );
+
+  // 3. Complete Cloud & Local Factory Reset (wipes habits, jumboDates, resets settings, wipes Firestore & shared records)
+  const factoryResetCloudData = useCallback(async () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    const emptyHabits: Habit[] = [];
+    const emptyJumbo: string[] = [];
+    const defaultSet: UserSettings = DEFAULT_SETTINGS;
+
+    const emptyPayloadJson = JSON.stringify({
+      habits: emptyHabits,
+      jumboDates: emptyJumbo,
+      settings: defaultSet,
+    });
+
+    lastSavedJsonRef.current = emptyPayloadJson;
+    lastLocalMutationTimeRef.current = Date.now();
+
+    // Clear React state
+    setHabits(emptyHabits);
+    setJumboDates(emptyJumbo);
+    setSettings(defaultSet);
+
+    // Clear local storage and explicitly zero-out user cache
+    const currentUid = user?.uid;
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+      if (currentUid) {
+        saveHabitsToStorage([], currentUid);
+        saveJumboDatesToStorage([], currentUid);
+        saveSettingsToStorage(defaultSet, currentUid);
+      }
+    }
+
+    // Persist empty state to Firestore & remove shared habits
+    if (user && db) {
+      try {
+        setSyncState('syncing');
+        const userDocRef = doc(db, 'users', user.uid);
+        const timestamp = new Date().toISOString();
+
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: (user.email ?? '').toLowerCase(),
+          displayName: user.displayName ?? '',
+          photoURL: user.photoURL ?? '',
+          activeBuddyUid: null,
+          habits: [],
+          jumboDates: [],
+          settings: defaultSet,
+          updatedAt: timestamp,
+        });
+
+        await deleteAllSharedHabitsForUser(user.uid);
+        setActiveBuddyUid(null);
+        setSyncState('synced');
+        console.log('✅ [Reset] Complete Factory Reset executed in cloud & local storage.');
+      } catch (err) {
+        console.error('❌ [Reset] Error during cloud factory reset:', err);
+        setSyncState('error');
+      }
+    }
+  }, [user, setHabits, setJumboDates, setSettings]);
+
+  // 4. Debounced (1000ms) Autosave to Firestore on Habit / Jumbo / Settings change
   useEffect(() => {
     if (!user || !db || !isCloudHydratedRef.current) return;
 
@@ -337,6 +432,8 @@ export function useFirebaseAuth({
     if (lastSavedJsonRef.current === currentPayloadJson) {
       return;
     }
+
+    lastLocalMutationTimeRef.current = Date.now();
 
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -391,7 +488,7 @@ export function useFirebaseAuth({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [habits, jumboDates, settings, user]);
+  }, [habits, jumboDates, settings, user, activeBuddyUid]);
 
   const handleLogin = useCallback(async () => {
     setIsSigningIn(true);
@@ -449,5 +546,7 @@ export function useFirebaseAuth({
     migrationToast,
     loginWithGoogle: handleLogin,
     logout: handleLogout,
+    saveImmediately,
+    factoryResetCloudData,
   };
 }
