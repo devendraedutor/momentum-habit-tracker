@@ -79,12 +79,11 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   const daysRemaining = Math.max(0, targetDays - goalStreak);
   const isNearGoal = !isGoalConquered && isDone && (goalStreak / targetDays) >= 0.7 && daysRemaining > 0;
 
-  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [noteInput, setNoteInput] = useState(savedNote);
 
   React.useEffect(() => {
     setNoteInput(savedNote);
-    setIsEditingNote(false);
   }, [savedNote, activeDateStr]);
 
   const handleCommitNote = () => {
@@ -92,7 +91,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
     if (onSaveHabitNote && trimmed !== savedNote) {
       onSaveHabitNote(h.id, activeDateStr, trimmed);
     }
-    setIsEditingNote(false);
+    setNoteModalOpen(false);
   };
 
   const [animatedStreak, setAnimatedStreak] = useState<number>(() => {
@@ -118,254 +117,316 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   const isExpanded = animatedStreak === goalStreak && isDone && goalStreak > 0;
 
   return (
-    <div
-      onClick={() => onOpenDetail(h)}
-      className={`p-3 pb-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border flex flex-col justify-between transition-all shadow-xs dark:shadow-md dark:shadow-black/20 cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
-        isGoalConquered
-          ? 'border-amber-500/40 dark:border-amber-400/40'
-          : isMissed
-          ? 'border-rose-500/30 dark:border-rose-500/30'
-          : 'border-slate-200/90 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-      }`}
-      title={`Click to view insights and modify check-in for ${h.name}`}
-    >
-      {/* Top Main Row */}
-      <div className="flex items-center justify-between gap-2.5 sm:gap-3 w-full">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-          <div
-            className={`w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-xs relative transition-transform group-hover:scale-105 rounded-2xl bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 ${
-              isBreak
-                ? 'ring-2 ring-rose-500/30 dark:ring-rose-500/40'
-                : 'ring-2 ring-emerald-500/30 dark:ring-emerald-500/40'
-            }`}
-            style={{ color: h.color }}
-          >
-            <DynamicIcon name={h.icon} className="w-5 h-5" />
-            <span className="absolute -bottom-1 -right-1 text-[11px] leading-none select-none">
-              {isBreak ? '🛡️' : '🌱'}
-            </span>
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                {h.name}
+    <>
+      <div
+        onClick={() => onOpenDetail(h)}
+        className={`p-3 pb-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border flex flex-col justify-between transition-all shadow-xs dark:shadow-md dark:shadow-black/20 cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
+          isGoalConquered
+            ? 'border-amber-500/40 dark:border-amber-400/40'
+            : isMissed
+            ? 'border-rose-500/30 dark:border-rose-500/30'
+            : 'border-slate-200/90 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+        }`}
+        title={`Click to view insights and modify check-in for ${h.name}`}
+      >
+        {/* Top Main Row */}
+        <div className="flex items-center justify-between gap-2.5 sm:gap-3 w-full">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div
+              className={`w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-xs relative transition-transform group-hover:scale-105 rounded-2xl bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 ${
+                isBreak
+                  ? 'ring-2 ring-rose-500/30 dark:ring-rose-500/40'
+                  : 'ring-2 ring-emerald-500/30 dark:ring-emerald-500/40'
+              }`}
+              style={{ color: h.color }}
+            >
+              <DynamicIcon name={h.icon} className="w-5 h-5" />
+              <span className="absolute -bottom-1 -right-1 text-[11px] leading-none select-none">
+                {isBreak ? '🛡️' : '🌱'}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
-              {/* 1. XP */}
-              <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Lifetime Score: ${stats.currentScore}`}>
-                <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>{stats.currentScore}</span>
-              </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                  {h.name}
+                </span>
+              </div>
 
-              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
+                {/* 1. XP */}
+                <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Lifetime Score: ${stats.currentScore}`}>
+                  <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  <span>{stats.currentScore}</span>
+                </span>
 
-              {/* 2. Streak */}
-              <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Current Streak: ${stats.currentStreak} days`}>
-                <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>{stats.currentStreak}</span>
-              </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
 
-              <span className="text-slate-300 dark:text-slate-600">•</span>
+                {/* 2. Streak */}
+                <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Current Streak: ${stats.currentStreak} days`}>
+                  <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  <span>{stats.currentStreak}</span>
+                </span>
 
-              {/* 3. Level */}
-              <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Mastery Level ${stats.achievedLevel}`}>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
+
+                {/* 3. Level */}
+                <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Mastery Level ${stats.achievedLevel}`}>
+                  <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                  <span>{stats.achievedLevel}</span>
+                </span>
+
+                {isNearGoal && (
+                  <>
+                    <span className="text-slate-300 dark:text-slate-600">•</span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono animate-pulse" title={`${daysRemaining} days left to conquer target goal!`}>
+                      <Flag className="w-3 h-3 text-cyan-500" />
+                      <span>{daysRemaining === 1 ? '1 day to goal!' : `${daysRemaining}d to goal!`}</span>
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {isGoalConquered && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onAscendHabit) onAscendHabit(h);
+                }}
+                className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-700 dark:text-amber-300 border border-amber-400/40 text-[10px] sm:text-xs font-black font-mono uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse whitespace-nowrap"
+                title="Milestone Conquered! Click to level up and claim rewards"
+              >
                 <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                <span>{stats.achievedLevel}</span>
+                <span>Level Up ⚡</span>
+              </button>
+            )}
+
+            <div className="flex items-baseline gap-0.5 justify-end font-mono">
+              <span
+                className={`font-medium text-sm sm:text-base tracking-tight transition-all duration-300 inline-block ${
+                  isDone
+                    ? 'text-slate-900 dark:text-slate-100'
+                    : 'text-slate-400 dark:text-slate-500'
+                } ${
+                  isExpanded
+                    ? 'scale-100 text-slate-900 dark:text-slate-100'
+                    : isDone
+                    ? 'scale-105 text-emerald-600 dark:text-emerald-400'
+                    : ''
+                }`}
+              >
+                {isDone ? animatedStreak : 0}
               </span>
-
-              {isNearGoal && (
-                <>
-                  <span className="text-slate-300 dark:text-slate-600">•</span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono animate-pulse" title={`${daysRemaining} days left to conquer target goal!`}>
-                    <Flag className="w-3 h-3 text-cyan-500" />
-                    <span>{daysRemaining === 1 ? '1 day to goal!' : `${daysRemaining}d to goal!`}</span>
-                  </span>
-                </>
-              )}
+              <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-slate-500">
+                /{targetDays} D
+              </span>
             </div>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          {isGoalConquered && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (onAscendHabit) onAscendHabit(h);
+                onCheckIn(h.id, isDone ? 'missed' : 'done', activeDateStr);
               }}
-              className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-700 dark:text-amber-300 border border-amber-400/40 text-[10px] sm:text-xs font-black font-mono uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse whitespace-nowrap"
-              title="Milestone Conquered! Click to level up and claim rewards"
-            >
-              <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>Level Up ⚡</span>
-            </button>
-          )}
-
-          <div className="flex items-baseline gap-0.5 justify-end font-mono">
-            <span
-              className={`font-medium text-sm sm:text-base tracking-tight transition-all duration-300 inline-block ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-90 shadow-xs cursor-pointer ${
                 isDone
-                  ? 'text-slate-900 dark:text-slate-100'
-                  : 'text-slate-400 dark:text-slate-500'
-              } ${
-                isExpanded
-                  ? 'scale-100 text-slate-900 dark:text-slate-100'
-                  : isDone
-                  ? 'scale-105 text-emerald-600 dark:text-emerald-400'
-                  : ''
+                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50 dark:bg-emerald-500/25 dark:border-emerald-400/50'
+                  : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50 dark:bg-rose-500/25 dark:border-rose-400/50'
               }`}
+              title={isDone ? 'Marked Done. Click to toggle to Missed.' : 'Marked Missed. Click to toggle to Done.'}
             >
-              {isDone ? animatedStreak : 0}
-            </span>
-            <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-slate-500">
-              /{targetDays} D
-            </span>
+              {isDone ? (
+                <Check className="w-4 h-4 stroke-[2.5]" />
+              ) : (
+                <X className="w-4 h-4 stroke-[2.5]" />
+              )}
+            </button>
           </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCheckIn(h.id, isDone ? 'missed' : 'done', activeDateStr);
-            }}
-            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-90 shadow-xs cursor-pointer ${
-              isDone
-                ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50 dark:bg-emerald-500/25 dark:border-emerald-400/50'
-                : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50 dark:bg-rose-500/25 dark:border-rose-400/50'
-            }`}
-            title={isDone ? 'Marked Done. Click to toggle to Missed.' : 'Marked Missed. Click to toggle to Done.'}
-          >
-            {isDone ? (
-              <Check className="w-4 h-4 stroke-[2.5]" />
-            ) : (
-              <X className="w-4 h-4 stroke-[2.5]" />
-            )}
-          </button>
         </div>
-      </div>
 
-      {/* Habit-Specific Miss Reflection Section (Only when habit is missed/failed) */}
-      {isMissed && (
-        <>
-          {savedNote && !isEditingNote ? (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="mt-2.5 pt-2 border-t border-rose-500/15 dark:border-rose-500/20 flex items-center justify-between gap-2 text-xs relative z-10 animate-fade-in"
-            >
-              <div className="flex items-center gap-1.5 min-w-0 flex-1 text-slate-600 dark:text-slate-300 font-sans italic truncate">
-                <FileText className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
-                <span className="truncate" title={savedNote}>
-                  “{savedNote}”
-                </span>
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditingNote(true);
-                    setNoteInput(savedNote);
-                  }}
-                  className="p-1 rounded-lg text-slate-400 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
-                  title="Edit reflection"
-                >
-                  <Pencil className="w-3 h-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onSaveHabitNote?.(h.id, activeDateStr, '')}
-                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
-                  title="Delete reflection"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="mt-2.5 pt-2 border-t border-rose-500/15 dark:border-rose-500/20 relative z-10 animate-fade-in"
-            >
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <FileText className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
-                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 font-mono">
-                  Why was this missed?
-                </span>
-                <span className="text-[9px] font-mono text-slate-400 ml-auto">
-                  {noteInput.length}/140
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={noteInput}
-                  onChange={(e) => {
-                    if (e.target.value.length <= 140) setNoteInput(e.target.value);
-                  }}
-                  onBlur={handleCommitNote}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCommitNote();
-                  }}
-                  placeholder={`What got in the way of ${h.name}? (e.g., worked late, low energy)`}
-                  maxLength={140}
-                  className="flex-1 text-xs bg-slate-50 dark:bg-slate-850 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-rose-500/50 focus:border-rose-500 transition-all font-sans"
-                  autoFocus={isEditingNote}
-                />
-                {noteInput.trim() && (
-                  <button
-                    type="button"
-                    onClick={handleCommitNote}
-                    className="px-2.5 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-mono font-bold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer transition-all active:scale-95 flex-shrink-0"
-                    title="Save Reflection"
-                  >
-                    <Check className="w-3 h-3 stroke-[3]" />
-                    <span>Save</span>
-                  </button>
-                )}
-                {savedNote && isEditingNote && (
+        {/* Habit-Specific Miss Reflection Section (Only when habit is missed/failed) */}
+        {isMissed && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="mt-2.5 pt-2 border-t border-rose-500/15 dark:border-rose-500/20 flex items-center justify-between gap-2 text-xs relative z-10 animate-fade-in"
+          >
+            {savedNote ? (
+              <>
+                <div className="flex items-center gap-1.5 min-w-0 flex-1 text-slate-600 dark:text-slate-300 font-sans italic truncate">
+                  <FileText className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                  <span className="truncate" title={savedNote}>
+                    “{savedNote}”
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => {
                       setNoteInput(savedNote);
-                      setIsEditingNote(false);
+                      setNoteModalOpen(true);
                     }}
-                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer"
-                    title="Cancel"
+                    className="p-1 rounded-lg text-slate-400 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
+                    title="Edit reflection note"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <Pencil className="w-3 h-3" />
                   </button>
-                )}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+                  <button
+                    type="button"
+                    onClick={() => onSaveHabitNote?.(h.id, activeDateStr, '')}
+                    className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                    title="Delete reflection note"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setNoteInput('');
+                  setNoteModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-medium py-0.5 px-1.5 -ml-1 rounded-lg hover:bg-rose-500/10 transition-all cursor-pointer group/btn"
+                title="Add reflection note for this missed habit"
+              >
+                <FileText className="w-3.5 h-3.5 text-rose-400 group-hover/btn:scale-110 transition-transform" />
+                <span className="text-slate-600 dark:text-slate-300 group-hover/btn:text-rose-600 dark:group-hover/btn:text-rose-300 transition-colors font-medium">
+                  Add Note?
+                </span>
+              </button>
+            )}
+          </div>
+        )}
 
-      {/* Bottom Progress Bar Rail */}
-      <div className="absolute bottom-0 left-0 right-0 h-[3.5px] bg-slate-200/50 dark:bg-slate-800 overflow-hidden">
-        <div
-          className={`h-full relative ${
-            isGoalConquered
-              ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-emerald-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]'
-              : isDone
-              ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 shadow-[0_0_6px_rgba(16,185,129,0.4)]'
-              : 'bg-slate-200 dark:bg-slate-800'
-          }`}
-          style={{
-            width: `${railWidth}%`,
-            transition: 'width 700ms cubic-bezier(0.16, 1, 0.3, 1)',
-            willChange: 'width',
-          }}
-        >
-          {isGoalConquered && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-bar-sheen" />
-          )}
+        {/* Bottom Progress Bar Rail */}
+        <div className="absolute bottom-0 left-0 right-0 h-[3.5px] bg-slate-200/50 dark:bg-slate-800 overflow-hidden">
+          <div
+            className={`h-full relative ${
+              isGoalConquered
+                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-emerald-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]'
+                : isDone
+                ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 shadow-[0_0_6px_rgba(16,185,129,0.4)]'
+                : 'bg-slate-200 dark:bg-slate-800'
+            }`}
+            style={{
+              width: `${railWidth}%`,
+              transition: 'width 700ms cubic-bezier(0.16, 1, 0.3, 1)',
+              willChange: 'width',
+            }}
+          >
+            {isGoalConquered && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-bar-sheen" />
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Note Modal Popup */}
+      <AnimatePresence>
+        {noteModalOpen && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setNoteModalOpen(false);
+            }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.18 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-5 overflow-hidden relative"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex-shrink-0"
+                    style={{ color: h.color }}
+                  >
+                    <DynamicIcon name={h.icon} className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {h.name}
+                    </h3>
+                    <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                      Reflection · {formatDisplayDate(activeDateStr)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNoteModalOpen(false)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="mt-3.5 space-y-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1 font-mono">
+                    <FileText className="w-3.5 h-3.5" />
+                    What got in the way?
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {noteInput.length}/140
+                  </span>
+                </div>
+
+                <textarea
+                  value={noteInput}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 140) setNoteInput(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleCommitNote();
+                    }
+                  }}
+                  placeholder={`What got in the way of ${h.name}? (e.g., worked late, low energy)`}
+                  maxLength={140}
+                  rows={3}
+                  autoFocus
+                  className="w-full text-xs sm:text-sm bg-slate-50 dark:bg-slate-850 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500 resize-none font-sans"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNoteModalOpen(false);
+                    setNoteInput(savedNote);
+                  }}
+                  className="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCommitNote}
+                  className="px-4 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 shadow-xs active:scale-95 transition-all cursor-pointer"
+                >
+                  Save Note
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
