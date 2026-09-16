@@ -44,11 +44,16 @@ export const AVAILABLE_ICONS = [
 ];
 
 export const DynamicIcon: React.FC<DynamicIconProps> = ({ name, className = 'w-5 h-5', size, style }) => {
-  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string; size?: number; style?: React.CSSProperties }>>)[name];
+  const IconComponent = (LucideIcons as unknown as Record<string, any>)?.[name];
 
-  if (!IconComponent) {
+  const isValidComponent =
+    typeof IconComponent === 'function' ||
+    (typeof IconComponent === 'object' && IconComponent !== null && '$$typeof' in IconComponent);
+
+  if (!isValidComponent) {
     return <LucideIcons.CheckCircle2 className={className} size={size} style={style} />;
   }
 
-  return <IconComponent className={className} size={size} style={style} />;
+  const Rendered = IconComponent;
+  return <Rendered className={className} size={size} style={style} />;
 };
