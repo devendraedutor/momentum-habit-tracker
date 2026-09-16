@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import type { BuddyMemberSummary, AppNotification } from '../../types/buddy';
 import type { SearchedUser } from '../../lib/firestoreService';
-import { Modal } from '../common/Modal';
 
 interface BuddyHubModalProps {
   isOpen: boolean;
@@ -106,145 +105,158 @@ export const BuddyHubModal: React.FC<BuddyHubModalProps> = ({
     onSelectBuddy(buddy);
   };
 
-  const headerCustom = (
-    <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
-      <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-          <Users className="w-4.5 h-4.5" />
-        </div>
-        <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-          Habit Buddies
-        </h2>
-      </div>
+  return (
+    <div
+      onClick={handleClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 selection:bg-emerald-500/20 cursor-default"
+    >
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          if (showPendingList) setShowPendingList(false);
+        }}
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+      >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
 
-      <div className="flex items-center gap-2 relative">
-        {/* Clickable Request (N) Button with Floating Pop-Up Dropdown */}
-        {pendingInvites.length > 0 && (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowPendingList((prev) => !prev);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
-                showPendingList
-                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/50 ring-2 ring-amber-500/20'
-                  : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30'
-              }`}
-              title="View pending requests"
-            >
-              <span>Request ({pendingInvites.length})</span>
-            </button>
+        {/* Minimal Header with Request (N) Button & Dropdown */}
+        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <Users className="w-4.5 h-4.5" />
+            </div>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+              Habit Buddies
+            </h2>
+          </div>
 
-            {/* Floating Pop-Up Dropdown */}
-            {showPendingList && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150"
-              >
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
-                  {pendingInvites.map((invite) => (
-                    <div
-                      key={invite.id}
-                      className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-750 shadow-xs flex items-center justify-between gap-2.5"
-                    >
-                      {/* Buddy Details: Avatar + Name + Email */}
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        {invite.senderPhoto ? (
-                          <img
-                            src={invite.senderPhoto}
-                            alt={invite.senderName}
-                            className="w-8 h-8 rounded-full object-cover ring-1 ring-emerald-500/30 flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                            {invite.senderName.charAt(0).toUpperCase()}
+          <div className="flex items-center gap-2 relative">
+            {/* Clickable Request (N) Button with Floating Pop-Up Dropdown */}
+            {pendingInvites.length > 0 && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPendingList((prev) => !prev);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 border shadow-xs ${
+                    showPendingList
+                      ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/50 ring-2 ring-amber-500/20'
+                      : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30'
+                  }`}
+                  title="View pending requests"
+                >
+                  <span>Request ({pendingInvites.length})</span>
+                </button>
+
+                {/* Floating Pop-Up Dropdown */}
+                {showPendingList && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
+                      {pendingInvites.map((invite) => (
+                        <div
+                          key={invite.id}
+                          className="p-2.5 rounded-xl bg-slate-50/90 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-750 shadow-xs flex items-center justify-between gap-2.5"
+                        >
+                          {/* Buddy Details: Avatar + Name + Email */}
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            {invite.senderPhoto ? (
+                              <img
+                                src={invite.senderPhoto}
+                                alt={invite.senderName}
+                                className="w-8 h-8 rounded-full object-cover ring-1 ring-emerald-500/30 flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                {invite.senderName.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
+                                {invite.senderName}
+                              </h4>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                {invite.senderEmail || 'Buddy request'}
+                              </p>
+                            </div>
                           </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate leading-tight">
-                            {invite.senderName}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                            {invite.senderEmail || 'Buddy request'}
-                          </p>
-                        </div>
-                      </div>
 
-                      {/* Icon-Only Action Buttons: Accept (Check) & Decline (X) */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => onAcceptInvite?.(invite)}
-                          disabled={isNotificationActionLoading === invite.id}
-                          className="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition cursor-pointer disabled:opacity-50"
-                          title="Accept"
-                          aria-label="Accept"
-                        >
-                          {isNotificationActionLoading === invite.id ? (
-                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeclineInvite?.(invite)}
-                          disabled={isNotificationActionLoading === invite.id}
-                          className="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 active:scale-95 text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition cursor-pointer disabled:opacity-50"
-                          title="Decline"
-                          aria-label="Decline"
-                        >
-                          <X className="w-3.5 h-3.5 stroke-[2.5]" />
-                        </button>
-                      </div>
+                          {/* Icon-Only Action Buttons: Accept (Check) & Decline (X) */}
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => onAcceptInvite?.(invite)}
+                              disabled={isNotificationActionLoading === invite.id}
+                              className="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition cursor-pointer disabled:opacity-50"
+                              title="Accept"
+                              aria-label="Accept"
+                            >
+                              {isNotificationActionLoading === invite.id ? (
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onDeclineInvite?.(invite)}
+                              disabled={isNotificationActionLoading === invite.id}
+                              className="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 active:scale-95 text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition cursor-pointer disabled:opacity-50"
+                              title="Decline"
+                              aria-label="Decline"
+                            >
+                              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Header Add Buddy Icon (Only when buddies.length > 0) */}
+            {buddies.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddForm((prev) => {
+                    const next = !prev;
+                    if (!next) {
+                      setEmailInput('');
+                      onClearSearch();
+                    }
+                    return next;
+                  });
+                }}
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+                  showAddForm
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title={showAddForm ? 'Close Add Buddy' : 'Add New Buddy'}
+              >
+                <UserPlus className="w-4.5 h-4.5" />
+              </button>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* Header Add Buddy Icon (Only when buddies.length > 0) */}
-        {buddies.length > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              setShowAddForm((prev) => {
-                const next = !prev;
-                if (!next) {
-                  setEmailInput('');
-                  onClearSearch();
-                }
-                return next;
-              });
-            }}
-            className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
-              showAddForm
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-            title={showAddForm ? 'Close Add Buddy' : 'Add New Buddy'}
-          >
-            <UserPlus className="w-4.5 h-4.5" />
-          </button>
-        )}
-      </div>
-    </div>
-  );
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      maxWidth="max-w-lg"
-      headerCustom={headerCustom}
-      className="max-h-[85vh] p-5 sm:p-6"
-      bodyClassName="p-0 flex flex-col"
-    >
-      {/* Content */}
+        {/* Content */}
         <div className="overflow-y-auto space-y-3 pt-3.5 max-h-[60vh] pr-0.5">
           {/* Expandable Search Input */}
           {showAddForm && (
@@ -420,7 +432,8 @@ export const BuddyHubModal: React.FC<BuddyHubModalProps> = ({
             )}
           </div>
         </div>
-    </Modal>
+      </div>
+    </div>
   );
 };
 

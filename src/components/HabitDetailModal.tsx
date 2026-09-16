@@ -38,7 +38,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { Modal } from './common/Modal';
 
 ChartJS.register(
   CategoryScale,
@@ -336,82 +335,90 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   const activeTier = getTierByLevel(stats.activeTierLevel);
   const targetDays = stats.targetGoalDays;
   const startDateFormatted = formatDisplayDate(habit.startDate || habit.createdAt, true);
-  const headerCustom = (
-    <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 sm:gap-4 flex-shrink-0 relative z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-t-[24px]">
-      {/* Left Side: Icon + Top: Habit Name, Down: Build/Break Tag */}
-      <div className="flex items-center gap-3 min-w-0">
-        <div
-          className="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform bg-slate-100 dark:bg-slate-850"
-          style={{
-            backgroundColor: `${habitColor}22`,
-            color: habitColor,
-            border: `1.5px solid ${habitColor}45`,
-          }}
-        >
-          <DynamicIcon name={habit.icon} className="w-6 h-6" />
-        </div>
-
-        <div className="min-w-0 flex flex-col justify-center">
-          {/* Top: Habit Name */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight truncate leading-tight">
-              {habit.name}
-            </h2>
-            {isReadOnly && (
-              <span className="text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400 font-sans">
-                ({sharedByBuddyName ? `${sharedByBuddyName.split(' ')[0]}'s Habit` : "Partner's Habit"})
-              </span>
-            )}
-          </div>
-
-          {/* Down: Build/Break Habit Tag */}
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span
-              className={`text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-mono flex items-center gap-1 border ${
-                isBreak
-                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 dark:bg-rose-500/20 dark:border-rose-500/40'
-                  : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 dark:bg-emerald-500/20 dark:border-emerald-500/40'
-              }`}
-            >
-              {isBreak ? <ShieldAlert className="w-3.5 h-3.5" /> : <Sprout className="w-3.5 h-3.5" />}
-              <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Side: Top: Category, Down: Started Date */}
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="text-right flex flex-col items-end justify-center">
-          {/* Top: Habit Category */}
-          <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 font-sans leading-tight">
-            {habit.category}
-          </span>
-
-          {/* Down: Started Date */}
-          <span className="font-mono text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1 leading-tight">
-            <Calendar className="w-3.5 h-3.5 text-cyan-500" />
-            <span>Started {startDateFormatted}</span>
-          </span>
-        </div>
-      </div>
-    </div>
-  );
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      maxWidth="max-w-3xl"
-      headerCustom={headerCustom}
-      className="max-h-[92vh]"
-      bodyClassName="p-0 overflow-y-auto flex-1 flex flex-col"
-    >
-      {/* Ambient Top Glow */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div
-        className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700"
-        style={{ backgroundColor: habitColor }}
-      />
+        className="w-full max-w-3xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl flex flex-col animate-scale-in relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close modal"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
+        {/* Ambient Top Glow */}
+        <div
+          className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-20 transition-all duration-700"
+          style={{ backgroundColor: habitColor }}
+        />
+
+        {/* 1. Header Identity Strip (Sticky with permanent accessibility) */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 sm:gap-4 flex-shrink-0 relative z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-t-3xl">
+          {/* Left Side: Icon + Top: Habit Name, Down: Build/Break Tag */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform bg-slate-100 dark:bg-slate-850"
+              style={{
+                backgroundColor: `${habitColor}22`,
+                color: habitColor,
+                border: `1.5px solid ${habitColor}45`,
+              }}
+            >
+              <DynamicIcon name={habit.icon} className="w-6 h-6" />
+            </div>
+
+            <div className="min-w-0 flex flex-col justify-center">
+              {/* Top: Habit Name */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight truncate leading-tight">
+                  {habit.name}
+                </h2>
+                {isReadOnly && (
+                  <span className="text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400 font-sans">
+                    ({sharedByBuddyName ? `${sharedByBuddyName.split(' ')[0]}'s Habit` : "Partner's Habit"})
+                  </span>
+                )}
+              </div>
+
+              {/* Down: Build/Break Habit Tag */}
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                <span
+                  className={`text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-mono flex items-center gap-1 border ${
+                    isBreak
+                      ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 dark:bg-rose-500/20 dark:border-rose-500/40'
+                      : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 dark:bg-emerald-500/20 dark:border-emerald-500/40'
+                  }`}
+                >
+                  {isBreak ? <ShieldAlert className="w-3.5 h-3.5" /> : <Sprout className="w-3.5 h-3.5" />}
+                  <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Top: Category, Down: Started Date */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="text-right flex flex-col items-end justify-center">
+              {/* Top: Habit Category */}
+              <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 font-sans leading-tight">
+                {habit.category}
+              </span>
+
+              {/* Down: Started Date */}
+              <span className="font-mono text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1 leading-tight">
+                <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                <span>Started {startDateFormatted}</span>
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* Optional Accountability Partner Sharing Toggle (Owner Only) */}
         {!isReadOnly && onToggleShare ? (
@@ -749,6 +756,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
             </div>
           </div>
         </div>
-    </Modal>
+      </div>
+    </div>
   );
 };

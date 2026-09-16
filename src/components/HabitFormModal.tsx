@@ -5,6 +5,7 @@ import { loadCategoriesFromStorage, saveCategoriesToStorage } from '../lib/stora
 import { getTodayString } from '../lib/momentum';
 import { DEFAULT_START_TARGET_DAYS } from '../config/progression';
 import {
+  X,
   Check,
   Plus,
   Trash2,
@@ -17,7 +18,6 @@ import {
   ArrowRight,
   Sparkles,
 } from 'lucide-react';
-import { Modal } from './common/Modal';
 
 interface HabitFormModalProps {
   isOpen: boolean;
@@ -223,42 +223,50 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   const progressPercentage = currentStep === 1 ? 50 : 100;
   const slideAnimationClass = stepDirection === 'forward' ? 'animate-slide-right' : 'animate-slide-left';
 
-  const headerCustom = (
-    <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
-      {/* Top Left: Back Button on Step 2 */}
-      <div className="w-16">
-        {currentStep > 1 && (
-          <button
-            type="button"
-            onClick={() => goToStep(1)}
-            className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Back</span>
-          </button>
-        )}
-      </div>
-
-      {/* Center Title */}
-      <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight text-center font-sans">
-        {initialHabit ? 'Edit Habit' : 'Create New Habit'}
-      </h2>
-
-      <div className="w-16" />
-    </div>
-  );
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      maxWidth="max-w-xl"
-      headerCustom={headerCustom}
-      className="max-h-[90vh]"
-      bodyClassName="p-0 overflow-y-auto flex-1 flex flex-col justify-between"
-    >
-      <div className="p-5 sm:p-6 overflow-y-auto flex-1 flex flex-col justify-between">
-        <div key={currentStep} className={slideAnimationClass}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+      <div
+        className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col relative animate-scale-in max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close modal"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
+        {/* 1. Modal Header */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
+          {/* Top Left: Back Button on Step 2 */}
+          <div className="w-16">
+            {currentStep > 1 && (
+              <button
+                type="button"
+                onClick={() => goToStep(1)}
+                className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Back</span>
+              </button>
+            )}
+          </div>
+
+          {/* Center Title */}
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight text-center">
+            {initialHabit ? 'Edit Habit' : 'Create New Habit'}
+          </h2>
+
+          <div className="w-16" />
+        </div>
+
+        {/* 2. Step Content Container */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 flex flex-col justify-between">
+          <div key={currentStep} className={slideAnimationClass}>
             {/* ================= STEP 1: Identity, Name & Start Date ================= */}
             {currentStep === 1 && (
               <div className="space-y-4">
@@ -592,12 +600,13 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
         </div>
 
         {/* 4. Progress Bar */}
-        <div className="w-full h-[2.5px] bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0 rounded-b-[24px]">
+        <div className="w-full h-[2.5px] bg-slate-100 dark:bg-slate-800 overflow-hidden flex-shrink-0">
           <div
             className="h-full bg-emerald-500/50 dark:bg-emerald-400/60 transition-all duration-300 ease-out"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
-    </Modal>
+      </div>
+    </div>
   );
 };
