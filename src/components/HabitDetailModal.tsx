@@ -261,21 +261,17 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
             label: (item: TooltipItem<'line'>) => {
               const point = trajectory[item.dataIndex];
               const isBreak = habit?.type === 'BREAK';
+              const habitNote = point?.date ? habit?.notes?.[point.date] : undefined;
+              if (habitNote) {
+                return `📝 Note: “${habitNote}”`;
+              }
               const statusLabel =
                 point?.status === 'done'
                   ? (isBreak ? 'Controlled (+1 XP)' : 'Done (+1 XP)')
                   : point?.status === 'missed'
                   ? (isBreak ? 'Failed (-1 XP)' : 'Missed (-1 XP)')
                   : 'Untracked';
-              const lines = [
-                `Status: ${statusLabel}`,
-                `Score: ${item.formattedValue} XP`,
-              ];
-              const habitNote = point?.date ? habit?.notes?.[point.date] : undefined;
-              if (habitNote) {
-                lines.push(`📝 Note: “${habitNote}”`);
-              }
-              return lines;
+              return `Status: ${statusLabel}`;
             },
           },
         },
@@ -632,54 +628,95 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
 
                 const habitNote = habit.notes?.[d.dateStr];
                 const statusText = isDone
-                  ? (isBreak ? 'Controlled' : 'Done')
+                  ? (isBreak ? 'Controlled (+1 XP)' : 'Done (+1 XP)')
                   : isMissed
-                  ? (isBreak ? 'Failed' : 'Missed')
+                  ? (isBreak ? 'Failed (-1 XP)' : 'Missed (-1 XP)')
                   : 'Untracked';
-                const tileTitle = `${d.formatted} · ${statusText}${habitNote ? `\n\n“${habitNote}”` : ''}${isReadOnly ? '' : '\n(Click to jump to date)'}`;
 
                 return (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => {
-                      if (!isReadOnly && onSelectDate) {
-                        onSelectDate(d.dateStr);
-                        onClose();
-                      }
-                    }}
-                    className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-between min-h-[48px] sm:min-h-[52px] transition-all select-none text-center relative ${
-                      isReadOnly ? 'cursor-default' : 'cursor-pointer hover:scale-[1.03] active:scale-95'
-                    } ${cardStyle}`}
-                    title={tileTitle}
-                  >
-                    {/* Top Day / Month Tag + Reflection Dot */}
-                    <div className="flex items-center justify-between w-full px-0.5 text-[9px] font-mono leading-none">
-                      <span className="font-bold opacity-80">{d.dayNum}</span>
-                      <div className="flex items-center gap-1">
-                        {habitNote && (
-                          <span
-                            className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_5px_rgba(244,63,94,0.9)] inline-block"
-                            title={`“${habitNote}”`}
-                          />
-                        )}
-                        <span className="text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>
+                  <div key={d.dateStr} className="relative group/tile flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!isReadOnly && onSelectDate) {
+                          onSelectDate(d.dateStr);
+                          onClose();
+                        }
+                      }}
+                      className={`w-full p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-between min-h-[48px] sm:min-h-[52px] transition-all select-none text-center relative ${
+                        isReadOnly ? 'cursor-default' : 'cursor-pointer hover:scale-[1.03] active:scale-95'
+                      } ${cardStyle}`}
+                    >
+                      {/* Top Day / Month Tag + Reflection Dot */}
+                      <div className="flex items-center justify-between w-full px-0.5 text-[9px] font-mono leading-none">
+                        <span className="font-bold opacity-80">{d.dayNum}</span>
+                        <div className="flex items-center gap-1">
+                          {habitNote && (
+                            <span
+                              className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_5px_rgba(244,63,94,0.9)] inline-block"
+                            />
+                          )}
+                          <span className="text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Center Icon Badge */}
-                    <div className="my-auto flex items-center justify-center">
-                      {isDone ? (
-                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-xs">
-                          <Check className="w-3 h-3 stroke-[3]" />
+                      {/* Center Icon Badge */}
+                      <div className="my-auto flex items-center justify-center">
+                        {isDone ? (
+                          <div className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-xs">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        ) : isMissed ? (
+                          <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-xs">
+                            <X className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        ) : null}
+                      </div>
+                    </button>
+
+                    {/* Instant Custom Hover Tooltip Matching Graph */}
+                    <div
+                      className={`pointer-events-none absolute bottom-full mb-2 w-max max-w-[200px] sm:max-w-[240px] opacity-0 group-hover/tile:opacity-100 group-hover/tile:scale-100 scale-95 transition-all duration-75 ease-out z-50 origin-bottom bg-white/98 dark:bg-slate-900/98 backdrop-blur-md border border-slate-200 dark:border-slate-750 shadow-xl rounded-2xl p-2.5 sm:p-3 text-left ${
+                        d.weekdayShort === 'Mon'
+                          ? 'left-0'
+                          : d.weekdayShort === 'Sun'
+                          ? 'right-0'
+                          : 'left-1/2 -translate-x-1/2'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono leading-tight">
+                        {d.formatted}
+                      </div>
+                      {habitNote ? (
+                        <div className="text-xs text-slate-600 dark:text-slate-300 mt-1 font-sans italic flex items-start gap-1">
+                          <span className="leading-snug">📝 Note: “{habitNote}”</span>
                         </div>
-                      ) : isMissed ? (
-                        <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-xs">
-                          <X className="w-3 h-3 stroke-[3]" />
+                      ) : (
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-sans">
+                          Status: {statusText}
                         </div>
-                      ) : null}
+                      )}
+                      {/* Caret Triangle */}
+                      <div
+                        className={`absolute top-full -mt-px border-4 border-transparent border-t-slate-200 dark:border-t-slate-750 ${
+                          d.weekdayShort === 'Mon'
+                            ? 'left-4'
+                            : d.weekdayShort === 'Sun'
+                            ? 'right-4'
+                            : 'left-1/2 -translate-x-1/2'
+                        }`}
+                      />
+                      <div
+                        className={`absolute top-full -mt-[2px] border-4 border-transparent border-t-white dark:border-t-slate-900 ${
+                          d.weekdayShort === 'Mon'
+                            ? 'left-4'
+                            : d.weekdayShort === 'Sun'
+                            ? 'right-4'
+                            : 'left-1/2 -translate-x-1/2'
+                        }`}
+                      />
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
