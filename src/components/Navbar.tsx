@@ -39,7 +39,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   tester,
   user,
   isSigningIn = false,
-  syncState,
   notifications = [],
   unreadCount = 0,
   buddyCount = 0,
@@ -178,46 +177,51 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* 4. Consumer-Grade User Profile & Navigation Pill */}
+          {/* 4. New Habit Action Button */}
+          <button
+            onClick={onOpenNewHabit}
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
+            title="Add New Habit"
+            aria-label="Add New Habit"
+          >
+            <Plus className="w-4 h-4 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
+          </button>
+
+          {/* 5. Habit Directory Button */}
+          <button
+            onClick={onOpenDirectory}
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+            title="Habit Directory & Management"
+            aria-label="Habit Directory & Management"
+          >
+            <ListChecks className="w-4 h-4 text-cyan-500" />
+          </button>
+
+          {/* 6. User Profile / Minimal Avatar Button */}
           {user ? (
             <div className="relative" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 shadow-xs transition active:scale-95 cursor-pointer"
+                className="p-0.5 rounded-full hover:ring-2 hover:ring-slate-300 dark:hover:ring-slate-600 transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center flex-shrink-0"
+                title={user.displayName || user.email || 'Profile'}
+                aria-label="Profile and Settings"
               >
-                <div className="relative">
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt={user.displayName || 'Google User'}
-                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-1 ring-emerald-500/40"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-500 text-white font-bold text-xs flex items-center justify-center font-mono">
-                      {user.displayName
-                        ? user.displayName.charAt(0).toUpperCase()
-                        : user.email
-                        ? user.email.charAt(0).toUpperCase()
-                        : 'U'}
-                    </div>
-                  )}
-                  {syncState && (
-                    <span
-                      className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-slate-900 ${
-                        syncState === 'syncing'
-                          ? 'bg-amber-400 animate-pulse'
-                          : syncState === 'error'
-                          ? 'bg-rose-500'
-                          : 'bg-emerald-500'
-                      }`}
-                      title={`Cloud Sync: ${syncState}`}
-                    />
-                  )}
-                </div>
-                <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 max-w-[90px] sm:max-w-[140px] truncate">
-                  {user.displayName || user.email?.split('@')[0] || 'Account'}
-                </span>
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName || 'Google User'}
+                    className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full object-cover ring-1 ring-emerald-500/40"
+                  />
+                ) : (
+                  <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-rose-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center font-mono shadow-xs">
+                    {user.displayName
+                      ? user.displayName.charAt(0).toUpperCase()
+                      : user.email
+                      ? user.email.charAt(0).toUpperCase()
+                      : 'U'}
+                  </div>
+                )}
               </button>
 
               {/* Clean Dropdown Popover */}
@@ -296,36 +300,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )
           )}
-
-          {/* 5. New Habit Action Button */}
-          <button
-            onClick={onOpenNewHabit}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
-            title="Add New Habit"
-            aria-label="Add New Habit"
-          >
-            <Plus className="w-4 h-4 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
-          </button>
-
-          {/* 6. Habit Directory Button */}
-          <button
-            onClick={onOpenDirectory}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
-            title="Habit Directory & Management"
-            aria-label="Habit Directory & Management"
-          >
-            <ListChecks className="w-4 h-4 text-cyan-500" />
-          </button>
-
-          {/* 7. System Settings Button */}
-          <button
-            onClick={onOpenSettings}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
-            title="Settings & Data Management"
-            aria-label="Settings & Data Management"
-          >
-            <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors" />
-          </button>
 
           {/* 8. Exit Session / Switch Profile Button */}
           {tester && (
