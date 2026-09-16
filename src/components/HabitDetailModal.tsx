@@ -351,9 +351,16 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
 
             <div className="min-w-0 flex flex-col justify-center">
               {/* Top: Habit Name */}
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight truncate leading-tight">
-                {habit.name}
-              </h2>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight truncate leading-tight">
+                  {habit.name}
+                </h2>
+                {isReadOnly && (
+                  <span className="text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                    ({sharedByBuddyName ? `${sharedByBuddyName.split(' ')[0]}'s Habit` : "Partner's Habit"})
+                  </span>
+                )}
+              </div>
 
               {/* Down: Build/Break Habit Tag */}
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -388,15 +395,8 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Optional Partner Read-Only Banner / Share Toggle */}
-        {isReadOnly ? (
-          <div className="px-4 sm:px-5 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20 flex items-center justify-between text-xs text-emerald-700 dark:text-emerald-300">
-            <div className="flex items-center gap-2 font-mono font-semibold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Shared by {sharedByBuddyName || 'Partner'} • Live Analytics</span>
-            </div>
-          </div>
-        ) : onToggleShare ? (
+        {/* Optional Accountability Partner Sharing Toggle (Owner Only) */}
+        {!isReadOnly && onToggleShare ? (
           <div className="px-4 sm:px-5 py-2 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
             <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
               Accountability Partner Sharing:
