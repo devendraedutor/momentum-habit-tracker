@@ -7,8 +7,6 @@ import {
   saveSettingsToStorage,
   loadJumboDatesFromStorage,
   saveJumboDatesToStorage,
-  loadDailyReflectionsFromStorage,
-  saveDailyReflectionsToStorage,
   reconcileJumboDate,
   recalculateAllJumboPoints,
   getHistoricalPendingBacklog,
@@ -42,8 +40,7 @@ import { GranularShareModal } from './components/buddies/GranularShareModal';
 import { PartnershipDetailsModal } from './components/buddies/PartnershipDetailsModal';
 import {
   syncHabitProgressToSharedHabits,
-  saveDailyReflection,
-  subscribeToDailyReflections,
+  saveHabitLogNote,
 } from './lib/firestoreService';
 import type { BuddyMemberSummary, SharedHabitRecord } from './types/buddy';
 import { Sparkles } from 'lucide-react';
@@ -63,9 +60,6 @@ export function App() {
   );
   const [jumboDates, setJumboDates] = useState<string[]>(() =>
     loadJumboDatesFromStorage(activeTester?.id)
-  );
-  const [reflections, setReflections] = useState<Record<string, string>>(() =>
-    loadDailyReflectionsFromStorage(activeTester?.id)
   );
 
   // Active logging date (defaults to today, switchable for testing multi-day histories)
@@ -243,41 +237,32 @@ export function App() {
     }
   }, [jumboDates, activeTester]);
 
-  // Save reflections to namespaced localStorage
-  useEffect(() => {
-    if (activeTester) {
-      saveDailyReflectionsToStorage(reflections, activeTester.id);
-    }
-  }, [reflections, activeTester]);
 
-  // Real-time Cloud Synchronization for Daily Reflections
-  useEffect(() => {
-    if (!firebaseUser?.uid) return;
-    const unsub = subscribeToDailyReflections(firebaseUser.uid, (cloudReflections) => {
-      setReflections((prev) => {
-        const merged = { ...prev, ...cloudReflections };
-        saveDailyReflectionsToStorage(merged, activeTester?.id);
-        return merged;
-      });
-    });
-    return () => {
-      unsub?.();
-    };
-  }, [firebaseUser?.uid, activeTester?.id]);
+  // Handle saving a habit-specific miss reflection note
+  const handleSaveHabitNote = useCallback(
+    (habitId: string, dateStr: string, note: string) => {
+      setHabits((prev) =>
+        prev.map((h) => {
+          if (h.id !== habitId) return h;
+          const currentNotes = { ...(h.notes || {}) };
+          if (note.trim()) {
+            currentNotes[dateStr] = note.trim();
+          } else {
+            delete currentNotes[dateStr];
+          }
+          return {
+            ...h,
+            notes: currentNotes,
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      );
 
-  // Handle saving a daily reflection note
-  const handleSaveReflection = useCallback(
-    (dateKey: string, note: string) => {
-      setReflections((prev) => {
-        const next = { ...prev, [dateKey]: note };
-        saveDailyReflectionsToStorage(next, activeTester?.id);
-        return next;
-      });
       if (firebaseUser?.uid) {
-        saveDailyReflection(firebaseUser.uid, dateKey, note);
+        saveHabitLogNote(firebaseUser.uid, habitId, dateStr, note, 'missed');
       }
     },
-    [firebaseUser?.uid, activeTester?.id]
+    [firebaseUser?.uid]
   );
 
   // Sync active detail habit if updated
@@ -798,8 +783,7 @@ export function App() {
           onAscendHabit={openAscendModal}
           jumboPointsCount={jumboDates.length}
           floorAtZero={settings.floorAtZero}
-          reflections={reflections}
-          onSaveReflection={handleSaveReflection}
+          onSaveHabitNote={handleSaveHabitNote}
         />
       </main>
 
@@ -900,7 +884,6 @@ export function App() {
         activeDateStr={activeDateStr}
         floorAtZero={settings.floorAtZero}
         theme={settings.theme}
-        reflections={reflections}
       />
 
       {/* Partner Shared Habit Detail View (Read-Only Analytics) */}
@@ -912,7 +895,6 @@ export function App() {
         sharedByBuddyName={inspectingSharedHabit?.ownerName}
         floorAtZero={settings.floorAtZero}
         theme={settings.theme}
-        reflections={reflections}
       />
 
       {/* Ascension Ceremony Modal (Level Up Achievement) */}

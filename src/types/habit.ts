@@ -31,6 +31,7 @@ export interface Habit {
   archived?: boolean;
   sharedWithBuddy?: boolean; // Whether this habit is shared with accountability partner
   history: Record<string, CheckInStatus>;
+  notes?: Record<string, string>; // Date-indexed reflection notes (e.g., dateKey -> "Worked late")
 }
 
 export type ChartTimeRange = '7d' | '30d' | '90d' | 'all';

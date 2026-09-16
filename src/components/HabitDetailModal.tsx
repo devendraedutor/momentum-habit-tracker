@@ -263,17 +263,17 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
               const isBreak = habit?.type === 'BREAK';
               const statusLabel =
                 point?.status === 'done'
-                  ? (isBreak ? '✓ Controlled (+1 XP)' : '✓ Done (+1 XP)')
+                  ? (isBreak ? 'Controlled (+1 XP)' : 'Done (+1 XP)')
                   : point?.status === 'missed'
-                  ? (isBreak ? '✕ Slipped (-1 XP)' : '✕ Missed (-1 XP)')
-                  : '— Untracked';
+                  ? (isBreak ? 'Failed (-1 XP)' : 'Missed (-1 XP)')
+                  : 'Untracked';
               const lines = [
                 `Status: ${statusLabel}`,
                 `Score: ${item.formattedValue} XP`,
               ];
-              const note = point?.date ? reflections?.[point.date] : undefined;
-              if (note) {
-                lines.push(`📝 Note: ${note}`);
+              const habitNote = point?.date ? habit?.notes?.[point.date] : undefined;
+              if (habitNote) {
+                lines.push(`📝 Note: “${habitNote}”`);
               }
               return lines;
             },
@@ -630,9 +630,13 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                   cardStyle += ' ring-2 ring-cyan-500 border-cyan-500 shadow-xs';
                 }
 
-                const reflectionNote = reflections?.[d.dateStr];
-                const statusLabel = isDone ? (isBreak ? 'Controlled ✓' : 'Done ✓') : isMissed ? (isBreak ? 'Failed ✕' : 'Missed ✕') : 'Untracked';
-                const tileTitle = `${d.formatted}\nStatus: ${statusLabel}${reflectionNote ? `\n\n"${reflectionNote}"` : ''}${isReadOnly ? '' : '\n(Click to jump to date)'}`;
+                const habitNote = habit.notes?.[d.dateStr];
+                const statusText = isDone
+                  ? (isBreak ? 'Controlled' : 'Done')
+                  : isMissed
+                  ? (isBreak ? 'Failed' : 'Missed')
+                  : 'Untracked';
+                const tileTitle = `${d.formatted} · ${statusText}${habitNote ? `\n\n“${habitNote}”` : ''}${isReadOnly ? '' : '\n(Click to jump to date)'}`;
 
                 return (
                   <button
@@ -653,10 +657,10 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                     <div className="flex items-center justify-between w-full px-0.5 text-[9px] font-mono leading-none">
                       <span className="font-bold opacity-80">{d.dayNum}</span>
                       <div className="flex items-center gap-1">
-                        {reflectionNote && (
+                        {habitNote && (
                           <span
-                            className="w-1.5 h-1.5 rounded-full bg-cyan-400 dark:bg-cyan-300 shadow-[0_0_5px_rgba(6,182,212,0.9)] inline-block"
-                            title={`Note: "${reflectionNote}"`}
+                            className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_5px_rgba(244,63,94,0.9)] inline-block"
+                            title={`“${habitNote}”`}
                           />
                         )}
                         <span className="text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>

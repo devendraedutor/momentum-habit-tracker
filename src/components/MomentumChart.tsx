@@ -249,9 +249,11 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
               } else {
                 changeStr = `\n⚪ Change: 0 XP (Unlogged / Flat)`;
               }
-              const note = pt.date ? reflections?.[pt.date] : undefined;
+              const note = pt.date
+                ? (currentHabit ? currentHabit.notes?.[pt.date] : undefined) || reflections?.[pt.date]
+                : undefined;
               if (note) {
-                changeStr += `\n📝 Note: ${note}`;
+                changeStr += `\n📝 Note: “${note}”`;
               }
               return changeStr;
             }
@@ -441,7 +443,7 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
             {recentDaysBreakdown.map((pt) => {
               const isGain = pt.delta > 0;
               const isDrop = pt.delta < 0;
-              const note = reflections?.[pt.date];
+              const note = (currentHabit ? currentHabit.notes?.[pt.date] : undefined) || reflections?.[pt.date];
 
               return (
                 <button

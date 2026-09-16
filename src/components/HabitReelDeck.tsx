@@ -25,7 +25,9 @@ import {
   Crown,
   Gem,
   Flag,
-  BookOpen,
+  FileText,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { DatePickerPopover } from './DatePickerPopover';
 import confetti from 'canvas-confetti';
@@ -41,8 +43,7 @@ interface HabitReelDeckProps {
   onAscendHabit?: (habit: Habit) => void;
   jumboPointsCount?: number;
   floorAtZero?: boolean;
-  reflections?: Record<string, string>;
-  onSaveReflection?: (dateStr: string, note: string) => void;
+  onSaveHabitNote?: (habitId: string, dateStr: string, note: string) => void;
 }
 
 interface DailySummaryHabitRowProps {
@@ -53,6 +54,7 @@ interface DailySummaryHabitRowProps {
   onOpenDetail: (habit: Habit) => void;
   onAscendHabit?: (habit: Habit) => void;
   onCheckIn: (habitId: string, status: CheckInStatus, dateStr?: string) => void;
+  onSaveHabitNote?: (habitId: string, dateStr: string, note: string) => void;
 }
 
 const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
@@ -63,16 +65,35 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   onOpenDetail,
   onAscendHabit,
   onCheckIn,
+  onSaveHabitNote,
 }) => {
   const currentStatus = h.history?.[activeDateStr];
   const isBreak = h.type === 'BREAK';
   const isDone = currentStatus === 'done';
+  const isMissed = currentStatus === 'missed' || currentStatus === 'failed';
+  const savedNote = h.notes?.[activeDateStr] || '';
   const stats = calculateHabitStats(h, floorAtZero, activeDateStr);
   const targetDays = h.targetGoalDays || 21;
   const goalStreak = stats.currentGoalStreak;
   const isGoalConquered = goalStreak >= targetDays && isDone;
   const daysRemaining = Math.max(0, targetDays - goalStreak);
   const isNearGoal = !isGoalConquered && isDone && (goalStreak / targetDays) >= 0.7 && daysRemaining > 0;
+
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteInput, setNoteInput] = useState(savedNote);
+
+  React.useEffect(() => {
+    setNoteInput(savedNote);
+    setIsEditingNote(false);
+  }, [savedNote, activeDateStr]);
+
+  const handleCommitNote = () => {
+    const trimmed = noteInput.trim();
+    if (onSaveHabitNote && trimmed !== savedNote) {
+      onSaveHabitNote(h.id, activeDateStr, trimmed);
+    }
+    setIsEditingNote(false);
+  };
 
   const [animatedStreak, setAnimatedStreak] = useState<number>(() => {
     return isDone && goalStreak > 0 ? goalStreak - 1 : (isDone ? goalStreak : 0);
@@ -99,129 +120,231 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
   return (
     <div
       onClick={() => onOpenDetail(h)}
-      className={`p-3 pb-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border flex items-center justify-between gap-2.5 sm:gap-3 transition-all shadow-xs dark:shadow-md dark:shadow-black/20 cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
+      className={`p-3 pb-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border flex flex-col justify-between transition-all shadow-xs dark:shadow-md dark:shadow-black/20 cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
         isGoalConquered
           ? 'border-amber-500/40 dark:border-amber-400/40'
+          : isMissed
+          ? 'border-rose-500/30 dark:border-rose-500/30'
           : 'border-slate-200/90 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
       }`}
       title={`Click to view insights and modify check-in for ${h.name}`}
     >
-      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-        <div
-          className={`w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-xs relative transition-transform group-hover:scale-105 rounded-2xl bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 ${
-            isBreak
-              ? 'ring-2 ring-rose-500/30 dark:ring-rose-500/40'
-              : 'ring-2 ring-emerald-500/30 dark:ring-emerald-500/40'
-          }`}
-          style={{ color: h.color }}
-        >
-          <DynamicIcon name={h.icon} className="w-5 h-5" />
-          <span className="absolute -bottom-1 -right-1 text-[11px] leading-none select-none">
-            {isBreak ? '🛡️' : '🌱'}
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-              {h.name}
+      {/* Top Main Row */}
+      <div className="flex items-center justify-between gap-2.5 sm:gap-3 w-full">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+          <div
+            className={`w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-xs relative transition-transform group-hover:scale-105 rounded-2xl bg-slate-100 dark:bg-slate-850 border border-slate-200 dark:border-slate-700 ${
+              isBreak
+                ? 'ring-2 ring-rose-500/30 dark:ring-rose-500/40'
+                : 'ring-2 ring-emerald-500/30 dark:ring-emerald-500/40'
+            }`}
+            style={{ color: h.color }}
+          >
+            <DynamicIcon name={h.icon} className="w-5 h-5" />
+            <span className="absolute -bottom-1 -right-1 text-[11px] leading-none select-none">
+              {isBreak ? '🛡️' : '🌱'}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
-            {/* 1. XP */}
-            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Lifetime Score: ${stats.currentScore}`}>
-              <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>{stats.currentScore}</span>
-            </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight truncate group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                {h.name}
+              </span>
+            </div>
 
-            <span className="text-slate-300 dark:text-slate-600">•</span>
+            <div className="flex items-center gap-2 text-xs mt-0.5 font-mono font-bold flex-wrap">
+              {/* 1. XP */}
+              <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Lifetime Score: ${stats.currentScore}`}>
+                <Zap className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                <span>{stats.currentScore}</span>
+              </span>
 
-            {/* 2. Streak */}
-            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Current Streak: ${stats.currentStreak} days`}>
-              <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>{stats.currentStreak}</span>
-            </span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
 
-            <span className="text-slate-300 dark:text-slate-600">•</span>
+              {/* 2. Streak */}
+              <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Current Streak: ${stats.currentStreak} days`}>
+                <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                <span>{stats.currentStreak}</span>
+              </span>
 
-            {/* 3. Level */}
-            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Mastery Level ${stats.achievedLevel}`}>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+
+              {/* 3. Level */}
+              <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300 font-bold" title={`Mastery Level ${stats.achievedLevel}`}>
+                <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                <span>{stats.achievedLevel}</span>
+              </span>
+
+              {isNearGoal && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-600">•</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono animate-pulse" title={`${daysRemaining} days left to conquer target goal!`}>
+                    <Flag className="w-3 h-3 text-cyan-500" />
+                    <span>{daysRemaining === 1 ? '1 day to goal!' : `${daysRemaining}d to goal!`}</span>
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {isGoalConquered && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onAscendHabit) onAscendHabit(h);
+              }}
+              className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-700 dark:text-amber-300 border border-amber-400/40 text-[10px] sm:text-xs font-black font-mono uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse whitespace-nowrap"
+              title="Milestone Conquered! Click to level up and claim rewards"
+            >
               <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>{stats.achievedLevel}</span>
+              <span>Level Up ⚡</span>
+            </button>
+          )}
+
+          <div className="flex items-baseline gap-0.5 justify-end font-mono">
+            <span
+              className={`font-medium text-sm sm:text-base tracking-tight transition-all duration-300 inline-block ${
+                isDone
+                  ? 'text-slate-900 dark:text-slate-100'
+                  : 'text-slate-400 dark:text-slate-500'
+              } ${
+                isExpanded
+                  ? 'scale-100 text-slate-900 dark:text-slate-100'
+                  : isDone
+                  ? 'scale-105 text-emerald-600 dark:text-emerald-400'
+                  : ''
+              }`}
+            >
+              {isDone ? animatedStreak : 0}
             </span>
-
-            {isNearGoal && (
-              <>
-                <span className="text-slate-300 dark:text-slate-600">•</span>
-                <span className="px-1.5 py-0.5 rounded-md bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 font-bold text-[10px] flex items-center gap-1 shadow-xs font-mono animate-pulse" title={`${daysRemaining} days left to conquer target goal!`}>
-                  <Flag className="w-3 h-3 text-cyan-500" />
-                  <span>{daysRemaining === 1 ? '1 day to goal!' : `${daysRemaining}d to goal!`}</span>
-                </span>
-              </>
-            )}
+            <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-slate-500">
+              /{targetDays} D
+            </span>
           </div>
-        </div>
-      </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        {isGoalConquered && (
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              if (onAscendHabit) onAscendHabit(h);
+              onCheckIn(h.id, isDone ? 'missed' : 'done', activeDateStr);
             }}
-            className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-amber-700 dark:text-amber-300 border border-amber-400/40 text-[10px] sm:text-xs font-black font-mono uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer animate-pulse whitespace-nowrap"
-            title="Milestone Conquered! Click to level up and claim rewards"
-          >
-            <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-            <span>Level Up ⚡</span>
-          </button>
-        )}
-
-        <div className="flex items-baseline gap-0.5 justify-end font-mono">
-          <span
-            className={`font-medium text-sm sm:text-base tracking-tight transition-all duration-300 inline-block ${
+            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-90 shadow-xs cursor-pointer ${
               isDone
-                ? 'text-slate-900 dark:text-slate-100'
-                : 'text-slate-400 dark:text-slate-500'
-            } ${
-              isExpanded
-                ? 'scale-100 text-slate-900 dark:text-slate-100'
-                : isDone
-                ? 'scale-105 text-emerald-600 dark:text-emerald-400'
-                : ''
+                ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50 dark:bg-emerald-500/25 dark:border-emerald-400/50'
+                : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50 dark:bg-rose-500/25 dark:border-rose-400/50'
             }`}
+            title={isDone ? 'Marked Done. Click to toggle to Missed.' : 'Marked Missed. Click to toggle to Done.'}
           >
-            {isDone ? animatedStreak : 0}
-          </span>
-          <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-slate-500">
-            /{targetDays} D
-          </span>
+            {isDone ? (
+              <Check className="w-4 h-4 stroke-[2.5]" />
+            ) : (
+              <X className="w-4 h-4 stroke-[2.5]" />
+            )}
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onCheckIn(h.id, isDone ? 'missed' : 'done', activeDateStr);
-          }}
-          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-90 shadow-xs cursor-pointer ${
-            isDone
-              ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50 dark:bg-emerald-500/25 dark:border-emerald-400/50'
-              : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50 dark:bg-rose-500/25 dark:border-rose-400/50'
-          }`}
-          title={isDone ? 'Marked Done. Click to toggle to Missed.' : 'Marked Missed. Click to toggle to Done.'}
-        >
-          {isDone ? (
-            <Check className="w-4 h-4 stroke-[2.5]" />
-          ) : (
-            <X className="w-4 h-4 stroke-[2.5]" />
-          )}
-        </button>
       </div>
 
+      {/* Habit-Specific Miss Reflection Section (Only when habit is missed/failed) */}
+      {isMissed && (
+        <>
+          {savedNote && !isEditingNote ? (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2.5 pt-2 border-t border-rose-500/15 dark:border-rose-500/20 flex items-center justify-between gap-2 text-xs relative z-10 animate-fade-in"
+            >
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 text-slate-600 dark:text-slate-300 font-sans italic truncate">
+                <FileText className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                <span className="truncate" title={savedNote}>
+                  “{savedNote}”
+                </span>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingNote(true);
+                    setNoteInput(savedNote);
+                  }}
+                  className="p-1 rounded-lg text-slate-400 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
+                  title="Edit reflection"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSaveHabitNote?.(h.id, activeDateStr, '')}
+                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                  title="Delete reflection"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2.5 pt-2 border-t border-rose-500/15 dark:border-rose-500/20 relative z-10 animate-fade-in"
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <FileText className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 font-mono">
+                  Why was this missed?
+                </span>
+                <span className="text-[9px] font-mono text-slate-400 ml-auto">
+                  {noteInput.length}/140
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={noteInput}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 140) setNoteInput(e.target.value);
+                  }}
+                  onBlur={handleCommitNote}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCommitNote();
+                  }}
+                  placeholder={`What got in the way of ${h.name}? (e.g., worked late, low energy)`}
+                  maxLength={140}
+                  className="flex-1 text-xs bg-slate-50 dark:bg-slate-850 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-rose-500/50 focus:border-rose-500 transition-all font-sans"
+                  autoFocus={isEditingNote}
+                />
+                {noteInput.trim() && (
+                  <button
+                    type="button"
+                    onClick={handleCommitNote}
+                    className="px-2.5 py-1.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-mono font-bold text-[11px] flex items-center gap-1 shadow-xs cursor-pointer transition-all active:scale-95 flex-shrink-0"
+                    title="Save Reflection"
+                  >
+                    <Check className="w-3 h-3 stroke-[3]" />
+                    <span>Save</span>
+                  </button>
+                )}
+                {savedNote && isEditingNote && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNoteInput(savedNote);
+                      setIsEditingNote(false);
+                    }}
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs cursor-pointer"
+                    title="Cancel"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Bottom Progress Bar Rail */}
       <div className="absolute bottom-0 left-0 right-0 h-[3.5px] bg-slate-200/50 dark:bg-slate-800 overflow-hidden">
         <div
           className={`h-full relative ${
@@ -241,92 +364,6 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-bar-sheen" />
           )}
         </div>
-      </div>
-    </div>
-  );
-};
-
-interface DailyReflectionCardProps {
-  activeDateStr: string;
-  initialNote?: string;
-  onSave?: (dateStr: string, note: string) => void;
-}
-
-const DailyReflectionCard: React.FC<DailyReflectionCardProps> = ({
-  activeDateStr,
-  initialNote = '',
-  onSave,
-}) => {
-  const [note, setNote] = useState(initialNote || '');
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
-
-  // Keep note in sync with activeDateStr changes
-  React.useEffect(() => {
-    setNote(initialNote || '');
-    setSaveStatus('idle');
-  }, [activeDateStr, initialNote]);
-
-  const handleCommit = () => {
-    const trimmed = note.trim();
-    if (trimmed !== (initialNote || '').trim()) {
-      onSave?.(activeDateStr, trimmed);
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2500);
-    }
-  };
-
-  return (
-    <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/90 border border-slate-200/90 dark:border-slate-700/80 relative z-10 shadow-xs dark:shadow-md dark:shadow-black/20 transition-all">
-      <div className="flex items-center justify-between mb-2.5">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-            <BookOpen className="w-3.5 h-3.5" />
-          </div>
-          <span className="text-xs font-bold font-mono text-slate-800 dark:text-slate-200">
-            Daily Reflection
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 font-mono">
-          {saveStatus === 'saved' && (
-            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 animate-fade-in">
-              <Check className="w-3 h-3 stroke-[3]" /> Saved
-            </span>
-          )}
-          <span className={`text-[10px] ${note.length >= 190 ? 'text-amber-500 font-bold' : 'text-slate-400 dark:text-slate-500'}`}>
-            {note.length}/200
-          </span>
-        </div>
-      </div>
-
-      <textarea
-        value={note}
-        onChange={(e) => {
-          if (e.target.value.length <= 200) {
-            setNote(e.target.value);
-            setSaveStatus('idle');
-          }
-        }}
-        onBlur={handleCommit}
-        placeholder="Reflect on today: what triggered slip-ups or fueled your momentum?"
-        rows={2}
-        maxLength={200}
-        className="w-full text-xs font-sans bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 resize-none transition-all leading-relaxed"
-      />
-
-      <div className="flex items-center justify-between mt-2.5">
-        <span className="text-[10px] text-slate-400 dark:text-slate-500 italic font-sans">
-          Visible on heatmap & chart tooltips
-        </span>
-        <button
-          type="button"
-          onClick={handleCommit}
-          className="px-3 py-1 text-[11px] font-mono font-bold rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
-          title="Save Daily Reflection"
-        >
-          <Check className="w-3 h-3 stroke-[3]" />
-          <span>Save Reflection</span>
-        </button>
       </div>
     </div>
   );
@@ -705,8 +742,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   onAscendHabit,
   jumboPointsCount = 0,
   floorAtZero = false,
-  reflections,
-  onSaveReflection,
+  onSaveHabitNote,
 }) => {
   const hasAnyHabits = useMemo(() => habits.some((h) => !h.archived), [habits]);
 
@@ -1065,6 +1101,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                   onOpenDetail={onOpenDetail}
                   onAscendHabit={onAscendHabit}
                   onCheckIn={onCheckIn}
+                  onSaveHabitNote={onSaveHabitNote}
                 />
               ))}
 
@@ -1074,13 +1111,6 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                 </div>
               )}
             </div>
-
-            {/* Daily Reflection Section */}
-            <DailyReflectionCard
-              activeDateStr={activeDateStr}
-              initialNote={reflections?.[activeDateStr]}
-              onSave={onSaveReflection}
-            />
           </div>
         </div>
       ) : (

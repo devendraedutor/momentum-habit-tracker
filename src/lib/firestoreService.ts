@@ -39,7 +39,6 @@ const COLLECTION_INVITES = 'buddy_invites';
 const COLLECTION_FRIENDSHIPS = 'friendships';
 const COLLECTION_SHARED_HABITS = 'shared_habits';
 const SUBCOLLECTION_NOTIFICATIONS = 'notifications';
-const SUBCOLLECTION_DAILY_SUMMARIES = 'daily_summaries';
 
 /**
  * Strips all `undefined` fields recursively so Firestore never throws
@@ -1354,112 +1353,44 @@ export function subscribeToNotifications(
 }
 
 /* =========================================================================
-   DAILY REFLECTIONS & SUMMARIES PERSISTENCE
-   Path: users/{userId}/daily_summaries/{dateKey}
+   HABIT-SPECIFIC REFLECTION NOTES PERSISTENCE
+   Path: users/{userId}/habits/{habitId}/logs/{dateKey}
    ========================================================================= */
 
 /**
- * Saves a daily reflection note under `users/{userId}/daily_summaries/{dateKey}`
+ * Stores a habit-specific miss/check-in reflection note directly in Firestore:
+ * Path: `users/{userId}/habits/{habitId}/logs/{dateKey}`
  */
-export async function saveDailyReflection(
+export async function saveHabitLogNote(
   userId: string,
+  habitId: string,
   dateKey: string,
   note: string,
-  tags?: string[]
+  status: CheckInStatus = 'missed'
 ): Promise<boolean> {
-  if (!db || !userId || !dateKey) return false;
+  if (!db || !userId || !habitId || !dateKey) return false;
 
   try {
     const docRef = doc(
       db,
       COLLECTION_USERS,
       userId,
-      SUBCOLLECTION_DAILY_SUMMARIES,
+      'habits',
+      habitId,
+      'logs',
       dateKey
     );
     const timestamp = new Date().toISOString();
     const payload = sanitizeForFirestore({
-      date: dateKey,
-      note,
-      tags: tags || [],
+      status,
+      note: note.trim(),
       updatedAt: timestamp,
     });
 
     await setDoc(docRef, payload, { merge: true });
     return true;
   } catch (error) {
-    console.error('[Reflection] Error saving daily reflection note:', error);
+    console.error('[HabitLog] Error saving habit log reflection note:', error);
     return false;
-  }
-}
-
-/**
- * Fetches all daily reflections for a given user from Firestore
- */
-export async function fetchDailyReflections(
-  userId: string
-): Promise<Record<string, string>> {
-  if (!db || !userId) return {};
-
-  try {
-    const colRef = collection(
-      db,
-      COLLECTION_USERS,
-      userId,
-      SUBCOLLECTION_DAILY_SUMMARIES
-    );
-    const snapshot = await getDocs(colRef);
-    const reflections: Record<string, string> = {};
-
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (data && data.note !== undefined) {
-        reflections[docSnap.id] = data.note;
-      }
-    });
-
-    return reflections;
-  } catch (error) {
-    console.warn('[Reflection] Error fetching daily reflections:', error);
-    return {};
-  }
-}
-
-/**
- * Subscribes to real-time updates for daily reflections under `users/{userId}/daily_summaries`
- */
-export function subscribeToDailyReflections(
-  userId: string,
-  onUpdate: (reflections: Record<string, string>) => void
-): Unsubscribe | null {
-  if (!db || !userId) return null;
-
-  try {
-    const colRef = collection(
-      db,
-      COLLECTION_USERS,
-      userId,
-      SUBCOLLECTION_DAILY_SUMMARIES
-    );
-
-    return onSnapshot(
-      colRef,
-      (snapshot) => {
-        const reflections: Record<string, string> = {};
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (data && data.note !== undefined) {
-            reflections[docSnap.id] = data.note;
-          }
-        });
-        onUpdate(reflections);
-      },
-      (error) => {
-        console.warn('[Reflection] Error in daily reflections subscription:', error);
-      }
-    );
-  } catch (error) {
-    console.warn('[Reflection] Error establishing daily reflections listener:', error);
-    return null;
   }
 }
