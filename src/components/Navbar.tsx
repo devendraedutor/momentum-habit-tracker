@@ -41,7 +41,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   isSigningIn = false,
   notifications = [],
   unreadCount = 0,
-  buddyCount = 0,
   isActionLoading = null,
   onMarkAllAsRead = () => {},
   onAcceptInvite = () => {},
@@ -169,11 +168,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label="Pair with Buddy"
             >
               <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              {buddyCount > 0 && (
-                <span className="absolute -bottom-1 -right-1 px-1 rounded-full bg-emerald-600 text-white font-bold text-[9px] font-mono flex items-center justify-center ring-1 ring-white dark:ring-slate-900">
-                  {buddyCount}
-                </span>
-              )}
             </button>
           )}
 
