@@ -922,12 +922,18 @@ export async function revokeSharedHabit(sharedHabitDocId: string): Promise<boole
 }
 
 /**
- * Syncs user's local habit progress to all `shared_habits` records where user is owner
+ * Syncs user's local habit progress to all `shared_habits` records where user is owner,
+ * and automatically notifies active accountability buddies about check-in status (Done, Missed, Controlled, Failed).
  */
 export async function syncHabitProgressToSharedHabits(
-  ownerUid: string,
-  habit: Habit
+  owner: { uid: string; displayName?: string | null; email?: string | null; photoURL?: string | null } | string,
+  habit: Habit,
+  checkInEvent?: {
+    status: 'done' | 'missed' | 'controlled' | 'failed' | string;
+    dateStr?: string;
+  }
 ): Promise<void> {
+  const ownerUid = typeof owner === 'string' ? owner : owner.uid;
   if (!db || !ownerUid || !habit.id) return;
 
   try {
@@ -947,6 +953,10 @@ export async function syncHabitProgressToSharedHabits(
     if (snap.empty) return;
 
     const batch = writeBatch(db);
+    const ownerName = typeof owner === 'object' && owner.displayName ? owner.displayName : 'Your buddy';
+    const ownerEmail = typeof owner === 'object' && owner.email ? owner.email : '';
+    const ownerPhoto = typeof owner === 'object' && owner.photoURL ? owner.photoURL : '';
+
     for (const d of snap.docs) {
       batch.update(d.ref, {
         habitTitle: habit.name,
@@ -959,6 +969,70 @@ export async function syncHabitProgressToSharedHabits(
         history: habit.history || {},
         updatedAt: timestamp,
       });
+
+      // Send real-time check-in notification to the accountability buddy
+      if (checkInEvent && checkInEvent.status && checkInEvent.status !== 'none') {
+        const sharedData = d.data() as SharedHabitRecord;
+        const targetBuddyUid = sharedData.targetBuddyUid;
+
+        if (targetBuddyUid && targetBuddyUid !== ownerUid) {
+          const buddyNotifsRef = collection(
+            db,
+            COLLECTION_USERS,
+            targetBuddyUid,
+            SUBCOLLECTION_NOTIFICATIONS
+          );
+          const newNotifRef = doc(buddyNotifsRef);
+
+          const rawStatus = checkInEvent.status.toLowerCase();
+          const isBreak = habit.type === 'BREAK';
+
+          let displayStatus: 'Done' | 'Missed' | 'Controlled' | 'Failed' = 'Done';
+          let title = `✅ ${habit.name}: Done`;
+          let message = `${ownerName} completed "${habit.name}" today!`;
+
+          if (isBreak) {
+            if (rawStatus === 'done' || rawStatus === 'controlled') {
+              displayStatus = 'Controlled';
+              title = `🛡️ ${habit.name}: Controlled`;
+              message = `${ownerName} successfully controlled "${habit.name}" today!`;
+            } else {
+              displayStatus = 'Failed';
+              title = `⚠️ ${habit.name}: Failed`;
+              message = `${ownerName} slipped on "${habit.name}" today.`;
+            }
+          } else {
+            if (rawStatus === 'done') {
+              displayStatus = 'Done';
+              title = `✅ ${habit.name}: Done`;
+              message = `${ownerName} completed "${habit.name}" today!`;
+            } else {
+              displayStatus = 'Missed';
+              title = `❌ ${habit.name}: Missed`;
+              message = `${ownerName} missed "${habit.name}" today.`;
+            }
+          }
+
+          const notifPayload: AppNotification = {
+            id: newNotifRef.id,
+            type: 'buddy_checkin',
+            title,
+            message,
+            senderUid: ownerUid,
+            senderName: ownerName,
+            senderEmail: ownerEmail,
+            senderPhoto: ownerPhoto,
+            habitId: habit.id,
+            habitName: habit.name,
+            checkInStatus: displayStatus,
+            status: 'actioned',
+            read: false,
+            createdAt: timestamp,
+          };
+
+          batch.set(newNotifRef, sanitizeForFirestore(notifPayload));
+        }
+      }
     }
     await batch.commit();
   } catch (error) {
@@ -1213,6 +1287,9 @@ export function subscribeToNotifications(
             senderEmail: data.senderEmail || '',
             senderPhoto: data.senderPhoto || '',
             inviteId: data.inviteId,
+            habitId: data.habitId,
+            habitName: data.habitName,
+            checkInStatus: data.checkInStatus,
             status: data.status || 'pending',
             read: Boolean(data.read),
             createdAt: data.createdAt || new Date().toISOString(),

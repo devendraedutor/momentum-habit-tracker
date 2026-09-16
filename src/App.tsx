@@ -447,11 +447,14 @@ export function App() {
           return updatedJumboDates;
         });
 
-        // Real-time Cloud Sync for Granular Shared Habits
+        // Real-time Cloud Sync for Granular Shared Habits & Real-time Buddy Notification
         if (firebaseUser) {
           const updatedHabit = nextHabits.find((h) => h.id === habitId);
           if (updatedHabit) {
-            syncHabitProgressToSharedHabits(firebaseUser.uid, updatedHabit);
+            syncHabitProgressToSharedHabits(firebaseUser, updatedHabit, {
+              status,
+              dateStr: activeDateStr,
+            });
           }
         }
 
@@ -526,11 +529,14 @@ export function App() {
           return updatedJumboDates;
         });
 
-        // Real-time Cloud Sync for Granular Shared Habits
+        // Real-time Cloud Sync for Granular Shared Habits & Real-time Buddy Notification
         if (firebaseUser) {
           for (const h of nextHabits) {
             if (updates[h.id]) {
-              syncHabitProgressToSharedHabits(firebaseUser.uid, h);
+              syncHabitProgressToSharedHabits(firebaseUser, h, {
+                status: updates[h.id],
+                dateStr,
+              });
             }
           }
         }

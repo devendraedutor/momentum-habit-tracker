@@ -1,6 +1,6 @@
 import type { Habit } from './habit';
 
-export type NotificationType = 'buddy_invite' | 'buddy_accepted' | 'buddy_nudge';
+export type NotificationType = 'buddy_invite' | 'buddy_accepted' | 'buddy_nudge' | 'buddy_checkin';
 export type NotificationStatus = 'pending' | 'actioned';
 
 export interface AppNotification {
@@ -13,6 +13,9 @@ export interface AppNotification {
   senderEmail: string;
   senderPhoto?: string;
   inviteId?: string;
+  habitId?: string;
+  habitName?: string;
+  checkInStatus?: 'done' | 'missed' | 'controlled' | 'failed' | string;
   status?: NotificationStatus;
   read: boolean;
   createdAt: string; // ISO string

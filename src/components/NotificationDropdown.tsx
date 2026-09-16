@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Bell, Check, X, Zap, Sparkles, UserCheck } from 'lucide-react';
+import { Bell, Check, X, Zap, Sparkles, UserCheck, Shield, AlertTriangle } from 'lucide-react';
 import type { AppNotification } from '../types/buddy';
 
 interface NotificationDropdownProps {
@@ -145,6 +145,30 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   {item.type === 'buddy_accepted' && (
                     <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
                       <UserCheck className="w-2.5 h-2.5" />
+                    </span>
+                  )}
+                  {item.type === 'buddy_checkin' && (
+                    <span
+                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center shadow-xs ${
+                        item.checkInStatus === 'Controlled'
+                          ? 'bg-cyan-500'
+                          : item.checkInStatus === 'Missed'
+                          ? 'bg-rose-500'
+                          : item.checkInStatus === 'Failed'
+                          ? 'bg-amber-500'
+                          : 'bg-emerald-500'
+                      }`}
+                      title={`Status: ${item.checkInStatus || 'Done'}`}
+                    >
+                      {item.checkInStatus === 'Controlled' ? (
+                        <Shield className="w-2.5 h-2.5 fill-white" />
+                      ) : item.checkInStatus === 'Missed' ? (
+                        <X className="w-2.5 h-2.5 stroke-[3]" />
+                      ) : item.checkInStatus === 'Failed' ? (
+                        <AlertTriangle className="w-2.5 h-2.5 fill-white" />
+                      ) : (
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      )}
                     </span>
                   )}
                 </div>
