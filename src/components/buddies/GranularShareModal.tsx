@@ -28,7 +28,11 @@ interface GranularShareModalProps {
   habits: Habit[];
   buddies: BuddyMemberSummary[];
   preselectedBuddyUid?: string | null;
-  onShareConfirmed: (selectedHabits: Habit[], targetBuddyUids: string[]) => Promise<boolean>;
+  onShareConfirmed: (
+    selectedHabits: Habit[],
+    targetBuddyUids: string[],
+    shareScope?: 'starting' | 'today'
+  ) => Promise<boolean>;
   onOpenBuddyHub?: () => void;
   onSearchBuddy?: (email: string) => Promise<void>;
   onSendInvite?: (targetUser: SearchedUser) => Promise<boolean>;
@@ -60,6 +64,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedHabitIds, setSelectedHabitIds] = useState<Set<string>>(new Set());
   const [selectedBuddyUids, setSelectedBuddyUids] = useState<Set<string>>(new Set());
+  const [shareScope, setShareScope] = useState<'starting' | 'today'>('starting');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState('');
@@ -73,6 +78,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
       setEmailInput('');
       setInviteSuccessMessage(null);
       setShowSearchForm(false);
+      setShareScope('starting');
       onClearSearch?.();
       // All habits and buddies deselected by default
       setSelectedHabitIds(new Set());
@@ -136,7 +142,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
 
     try {
       const chosenHabits = activeHabits.filter((h) => selectedHabitIds.has(h.id));
-      const success = await onShareConfirmed(chosenHabits, targetBuddyUids);
+      const success = await onShareConfirmed(chosenHabits, targetBuddyUids, shareScope);
       if (success) {
         onClose();
       } else {
@@ -257,6 +263,48 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   </div>
                 );
               })}
+            </div>
+
+            {/* Share Data Starting Point Selector */}
+            <div className="mt-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-750 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                    Share Data From
+                  </p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                    Applies to all selected habits
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center p-1 bg-slate-200/80 dark:bg-slate-900/80 rounded-xl gap-1 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShareScope('starting')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    shareScope === 'starting'
+                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  From Starting
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShareScope('today')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    shareScope === 'today'
+                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  From Today
+                </button>
+              </div>
             </div>
 
             {/* Error Banner for Direct Flow */}

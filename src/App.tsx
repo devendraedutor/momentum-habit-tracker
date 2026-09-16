@@ -172,8 +172,12 @@ export function App() {
   }, []);
 
   const handleShareConfirmed = useCallback(
-    async (selectedHabits: Habit[], targetBuddyUids: string[]) => {
-      const ok = await shareHabits(selectedHabits, targetBuddyUids);
+    async (
+      selectedHabits: Habit[],
+      targetBuddyUids: string[],
+      shareScope?: 'starting' | 'today'
+    ) => {
+      const ok = await shareHabits(selectedHabits, targetBuddyUids, shareScope);
       if (ok) {
         setIsGranularShareModalOpen(false);
       }

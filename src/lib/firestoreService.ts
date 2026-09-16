@@ -14,7 +14,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Habit, UserSettings } from '../types/habit';
+import type { Habit, UserSettings, CheckInStatus } from '../types/habit';
 import type {
   AppNotification,
   Friendship,
@@ -848,7 +848,8 @@ export function subscribeToFriendships(
 export async function shareHabitsWithBuddies(
   habits: Habit[],
   targetBuddyUids: string[],
-  owner: { uid: string; displayName?: string | null; photoURL?: string | null }
+  owner: { uid: string; displayName?: string | null; photoURL?: string | null },
+  shareScope: 'starting' | 'today' = 'starting'
 ): Promise<boolean> {
   if (!db || !owner.uid || habits.length === 0 || targetBuddyUids.length === 0) {
     return false;
@@ -862,6 +863,20 @@ export async function shareHabitsWithBuddies(
     for (const habit of habits) {
       const todayStatus = habit.history?.[todayStr];
       const isDone = todayStatus === 'done' || todayStatus === 'controlled';
+
+      // Filter history based on shareScope:
+      let sharedHistory: Record<string, CheckInStatus> = {};
+      let sharedStreak = habit.overallStreak || 0;
+
+      if (shareScope === 'today') {
+        if (todayStatus) {
+          sharedHistory[todayStr] = todayStatus;
+        }
+        sharedStreak = isDone ? 1 : 0;
+      } else {
+        sharedHistory = habit.history || {};
+        sharedStreak = habit.overallStreak || 0;
+      }
 
       for (const buddyUid of targetBuddyUids) {
         if (!buddyUid) continue;
@@ -881,11 +896,13 @@ export async function shareHabitsWithBuddies(
           habitIcon: habit.icon || 'Sparkles',
           habitColor: habit.color || '#10b981',
           habitCategory: habit.category || 'General',
-          streak: habit.overallStreak || 0,
+          streak: sharedStreak,
           completedToday: isDone,
           cadence: habit.type || 'BUILD',
           currentLevel: habit.currentLevel || 0,
-          history: habit.history || {},
+          history: sharedHistory,
+          shareScope: shareScope,
+          shareStartDate: shareScope === 'today' ? todayStr : (habit.createdAt?.split('T')[0] || todayStr),
           updatedAt: timestamp,
         };
 
@@ -895,7 +912,7 @@ export async function shareHabitsWithBuddies(
 
     await batch.commit();
     console.log(
-      `✅ [SharedHabits] Shared ${habits.length} habits with ${targetBuddyUids.length} buddies.`
+      `✅ [SharedHabits] Shared ${habits.length} habits with ${targetBuddyUids.length} buddies (${shareScope}).`
     );
     return true;
   } catch (error) {
@@ -960,6 +977,21 @@ export async function syncHabitProgressToSharedHabits(
     const targetBuddyUids = new Set<string>();
 
     for (const d of snap.docs) {
+      const sharedData = d.data() as SharedHabitRecord;
+      const shareScope = sharedData.shareScope || 'starting';
+      const shareStartDate = sharedData.shareStartDate;
+
+      let historyToSync = habit.history || {};
+      if (shareScope === 'today' && shareStartDate) {
+        const filteredHistory: Record<string, CheckInStatus> = {};
+        for (const [dateKey, val] of Object.entries(habit.history || {})) {
+          if (dateKey >= shareStartDate) {
+            filteredHistory[dateKey] = val;
+          }
+        }
+        historyToSync = filteredHistory;
+      }
+
       batch.update(d.ref, {
         habitTitle: habit.name,
         habitIcon: habit.icon,
@@ -968,11 +1000,10 @@ export async function syncHabitProgressToSharedHabits(
         streak: habit.overallStreak || 0,
         completedToday: isDone,
         currentLevel: habit.currentLevel || 0,
-        history: habit.history || {},
+        history: historyToSync,
         updatedAt: timestamp,
       });
 
-      const sharedData = d.data() as SharedHabitRecord;
       if (sharedData.targetBuddyUid && sharedData.targetBuddyUid !== ownerUid) {
         targetBuddyUids.add(sharedData.targetBuddyUid);
       }

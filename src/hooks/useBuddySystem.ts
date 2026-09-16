@@ -227,9 +227,9 @@ export function useBuddySystem({ user }: UseBuddySystemProps) {
 
   // Share multiple habits with multiple buddies
   const shareHabits = useCallback(
-    async (habitsToShare: Habit[], targetBuddyUids: string[]) => {
+    async (habitsToShare: Habit[], targetBuddyUids: string[], shareScope: 'starting' | 'today' = 'starting') => {
       if (!user) return false;
-      return await shareHabitsWithBuddies(habitsToShare, targetBuddyUids, user);
+      return await shareHabitsWithBuddies(habitsToShare, targetBuddyUids, user, shareScope);
     },
     [user]
   );
