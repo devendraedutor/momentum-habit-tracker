@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenJumboVault}
-              className={`relative px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 flex items-center gap-1.5 font-mono shadow-xs select-none cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-amber-500/60 dark:hover:border-amber-400/70 hover:shadow-amber-500/20 animate-fade-in group ${
+              className={`relative h-9 sm:h-10 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 flex items-center gap-1.5 font-mono shadow-xs select-none cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-amber-500/60 dark:hover:border-amber-400/70 hover:shadow-amber-500/20 animate-fade-in group ${
                 hasPendingBacklog
                   ? 'border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/70 dark:ring-amber-400/80 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 animate-pulse'
                   : 'border-amber-500/35 dark:border-amber-400/40'
@@ -133,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsNotificationsOpen((prev) => !prev)}
-                className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+                className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
                 title={`Notifications (${unreadCount} unread)`}
                 aria-label="Open Notifications"
               >
@@ -164,7 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenBuddyModal}
-              className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
               title="Pair with Accountability Buddy"
               aria-label="Pair with Buddy"
             >
@@ -180,7 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* 4. New Habit Action Button */}
           <button
             onClick={onOpenNewHabit}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
             title="Add New Habit"
             aria-label="Add New Habit"
           >
@@ -190,7 +190,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* 5. Habit Directory Button */}
           <button
             onClick={onOpenDirectory}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
             title="Habit Directory & Management"
             aria-label="Habit Directory & Management"
           >
@@ -203,7 +203,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="p-0.5 rounded-full hover:ring-2 hover:ring-slate-300 dark:hover:ring-slate-600 transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center flex-shrink-0"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center overflow-hidden"
                 title={user.displayName || user.email || 'Profile'}
                 aria-label="Profile and Settings"
               >
@@ -211,10 +211,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <img
                     src={user.photoURL}
                     alt={user.displayName || 'Google User'}
-                    className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full object-cover ring-1 ring-emerald-500/40"
+                    className="w-full h-full object-cover rounded-xl"
                   />
                 ) : (
-                  <div className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-rose-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center font-mono shadow-xs">
+                  <div className="w-full h-full rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 text-white font-bold text-xs sm:text-sm flex items-center justify-center font-mono shadow-xs">
                     {user.displayName
                       ? user.displayName.charAt(0).toUpperCase()
                       : user.email
@@ -269,7 +269,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 onClick={onLoginGoogle}
                 disabled={isSigningIn}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs text-xs font-bold text-slate-700 dark:text-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 h-9 sm:h-10 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs text-xs font-bold text-slate-700 dark:text-slate-200 transition-all hover:scale-105 active:scale-95 cursor-pointer group disabled:opacity-60 disabled:cursor-not-allowed"
                 title="Sign in with Google"
               >
                 {isSigningIn ? (
@@ -305,7 +305,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {tester && (
             <button
               onClick={onLogout}
-              className="p-2 sm:p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-900/50 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-900/50 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
               title={`Exit Session (Logged in as ${tester.name})`}
               aria-label="Exit Session"
             >
