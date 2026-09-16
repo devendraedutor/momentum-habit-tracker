@@ -842,7 +842,7 @@ export function App() {
       <PartnershipDetailsModal
         isOpen={!!selectedBuddyForDetails}
         onClose={() => setSelectedBuddyForDetails(null)}
-        currentUserUid={firebaseUser.uid}
+        currentUserUid={firebaseUser?.uid || ''}
         buddy={selectedBuddyForDetails}
         nudgeCooldownRemaining={
           selectedBuddyForDetails ? nudgeCooldowns[selectedBuddyForDetails.uid] || 0 : 0

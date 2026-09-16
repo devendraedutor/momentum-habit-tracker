@@ -21,7 +21,6 @@ import type { BuddyMemberSummary } from '../../types/buddy';
 import type { SearchedUser } from '../../lib/firestoreService';
 import { DynamicIcon } from '../DynamicIcon';
 import { getTierByLevel } from '../../config/progression';
-import { Modal } from '../common/Modal';
 
 interface GranularShareModalProps {
   isOpen: boolean;
@@ -47,8 +46,8 @@ interface GranularShareModalProps {
 export const GranularShareModal: React.FC<GranularShareModalProps> = ({
   isOpen,
   onClose,
-  habits,
-  buddies,
+  habits = [],
+  buddies = [],
   preselectedBuddyUid,
   onShareConfirmed,
   onOpenBuddyHub: _onOpenBuddyHub,
@@ -168,102 +167,124 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
     onClose();
   };
 
-  const headerCustom = (
-    <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
-      <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-          {step === 1 ? <ListChecks className="w-4.5 h-4.5" /> : <Users className="w-4.5 h-4.5" />}
-        </div>
-        <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-          {step === 1 ? 'Select Habits' : 'Select Buddies'}
-        </h2>
-      </div>
-    </div>
-  );
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleModalClose}
-      maxWidth="max-w-lg"
-      headerCustom={headerCustom}
-      className="max-h-[85vh] p-5 sm:p-6"
-      bodyClassName="p-0 flex-1 flex flex-col min-h-0"
-    >
-      {/* STEP 1: Select Habits */}
-      {step === 1 && (
-        <div className="flex-1 flex flex-col min-h-0 pt-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in selection:bg-emerald-500/20">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-750 relative z-10 flex flex-col max-h-[85vh] animate-scale-in"
+      >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={handleModalClose}
+          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-750 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
+        {/* Header: Dynamic Icon & Title for Step 1 (Select Habits) / Step 2 (Select Buddies) */}
+        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+              {step === 1 ? <ListChecks className="w-4.5 h-4.5" /> : <Users className="w-4.5 h-4.5" />}
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                {step === 1 ? 'Select Habits' : 'Select Buddies'}
+              </h2>
+              <p className="text-[11px] text-slate-400 font-mono">
+                {step === 1
+                  ? isDirectBuddyFlow
+                    ? 'Choose habits to commit with partner'
+                    : 'Step 1 of 2: Pick habits to share'
+                  : 'Step 2 of 2: Pick accountability partners'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* STEP 1: Select Habits */}
+        {step === 1 && (
+          <div className="flex-1 flex flex-col min-h-0 pt-3">
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 my-1 max-h-[50vh]">
-              {activeHabits.map((h) => {
-                const isSelected = selectedHabitIds.has(h.id);
-                const tier = getTierByLevel(h.currentLevel || 0);
+              {activeHabits.length === 0 ? (
+                <div className="text-center py-10 text-slate-400">
+                  <p className="text-sm font-medium">No active habits available to share.</p>
+                </div>
+              ) : (
+                activeHabits.map((h) => {
+                  const isSelected = selectedHabitIds.has(h.id);
+                  const tier = getTierByLevel(h.currentLevel || 0);
 
-                return (
-                  <div
-                    key={h.id}
-                    onClick={() => toggleHabit(h.id)}
-                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                      isSelected
-                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/80 shadow-xs'
-                        : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/80'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {/* Checkbox */}
-                      <div className="flex-shrink-0">
-                        {isSelected ? (
-                          <div className="w-5 h-5 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  return (
+                    <div
+                      key={h.id}
+                      onClick={() => toggleHabit(h.id)}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        isSelected
+                          ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/80 shadow-xs'
+                          : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* Checkbox */}
+                        <div className="flex-shrink-0">
+                          {isSelected ? (
+                            <div className="w-5 h-5 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-lg border-2 border-slate-300 dark:border-slate-600" />
+                          )}
+                        </div>
+
+                        {/* Icon */}
+                        <div
+                          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-xs"
+                          style={{
+                            backgroundColor: `${h.color}20`,
+                            color: h.color,
+                            border: `1px solid ${h.color}40`,
+                          }}
+                        >
+                          <DynamicIcon name={h.icon} className="w-4 h-4" />
+                        </div>
+
+                        {/* Name & Badges */}
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {h.name}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[11px] text-slate-400 font-medium">
+                              {h.category}
+                            </span>
+                            {tier && (
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                <Crown className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
+                                <span>{h.currentLevel || 0}</span>
+                              </span>
+                            )}
+                            {(h.overallStreak || 0) > 0 && (
+                              <span className="text-[10px] font-mono font-semibold text-amber-500 flex items-center gap-0.5">
+                                <Flame className="w-2.5 h-2.5 fill-amber-500" />
+                                {h.overallStreak}d
+                              </span>
+                            )}
                           </div>
-                        ) : (
-                          <div className="w-5 h-5 rounded-lg border-2 border-slate-300 dark:border-slate-600" />
-                        )}
-                      </div>
-
-                      {/* Icon */}
-                      <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-xs"
-                        style={{
-                          backgroundColor: `${h.color}20`,
-                          color: h.color,
-                          border: `1px solid ${h.color}40`,
-                        }}
-                      >
-                        <DynamicIcon name={h.icon} className="w-4 h-4" />
-                      </div>
-
-                      {/* Name & Badges */}
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                          {h.name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[11px] text-slate-400 font-medium">
-                            {h.category}
-                          </span>
-                          {tier && (
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                              <Crown className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
-                              <span>{h.currentLevel || 0}</span>
-                            </span>
-                          )}
-                          {(h.overallStreak || 0) > 0 && (
-                            <span className="text-[10px] font-mono font-semibold text-amber-500 flex items-center gap-0.5">
-                              <Flame className="w-2.5 h-2.5 fill-amber-500" />
-                              {h.overallStreak}d
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
 
             {/* Share Data Starting Point Selector - Only visible when at least 1 habit is selected */}
             {selectedHabitIds.size > 0 && (
-              <div className="mt-3 p-3 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="mt-3 p-3 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-scale-in">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
                     <Clock className="w-4 h-4" />
@@ -278,14 +299,14 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center p-1 bg-slate-200/90 dark:bg-slate-900 rounded-xl gap-1 flex-shrink-0">
+                <div className="flex items-center p-1 bg-slate-200/90 dark:bg-slate-800 rounded-xl gap-1 flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => setShareScope('starting')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       shareScope === 'starting'
                         ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-800'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {shareScope === 'starting' && <Check className="w-3 h-3 stroke-[3]" />}
@@ -297,7 +318,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       shareScope === 'today'
                         ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-800'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700'
                     }`}
                   >
                     {shareScope === 'today' && <Check className="w-3 h-3 stroke-[3]" />}
@@ -309,20 +330,26 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
 
             {/* Error Banner for Direct Flow */}
             {submitError && isDirectBuddyFlow && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-start gap-2 my-2 animate-in fade-in duration-150">
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-start gap-2 my-2 animate-scale-in">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span className="flex-1">{submitError}</span>
               </div>
             )}
 
-            {/* Footer Step 1: Direct Commit Button if coming from partner page, or Green Arrow if coming from Directory */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
+            {/* Footer Step 1: Selected Count + Next/Commit Button */}
+            <div className="pt-3.5 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+              <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">
+                {selectedHabitIds.size === 0
+                  ? 'Select habits to commit'
+                  : `${selectedHabitIds.size} habit${selectedHabitIds.size > 1 ? 's' : ''} selected`}
+              </span>
+
               {isDirectBuddyFlow ? (
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting || selectedHabitIds.size === 0}
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -338,10 +365,10 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={selectedHabitIds.size === 0}
-                  className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white flex items-center justify-center shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Next"
-                  aria-label="Next"
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Next: Select Buddies"
                 >
+                  <span>Next</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               )}
@@ -405,7 +432,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                           }}
                           placeholder="Enter partner's email..."
                           autoFocus
-                          className="w-full pl-9 pr-20 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 font-mono transition"
+                          className="w-full pl-9 pr-20 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-750 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 font-mono transition"
                         />
                         <button
                           type="submit"
@@ -422,7 +449,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
 
                       {/* Error Banner */}
                       {searchError && (
-                        <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs animate-in fade-in duration-150">
+                        <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-center gap-2 text-amber-800 dark:text-amber-300 text-xs animate-scale-in">
                           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 text-amber-600" />
                           <span className="flex-1">{searchError}</span>
                         </div>
@@ -430,7 +457,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
 
                       {/* Success Toast */}
                       {inviteSuccessMessage && (
-                        <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex items-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs animate-in fade-in duration-150">
+                        <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex items-center gap-2 text-emerald-800 dark:text-emerald-300 text-xs animate-scale-in">
                           <Check className="w-3.5 h-3.5 flex-shrink-0 text-emerald-600" />
                           <span className="flex-1">{inviteSuccessMessage}</span>
                         </div>
@@ -438,7 +465,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
 
                       {/* Search Result Card */}
                       {searchResult && (
-                        <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/30 flex items-center justify-between gap-2.5 animate-in fade-in duration-150">
+                        <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-emerald-500/30 flex items-center justify-between gap-2.5 animate-scale-in">
                           <div className="flex items-center gap-2.5 min-w-0">
                             {searchResult.photoURL ? (
                               <img
@@ -508,7 +535,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                       onClick={() => toggleBuddy(buddy.uid)}
                       className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                         isSelected
-                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/80 shadow-xs'
+                          ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/80 shadow-xs'
                           : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/80'
                       }`}
                     >
@@ -550,18 +577,18 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
 
             {/* Error Banner */}
             {submitError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-start gap-2 my-2 animate-in fade-in duration-150">
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-start gap-2 my-2 animate-scale-in">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span className="flex-1">{submitError}</span>
               </div>
             )}
 
             {/* Footer Step 2: Back button + Live Yellowish Commit Button */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="pt-3.5 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-750 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-750 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back</span>
@@ -571,7 +598,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting || selectedBuddyUids.size === 0}
-                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -585,6 +612,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
             </div>
           </div>
         )}
-    </Modal>
+      </div>
+    </div>
   );
 };

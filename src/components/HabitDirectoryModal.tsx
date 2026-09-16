@@ -17,7 +17,6 @@ import {
   Check,
   Handshake,
 } from 'lucide-react';
-import { Modal } from './common/Modal';
 
 interface HabitDirectoryModalProps {
   isOpen: boolean;
@@ -46,54 +45,63 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
 
   const activeHabits = useMemo(() => habits.filter((h) => !h.archived), [habits]);
 
-  const headerCustom = (
-    <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-shrink-0">
-      <div className="flex items-center gap-2">
-        <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight">
-          Habit Directory
-        </h2>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {onOpenShareHabits && (
-          <button
-            onClick={() => {
-              onClose();
-              onOpenShareHabits();
-            }}
-            className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-bold font-mono flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs"
-            title="Commit Habits with Buddy"
-          >
-            <Handshake className="w-4 h-4 text-amber-600 dark:text-amber-400 mr-0.5" />
-            <span className="hidden sm:inline">Commit</span>
-          </button>
-        )}
-
-        <button
-          onClick={() => {
-            onOpenNewHabit();
-          }}
-          className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
-          title="Add New Habit"
-          aria-label="Add New Habit"
-        >
-          <Plus className="w-4.5 h-4.5 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
-        </button>
-      </div>
-    </div>
-  );
+  if (!isOpen) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      maxWidth="max-w-2xl"
-      headerCustom={headerCustom}
-      className="max-h-[90vh]"
-      bodyClassName="p-0 overflow-y-auto flex-1 flex flex-col"
-    >
-      {/* Habit List */}
-      <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-3.5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+      <div
+        className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl flex flex-col relative animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
+        {/* Header */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight">
+              Habit Directory
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {onOpenShareHabits && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenShareHabits();
+                }}
+                className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm font-bold font-mono flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs"
+                title="Commit Habits with Buddy"
+              >
+                <Handshake className="w-4 h-4 text-amber-600 dark:text-amber-400 mr-0.5" />
+                <span className="hidden sm:inline">Commit</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                onOpenNewHabit();
+              }}
+              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
+              title="Add New Habit"
+              aria-label="Add New Habit"
+            >
+              <Plus className="w-4.5 h-4.5 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* Habit List */}
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-3.5">
           {activeHabits.length === 0 ? (
             <div className="text-center py-12 text-slate-400">
               <p className="text-sm sm:text-base font-medium">No habits found.</p>
@@ -266,6 +274,7 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
             })
           )}
         </div>
-    </Modal>
+      </div>
+    </div>
   );
 };
