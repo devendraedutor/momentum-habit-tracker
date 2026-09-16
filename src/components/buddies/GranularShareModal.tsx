@@ -265,47 +265,51 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
               })}
             </div>
 
-            {/* Share Data Starting Point Selector */}
-            <div className="mt-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-750 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-                  <Clock className="w-4 h-4" />
+            {/* Share Data Starting Point Selector - Only visible when at least 1 habit is selected */}
+            {selectedHabitIds.size > 0 && (
+              <div className="mt-3 p-3 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                      Share Data From
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                      {shareScope === 'starting' ? 'Full history from creation' : 'Progress tracked from today onwards'}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                    Share Data From
-                  </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                    Applies to all selected habits
-                  </p>
-                </div>
-              </div>
 
-              <div className="flex items-center p-1 bg-slate-200/80 dark:bg-slate-900/80 rounded-xl gap-1 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShareScope('starting')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    shareScope === 'starting'
-                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  From Starting
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShareScope('today')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    shareScope === 'today'
-                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  From Today
-                </button>
+                <div className="flex items-center p-1 bg-slate-200/90 dark:bg-slate-900 rounded-xl gap-1 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShareScope('starting')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      shareScope === 'starting'
+                        ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {shareScope === 'starting' && <Check className="w-3 h-3 stroke-[3]" />}
+                    <span>From Starting</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShareScope('today')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      shareScope === 'today'
+                        ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {shareScope === 'today' && <Check className="w-3 h-3 stroke-[3]" />}
+                    <span>From Today</span>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Error Banner for Direct Flow */}
             {submitError && isDirectBuddyFlow && (
