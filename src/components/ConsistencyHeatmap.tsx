@@ -6,9 +6,10 @@ import { Activity } from 'lucide-react';
 interface ConsistencyHeatmapProps {
   habits: Habit[];
   theme?: 'dark' | 'light';
+  reflections?: Record<string, string>;
 }
 
-export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ habits, theme = 'dark' }) => {
+export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ habits, theme = 'dark', reflections }) => {
   const activeHabits = useMemo(() => habits.filter((h) => !h.archived), [habits]);
   const isDark = theme === 'dark';
 
@@ -136,19 +137,33 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ habits, 
             {weeks.map((week, weekIdx) => (
               <div key={weekIdx} className="flex flex-col gap-1">
                 {week.map((day) => {
-                  const title = `${formatDisplayDate(day.dateStr, true)}: ${day.doneCount} Done (+), ${
-                    day.missedCount
-                  } Missed (-)`;
+                  const note = reflections?.[day.dateStr];
+                  const statusSummary =
+                    day.doneCount > 0 && day.missedCount === 0
+                      ? 'Completed'
+                      : day.missedCount > 0 && day.doneCount === 0
+                      ? 'Missed'
+                      : day.doneCount > 0
+                      ? `${day.doneCount} Done, ${day.missedCount} Missed`
+                      : 'Untracked';
+
+                  const title = `${formatDisplayDate(day.dateStr, true)}\nStatus: ${statusSummary}${
+                    note ? `\n\n"${note}"` : ''
+                  }`;
 
                   return (
                     <div
                       key={day.dateStr}
                       title={title}
-                      className={`w-4 h-4 rounded-[4px] border transition-transform hover:scale-125 cursor-pointer ${getColorClass(
+                      className={`w-4 h-4 rounded-[4px] border transition-transform hover:scale-125 cursor-pointer relative ${getColorClass(
                         day.doneCount,
                         day.missedCount
                       )}`}
-                    />
+                    >
+                      {note && (
+                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-cyan-400 dark:bg-cyan-300 shadow-[0_0_4px_rgba(6,182,212,0.9)] pointer-events-none ring-1 ring-slate-900" />
+                      )}
+                    </div>
                   );
                 })}
               </div>

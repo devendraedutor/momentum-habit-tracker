@@ -35,7 +35,7 @@ const DUMMY_HABIT_NAMES = [
 /**
  * Resolves namespaced localStorage key for the given domain and active tester.
  */
-export function getStorageKey(domain: 'habits' | 'settings' | 'categories' | 'jumbo_wallet' | 'checkins', userId?: string): string {
+export function getStorageKey(domain: 'habits' | 'settings' | 'categories' | 'jumbo_wallet' | 'checkins' | 'reflections', userId?: string): string {
   const activeUser = userId || getActiveSessionUserId() || 'guest';
   return `${activeUser}__${domain}`;
 }
@@ -487,6 +487,43 @@ export function importBackupData(jsonString: string): ExportData | null {
 }
 
 /**
+ * Loads daily reflection notes from namespaced localStorage
+ */
+export function loadDailyReflectionsFromStorage(userId?: string): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const key = getStorageKey('reflections', userId);
+    let raw = localStorage.getItem(key);
+    if (!raw) {
+      const legacyRaw = localStorage.getItem('momentum_reflections_v1');
+      if (legacyRaw) {
+        raw = legacyRaw;
+        localStorage.setItem(key, legacyRaw);
+      }
+    }
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Saves daily reflection notes to namespaced localStorage
+ */
+export function saveDailyReflectionsToStorage(reflections: Record<string, string>, userId?: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const key = getStorageKey('reflections', userId);
+    localStorage.setItem(key, JSON.stringify(reflections));
+    localStorage.setItem('momentum_reflections_v1', JSON.stringify(reflections));
+  } catch (err) {
+    console.error('Failed to save daily reflections:', err);
+  }
+}
+
+/**
  * Clears all namespaced data for a specific user.
  */
 export function clearUserStorage(userId?: string): void {
@@ -497,4 +534,5 @@ export function clearUserStorage(userId?: string): void {
   localStorage.removeItem(`${activeUser}__jumbo_wallet`);
   localStorage.removeItem(`${activeUser}__categories`);
   localStorage.removeItem(`${activeUser}__checkins`);
+  localStorage.removeItem(`${activeUser}__reflections`);
 }

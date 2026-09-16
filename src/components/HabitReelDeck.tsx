@@ -25,6 +25,7 @@ import {
   Crown,
   Gem,
   Flag,
+  BookOpen,
 } from 'lucide-react';
 import { DatePickerPopover } from './DatePickerPopover';
 import confetti from 'canvas-confetti';
@@ -40,6 +41,8 @@ interface HabitReelDeckProps {
   onAscendHabit?: (habit: Habit) => void;
   jumboPointsCount?: number;
   floorAtZero?: boolean;
+  reflections?: Record<string, string>;
+  onSaveReflection?: (dateStr: string, note: string) => void;
 }
 
 interface DailySummaryHabitRowProps {
@@ -238,6 +241,92 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-bar-sheen" />
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+
+interface DailyReflectionCardProps {
+  activeDateStr: string;
+  initialNote?: string;
+  onSave?: (dateStr: string, note: string) => void;
+}
+
+const DailyReflectionCard: React.FC<DailyReflectionCardProps> = ({
+  activeDateStr,
+  initialNote = '',
+  onSave,
+}) => {
+  const [note, setNote] = useState(initialNote || '');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
+
+  // Keep note in sync with activeDateStr changes
+  React.useEffect(() => {
+    setNote(initialNote || '');
+    setSaveStatus('idle');
+  }, [activeDateStr, initialNote]);
+
+  const handleCommit = () => {
+    const trimmed = note.trim();
+    if (trimmed !== (initialNote || '').trim()) {
+      onSave?.(activeDateStr, trimmed);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2500);
+    }
+  };
+
+  return (
+    <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/90 border border-slate-200/90 dark:border-slate-700/80 relative z-10 shadow-xs dark:shadow-md dark:shadow-black/20 transition-all">
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+            <BookOpen className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-xs font-bold font-mono text-slate-800 dark:text-slate-200">
+            Daily Reflection
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 font-mono">
+          {saveStatus === 'saved' && (
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 animate-fade-in">
+              <Check className="w-3 h-3 stroke-[3]" /> Saved
+            </span>
+          )}
+          <span className={`text-[10px] ${note.length >= 190 ? 'text-amber-500 font-bold' : 'text-slate-400 dark:text-slate-500'}`}>
+            {note.length}/200
+          </span>
+        </div>
+      </div>
+
+      <textarea
+        value={note}
+        onChange={(e) => {
+          if (e.target.value.length <= 200) {
+            setNote(e.target.value);
+            setSaveStatus('idle');
+          }
+        }}
+        onBlur={handleCommit}
+        placeholder="Reflect on today: what triggered slip-ups or fueled your momentum?"
+        rows={2}
+        maxLength={200}
+        className="w-full text-xs font-sans bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 resize-none transition-all leading-relaxed"
+      />
+
+      <div className="flex items-center justify-between mt-2.5">
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 italic font-sans">
+          Visible on heatmap & chart tooltips
+        </span>
+        <button
+          type="button"
+          onClick={handleCommit}
+          className="px-3 py-1 text-[11px] font-mono font-bold rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+          title="Save Daily Reflection"
+        >
+          <Check className="w-3 h-3 stroke-[3]" />
+          <span>Save Reflection</span>
+        </button>
       </div>
     </div>
   );
@@ -616,6 +705,8 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   onAscendHabit,
   jumboPointsCount = 0,
   floorAtZero = false,
+  reflections,
+  onSaveReflection,
 }) => {
   const hasAnyHabits = useMemo(() => habits.some((h) => !h.archived), [habits]);
 
@@ -983,6 +1074,13 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Daily Reflection Section */}
+            <DailyReflectionCard
+              activeDateStr={activeDateStr}
+              initialNote={reflections?.[activeDateStr]}
+              onSave={onSaveReflection}
+            />
           </div>
         </div>
       ) : (

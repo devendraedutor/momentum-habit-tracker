@@ -37,6 +37,7 @@ interface MomentumChartProps {
   floorAtZero?: boolean;
   theme?: 'dark' | 'light';
   onSelectDate?: (dateStr: string) => void;
+  reflections?: Record<string, string>;
 }
 
 export const MomentumChart: React.FC<MomentumChartProps> = ({
@@ -47,6 +48,7 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
   floorAtZero = false,
   theme = 'dark',
   onSelectDate,
+  reflections,
 }) => {
   const chartRef = useRef<ChartJS<'line'>>(null);
   const isDark = theme === 'dark';
@@ -239,13 +241,19 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
               const idx = tooltipItems[0].dataIndex;
               const pt = rawPoints[idx];
               if (!pt) return '';
+              let changeStr = '';
               if (pt.delta > 0) {
-                return `\n🟢 Change: +${pt.delta} XP (Done)`;
+                changeStr = `\n🟢 Change: +${pt.delta} XP (Done)`;
               } else if (pt.delta < 0) {
-                return `\n🔴 Change: ${pt.delta} XP (Missed / Skipped)`;
+                changeStr = `\n🔴 Change: ${pt.delta} XP (Missed / Skipped)`;
               } else {
-                return `\n⚪ Change: 0 XP (Unlogged / Flat)`;
+                changeStr = `\n⚪ Change: 0 XP (Unlogged / Flat)`;
               }
+              const note = pt.date ? reflections?.[pt.date] : undefined;
+              if (note) {
+                changeStr += `\n📝 Note: ${note}`;
+              }
+              return changeStr;
             }
             return '';
           },
@@ -433,20 +441,24 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
             {recentDaysBreakdown.map((pt) => {
               const isGain = pt.delta > 0;
               const isDrop = pt.delta < 0;
+              const note = reflections?.[pt.date];
 
               return (
                 <button
                   key={pt.date}
                   onClick={() => onSelectDate?.(pt.date)}
-                  className={`p-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
+                  className={`p-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer relative ${
                     isGain
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'
                       : isDrop
                       ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-slate-400'
                   }`}
-                  title={`${pt.displayDate}: Total ${pt.score > 0 ? '+' : ''}${pt.score} XP (Delta: ${pt.delta > 0 ? '+' : ''}${pt.delta})`}
+                  title={`${pt.displayDate}: Total ${pt.score > 0 ? '+' : ''}${pt.score} XP (Delta: ${pt.delta > 0 ? '+' : ''}${pt.delta})${note ? `\n\n📝 Note: "${note}"` : ''}`}
                 >
+                  {note && (
+                    <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_4px_rgba(6,182,212,0.8)]" />
+                  )}
                   <span className="text-[10px] font-mono opacity-80">{pt.displayDate}</span>
                   <div className="mt-0.5 flex items-center gap-0.5 font-mono font-bold text-xs">
                     {isGain ? (

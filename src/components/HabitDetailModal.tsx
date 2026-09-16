@@ -65,6 +65,7 @@ interface HabitDetailModalProps {
   isReadOnly?: boolean;
   sharedByBuddyName?: string;
   onToggleShare?: (habitId: string, shared: boolean) => void;
+  reflections?: Record<string, string>;
 }
 
 const WEEKDAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -81,6 +82,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   isReadOnly = false,
   sharedByBuddyName,
   onToggleShare,
+  reflections,
 }) => {
   const [timeRange, setTimeRange] = useState<ChartTimeRange>('30d');
   const [historyRange, setHistoryRange] = useState<'30d' | '60d' | '90d'>('30d');
@@ -265,10 +267,15 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                   : point?.status === 'missed'
                   ? (isBreak ? '✕ Slipped (-1 XP)' : '✕ Missed (-1 XP)')
                   : '— Untracked';
-              return [
+              const lines = [
                 `Status: ${statusLabel}`,
                 `Score: ${item.formattedValue} XP`,
               ];
+              const note = point?.date ? reflections?.[point.date] : undefined;
+              if (note) {
+                lines.push(`📝 Note: ${note}`);
+              }
+              return lines;
             },
           },
         },
@@ -302,7 +309,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
         },
       },
     };
-  }, [isDark, trajectory, habit]);
+  }, [isDark, trajectory, habit, reflections]);
 
   if (!isOpen || !habit || !stats) return null;
 
@@ -623,6 +630,10 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                   cardStyle += ' ring-2 ring-cyan-500 border-cyan-500 shadow-xs';
                 }
 
+                const reflectionNote = reflections?.[d.dateStr];
+                const statusLabel = isDone ? (isBreak ? 'Controlled ✓' : 'Done ✓') : isMissed ? (isBreak ? 'Failed ✕' : 'Missed ✕') : 'Untracked';
+                const tileTitle = `${d.formatted}\nStatus: ${statusLabel}${reflectionNote ? `\n\n"${reflectionNote}"` : ''}${isReadOnly ? '' : '\n(Click to jump to date)'}`;
+
                 return (
                   <button
                     key={d.dateStr}
@@ -633,15 +644,23 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                         onClose();
                       }
                     }}
-                    className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-between min-h-[48px] sm:min-h-[52px] transition-all select-none text-center ${
+                    className={`p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-between min-h-[48px] sm:min-h-[52px] transition-all select-none text-center relative ${
                       isReadOnly ? 'cursor-default' : 'cursor-pointer hover:scale-[1.03] active:scale-95'
                     } ${cardStyle}`}
-                    title={`${d.formatted}: ${isDone ? (isBreak ? 'Controlled ✓' : 'Done ✓') : isMissed ? (isBreak ? 'Failed ✕' : 'Missed ✕') : 'Untracked'}${isReadOnly ? '' : ' (Click to jump to date)'}`}
+                    title={tileTitle}
                   >
-                    {/* Top Day / Month Tag */}
+                    {/* Top Day / Month Tag + Reflection Dot */}
                     <div className="flex items-center justify-between w-full px-0.5 text-[9px] font-mono leading-none">
                       <span className="font-bold opacity-80">{d.dayNum}</span>
-                      <span className="text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>
+                      <div className="flex items-center gap-1">
+                        {reflectionNote && (
+                          <span
+                            className="w-1.5 h-1.5 rounded-full bg-cyan-400 dark:bg-cyan-300 shadow-[0_0_5px_rgba(6,182,212,0.9)] inline-block"
+                            title={`Note: "${reflectionNote}"`}
+                          />
+                        )}
+                        <span className="text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>
+                      </div>
                     </div>
 
                     {/* Center Icon Badge */}

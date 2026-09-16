@@ -71,10 +71,20 @@ export interface UserSettings {
   theme: 'dark' | 'light';
 }
 
+export interface DailyReflection {
+  date: string; // YYYY-MM-DD
+  note: string;
+  tags?: string[];
+  updatedAt?: string;
+}
+
+export type DailyReflectionsMap = Record<string, string>;
+
 export interface ExportData {
   version: number;
   exportedAt: string;
   habits: Habit[];
   settings: UserSettings;
   jumboDates?: string[];
+  reflections?: Record<string, string>;
 }

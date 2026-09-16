@@ -55,6 +55,7 @@ interface CornerHubModalProps {
   onSelectChartHabitId: (id: string | 'all') => void;
   jumboPointsCount?: number;
   onSelectHabitProfile?: (habit: Habit) => void;
+  reflections?: Record<string, string>;
 }
 
 export const CornerHubModal: React.FC<CornerHubModalProps> = ({
@@ -79,6 +80,7 @@ export const CornerHubModal: React.FC<CornerHubModalProps> = ({
   onSelectChartHabitId,
   jumboPointsCount = 0,
   onSelectHabitProfile,
+  reflections,
 }) => {
   const [activeTab, setActiveTab] = useState<'analytics' | 'habits' | 'settings'>('analytics');
   const [importError, setImportError] = useState<string | null>(null);
@@ -268,9 +270,10 @@ export const CornerHubModal: React.FC<CornerHubModalProps> = ({
                 floorAtZero={settings.floorAtZero}
                 theme={settings.theme}
                 onSelectDate={() => onClose()}
+                reflections={reflections}
               />
 
-              {habits.length > 0 && <ConsistencyHeatmap habits={habits} theme={settings.theme} />}
+              {habits.length > 0 && <ConsistencyHeatmap habits={habits} theme={settings.theme} reflections={reflections} />}
             </div>
           )}
 

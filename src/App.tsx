@@ -7,6 +7,8 @@ import {
   saveSettingsToStorage,
   loadJumboDatesFromStorage,
   saveJumboDatesToStorage,
+  loadDailyReflectionsFromStorage,
+  saveDailyReflectionsToStorage,
   reconcileJumboDate,
   recalculateAllJumboPoints,
   getHistoricalPendingBacklog,
@@ -38,7 +40,11 @@ import { HabitLaunchCelebration } from './components/HabitLaunchCelebration';
 import { BuddyHubModal } from './components/buddies/BuddyHubModal';
 import { GranularShareModal } from './components/buddies/GranularShareModal';
 import { PartnershipDetailsModal } from './components/buddies/PartnershipDetailsModal';
-import { syncHabitProgressToSharedHabits } from './lib/firestoreService';
+import {
+  syncHabitProgressToSharedHabits,
+  saveDailyReflection,
+  subscribeToDailyReflections,
+} from './lib/firestoreService';
 import type { BuddyMemberSummary, SharedHabitRecord } from './types/buddy';
 import { Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -57,6 +63,9 @@ export function App() {
   );
   const [jumboDates, setJumboDates] = useState<string[]>(() =>
     loadJumboDatesFromStorage(activeTester?.id)
+  );
+  const [reflections, setReflections] = useState<Record<string, string>>(() =>
+    loadDailyReflectionsFromStorage(activeTester?.id)
   );
 
   // Active logging date (defaults to today, switchable for testing multi-day histories)
@@ -233,6 +242,43 @@ export function App() {
       saveJumboDatesToStorage(jumboDates, activeTester.id);
     }
   }, [jumboDates, activeTester]);
+
+  // Save reflections to namespaced localStorage
+  useEffect(() => {
+    if (activeTester) {
+      saveDailyReflectionsToStorage(reflections, activeTester.id);
+    }
+  }, [reflections, activeTester]);
+
+  // Real-time Cloud Synchronization for Daily Reflections
+  useEffect(() => {
+    if (!firebaseUser?.uid) return;
+    const unsub = subscribeToDailyReflections(firebaseUser.uid, (cloudReflections) => {
+      setReflections((prev) => {
+        const merged = { ...prev, ...cloudReflections };
+        saveDailyReflectionsToStorage(merged, activeTester?.id);
+        return merged;
+      });
+    });
+    return () => {
+      unsub?.();
+    };
+  }, [firebaseUser?.uid, activeTester?.id]);
+
+  // Handle saving a daily reflection note
+  const handleSaveReflection = useCallback(
+    (dateKey: string, note: string) => {
+      setReflections((prev) => {
+        const next = { ...prev, [dateKey]: note };
+        saveDailyReflectionsToStorage(next, activeTester?.id);
+        return next;
+      });
+      if (firebaseUser?.uid) {
+        saveDailyReflection(firebaseUser.uid, dateKey, note);
+      }
+    },
+    [firebaseUser?.uid, activeTester?.id]
+  );
 
   // Sync active detail habit if updated
   useEffect(() => {
@@ -752,6 +798,8 @@ export function App() {
           onAscendHabit={openAscendModal}
           jumboPointsCount={jumboDates.length}
           floorAtZero={settings.floorAtZero}
+          reflections={reflections}
+          onSaveReflection={handleSaveReflection}
         />
       </main>
 
@@ -852,6 +900,7 @@ export function App() {
         activeDateStr={activeDateStr}
         floorAtZero={settings.floorAtZero}
         theme={settings.theme}
+        reflections={reflections}
       />
 
       {/* Partner Shared Habit Detail View (Read-Only Analytics) */}
@@ -863,6 +912,7 @@ export function App() {
         sharedByBuddyName={inspectingSharedHabit?.ownerName}
         floorAtZero={settings.floorAtZero}
         theme={settings.theme}
+        reflections={reflections}
       />
 
       {/* Ascension Ceremony Modal (Level Up Achievement) */}
