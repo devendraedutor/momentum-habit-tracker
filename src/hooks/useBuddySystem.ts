@@ -212,6 +212,14 @@ export function useBuddySystem({ user }: UseBuddySystemProps) {
   const unfriend = useCallback(
     async (friendshipId: string, partnerUid: string) => {
       if (!user) return;
+      // Optimistically update local friendships state for instant feedback
+      setFriendships((prev) =>
+        prev.filter(
+          (f) =>
+            f.id !== friendshipId &&
+            !(f.members || []).includes(partnerUid)
+        )
+      );
       await unfriendBuddy(friendshipId, user.uid, partnerUid);
     },
     [user]

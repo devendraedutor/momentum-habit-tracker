@@ -71,13 +71,24 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 10 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className="relative z-10 w-[92vw] max-w-5xl h-[88vh] max-h-[920px] mx-auto p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col"
+        className="relative z-10 w-[92vw] max-w-5xl h-[88vh] max-h-[920px] mx-auto p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
       >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close Vault"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
         {/* Ambient Top Glow */}
         <div className="absolute -top-24 -left-24 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -top-24 -right-24 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* 1. TOP ROW: PURE IDENTITY + CLOSE BUTTON */}
+        {/* 1. TOP ROW: PURE IDENTITY */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 relative z-10 flex-shrink-0">
           {/* Left: Jumbo Vault Identity */}
           <div className="flex items-center gap-3">
@@ -94,16 +105,6 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
               </span>
             </div>
           </div>
-
-          {/* Right: Clean Close Tag */}
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-            title="Close Vault"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* ═════════════════════════════════════════════════════════════════ */}

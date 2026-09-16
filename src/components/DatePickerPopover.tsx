@@ -108,32 +108,36 @@ export const DatePickerPopover: React.FC<DatePickerPopoverProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div
-        className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-2xl relative overflow-hidden"
+        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl relative animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
         {/* Ambient Top Glow */}
         <div className="absolute -top-16 -right-16 w-36 h-36 rounded-full blur-2xl pointer-events-none opacity-20 bg-cyan-500" />
 
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-3 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30">
-              <CalendarIcon className="w-4 h-4" />
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-3.5 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 flex items-center justify-center">
+              <CalendarIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white font-mono">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white font-mono tracking-tight">
                 Jump to Date
               </h3>
-              <p className="text-[10px] text-slate-400">Select any day to view or log habits</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Select any day to view or log habits</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
 
         {/* Month Navigation */}

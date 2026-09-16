@@ -30,20 +30,22 @@ export const JumboUnlockModal: React.FC<JumboUnlockModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in">
       <div
-        className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 border border-amber-500/30 shadow-2xl relative overflow-hidden text-center animate-scale-in"
+        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-amber-500/30 shadow-2xl relative text-center animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Ambient Top Radiant Glow */}
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-20 bg-amber-400" />
-
-        {/* Close Button */}
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer z-20"
+          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4 h-4 stroke-[2.5]" />
         </button>
+
+        {/* Ambient Top Radiant Glow */}
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-3xl pointer-events-none opacity-20 bg-amber-400" />
 
         {/* Diamond Icon */}
         <div className="relative z-10 flex flex-col items-center mt-1">
@@ -87,10 +89,10 @@ export const JumboUnlockModal: React.FC<JumboUnlockModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2.5 sm:py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider font-mono shadow-md shadow-amber-500/20 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+            className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider font-mono shadow-md shadow-amber-500/20 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
           >
             <span>Got it!</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>

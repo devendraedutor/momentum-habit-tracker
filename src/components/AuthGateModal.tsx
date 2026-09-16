@@ -83,7 +83,7 @@ export const AuthGateModal: React.FC<AuthGateModalProps> = ({ isOpen, onSuccess 
       <div className="absolute w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none -bottom-20 -left-20 animate-pulse" />
 
       <div
-        className={`w-full max-w-sm sm:max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl p-5 sm:p-8 relative overflow-hidden max-h-[92vh] overflow-y-auto transition-all duration-300 ${
+        className={`w-full max-w-md sm:max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl p-6 sm:p-8 relative overflow-hidden max-h-[92vh] overflow-y-auto transition-all duration-300 ${
           isUnlocking ? 'scale-105 opacity-90' : 'scale-100 opacity-100'
         }`}
       >

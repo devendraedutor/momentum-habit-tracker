@@ -716,7 +716,7 @@ export function App() {
       />
 
       {/* Main Reel Card Deck Showcase */}
-      <main className="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-start items-center py-3 sm:py-6 px-2 sm:px-4">
+      <main className="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-start items-center py-3 sm:py-6 px-2 sm:px-4 relative z-10">
         <HabitReelDeck
           habits={habits}
           activeDateStr={activeDateStr}
@@ -752,6 +752,12 @@ export function App() {
           setSelectedBuddyForDetails(b);
         }}
         onUnfriendBuddy={unfriendBuddy}
+        pendingInvites={notifications.filter(
+          (n) => n.type === 'buddy_invite' && n.status === 'pending'
+        )}
+        onAcceptInvite={handleAcceptInvite}
+        onDeclineInvite={handleDeclineInvite}
+        isNotificationActionLoading={isNotificationActionLoading}
       />
 
       {/* Granular Habit Sharing Wizard Modal */}
@@ -760,12 +766,20 @@ export function App() {
         onClose={() => {
           setIsGranularShareModalOpen(false);
           setPreselectedBuddyUid(null);
+          clearBuddySearch();
         }}
         habits={habits}
         buddies={buddies}
         preselectedBuddyUid={preselectedBuddyUid}
         onShareConfirmed={handleShareConfirmed}
         onOpenBuddyHub={() => setIsBuddyHubOpen(true)}
+        onSearchBuddy={searchBuddy}
+        onSendInvite={sendBuddyInvite}
+        isSearching={isBuddySearching}
+        searchResult={buddySearchResult}
+        searchError={buddySearchError}
+        isInviteSending={isInviteSending}
+        onClearSearch={clearBuddySearch}
       />
 
       {/* Partnership Details View Modal (Tabs for Received vs Sent & Live Nudge) */}

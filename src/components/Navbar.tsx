@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [isUserMenuOpen]);
 
   return (
-    <header className="sticky top-0 z-30 backdrop-blur-2xl bg-white/90 dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-750 transition-colors duration-300">
+    <header className="sticky top-0 z-40 backdrop-blur-2xl bg-white/90 dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-750 transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Logo & Brand */}
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
@@ -222,31 +222,26 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Clean Dropdown Popover */}
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 shadow-xl border border-slate-100 dark:border-slate-800 p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                   <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
                     <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                      {user.displayName || 'User'}
+                      {user.displayName || user.email?.split('@')[0] || 'User'}
                     </p>
-                    <p className="text-xs text-slate-400 font-mono truncate">
-                      {user.email}
-                    </p>
-                    {syncState && (
-                      <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1 capitalize flex items-center gap-1">
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            syncState === 'syncing'
-                              ? 'bg-amber-400 animate-pulse'
-                              : syncState === 'error'
-                              ? 'bg-rose-500'
-                              : 'bg-emerald-500'
-                          }`}
-                        />
-                        Sync: {syncState}
-                      </p>
-                    )}
                   </div>
 
-                  <div className="pt-1">
+                  <div className="p-1 space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        onOpenSettings();
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition cursor-pointer"
+                    >
+                      <Settings className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                      <span>Settings & Preferences</span>
+                    </button>
+
                     {onLogoutGoogle && (
                       <button
                         type="button"
@@ -254,7 +249,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           setIsUserMenuOpen(false);
                           onLogoutGoogle();
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition cursor-pointer"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>

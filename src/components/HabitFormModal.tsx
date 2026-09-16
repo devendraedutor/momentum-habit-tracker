@@ -224,69 +224,71 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
   const slideAnimationClass = stepDirection === 'forward' ? 'animate-slide-right' : 'animate-slide-left';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
       <div
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-in relative"
+        className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col relative animate-scale-in max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          title="Close"
+          aria-label="Close modal"
+        >
+          <X className="w-4 h-4 stroke-[2.5]" />
+        </button>
+
         {/* 1. Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
           {/* Top Left: Back Button on Step 2 */}
           <div className="w-16">
             {currentStep > 1 && (
               <button
                 type="button"
                 onClick={() => goToStep(1)}
-                className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer py-1 px-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-mono"
+                className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
                 <span>Back</span>
               </button>
             )}
           </div>
 
           {/* Center Title */}
-          <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono tracking-tight text-center">
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight text-center">
             {initialHabit ? 'Edit Habit' : 'Create New Habit'}
           </h2>
 
-          {/* Top Right: Close Button */}
-          <div className="w-16 flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <div className="w-16" />
         </div>
 
         {/* 2. Step Content Container */}
-        <div className="p-5 sm:p-6 overflow-y-auto max-h-[68vh] min-h-[350px] flex flex-col justify-between">
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 flex flex-col justify-between">
           <div key={currentStep} className={slideAnimationClass}>
             {/* ================= STEP 1: Identity, Name & Start Date ================= */}
             {currentStep === 1 && (
               <div className="space-y-4">
                 {/* Habit Goal Paradigm: Build vs Break */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 font-mono">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     Habit Goal Paradigm <span className="text-emerald-500">*</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 relative">
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 relative">
                     <button
                       type="button"
                       onClick={() => {
                         setHabitType('BUILD');
                         if (icon === 'ShieldAlert') setIcon('Flame');
                       }}
-                      className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 cursor-pointer font-mono ${
+                      className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 cursor-pointer ${
                         habitType === 'BUILD'
-                          ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/25 scale-[1.02]'
+                          ? 'bg-emerald-500 text-slate-950 shadow-sm shadow-emerald-500/25 font-bold'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
                       }`}
                     >
-                      <Sprout className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
+                      <Sprout className="w-4 h-4" />
                       <span>Build Habit</span>
                     </button>
 
@@ -296,13 +298,13 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                         setHabitType('BREAK');
                         if (icon === 'Flame') setIcon('ShieldAlert');
                       }}
-                      className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 active:scale-95 cursor-pointer font-mono ${
+                      className={`py-2.5 px-3 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 cursor-pointer ${
                         habitType === 'BREAK'
-                          ? 'bg-rose-500 text-white shadow-md shadow-rose-500/25 scale-[1.02]'
+                          ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/25 font-bold'
                           : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
                       }`}
                     >
-                      <ShieldAlert className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
+                      <ShieldAlert className="w-4 h-4" />
                       <span>Break Habit</span>
                     </button>
                   </div>
@@ -310,7 +312,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
 
                 {/* Habit Name Input */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 font-mono">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     Habit Name <span className="text-emerald-500">*</span>
                   </label>
                   <input
@@ -326,17 +328,17 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                     }}
                     placeholder={
                       habitType === 'BREAK'
-                        ? 'e.g. Stop doomscrolling, No sugar, Quit vaping...'
-                        : 'e.g. Morning Walk, Read 20 Pages, Meditation...'
+                        ? 'e.g. Stop doomscrolling, No sugar...'
+                        : 'e.g. Morning Walk, Read 20 Pages...'
                     }
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white placeholder-slate-400 text-sm sm:text-base font-semibold transition-all shadow-2xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white placeholder-slate-400 text-sm font-semibold transition-all shadow-2xs"
                     required
                   />
                 </div>
 
-                {/* Start Tracking From Date Picker (Moved to Step 1 per user request) */}
+                {/* Start Tracking From Date Picker */}
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 font-mono">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-cyan-500" />
                       <span>Start Tracking From</span>
@@ -353,13 +355,13 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                         const today = getTodayString();
                         setStartDate(val > today ? today : val);
                       }}
-                      className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white text-xs sm:text-sm font-mono font-bold transition-all shadow-2xs"
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-900 dark:text-white text-xs sm:text-sm font-semibold transition-all shadow-2xs"
                     />
                     {startDate !== getTodayString() && (
                       <button
                         type="button"
                         onClick={() => setStartDate(getTodayString())}
-                        className="px-4 py-2.5 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 text-xs font-bold font-mono transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 shadow-2xs"
+                        className="px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer flex items-center gap-1"
                       >
                         Today
                       </button>
@@ -372,7 +374,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowDescription(!showDescription)}
-                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 font-semibold flex items-center gap-1.5 transition-colors cursor-pointer py-1 select-none active:scale-95"
+                    className="text-xs text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 font-semibold flex items-center gap-1 transition-colors cursor-pointer select-none active:scale-95"
                   >
                     {showDescription ? (
                       <>
@@ -394,7 +396,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Why is this habit important to you? What is your trigger or anchor routine?"
                         rows={2}
-                        className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white placeholder-slate-400 text-xs transition-all resize-none shadow-2xs"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white placeholder-slate-400 text-xs sm:text-sm transition-all resize-none shadow-2xs"
                       />
                     </div>
                   )}
@@ -404,35 +406,35 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
 
             {/* ================= STEP 2: Visual Identity & Category ================= */}
             {currentStep === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 {/* Category Selector */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                       Category
                     </label>
                     <button
                       type="button"
                       onClick={() => setIsAddingCategory(true)}
-                      className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-bold flex items-center gap-1 font-mono cursor-pointer active:scale-95 transition-transform"
+                      className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-bold flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add Category
                     </button>
                   </div>
 
                   {isAddingCategory && (
-                    <div className="flex items-center gap-2 mb-2 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-fade-in">
+                    <div className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 animate-fade-in">
                       <input
                         type="text"
                         value={newCatInput}
                         onChange={(e) => setNewCatInput(e.target.value)}
                         placeholder="Category name..."
-                        className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
+                        className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={handleAddCategory}
-                        className="px-3 py-1.5 bg-emerald-500 text-slate-950 text-xs font-bold rounded-xl active:scale-95 cursor-pointer"
+                        className="px-3 py-1.5 bg-emerald-500 text-slate-950 text-xs font-bold rounded-lg active:scale-95 cursor-pointer"
                       >
                         Save
                       </button>
@@ -446,12 +448,12 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                     </div>
                   )}
 
-                  <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto">
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                     {categories.map((cat) => (
                       <div
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border flex items-center gap-1.5 transition-all duration-200 hover:scale-105 active:scale-95 select-none ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border flex items-center gap-1.5 transition-all duration-200 active:scale-95 select-none ${
                           selectedCategory === cat
                             ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-xs font-bold'
                             : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
@@ -473,23 +475,23 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                 </div>
 
                 {/* Accent Color & Icon Picker Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   {/* Colors */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         Accent Color
                       </label>
                     </div>
-                    <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750">
+                    <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750">
                       {PRESET_COLORS.map((c) => (
                         <button
                           key={c.hex}
                           type="button"
                           onClick={() => setColor(c.hex)}
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs hover:scale-110 active:scale-90 mx-auto ${
+                          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer shadow-xs hover:scale-105 active:scale-90 mx-auto ${
                             color === c.hex
-                              ? 'scale-110 ring-2 ring-slate-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-md'
+                              ? 'scale-105 ring-2 ring-slate-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900 shadow-md'
                               : ''
                           }`}
                           style={{ backgroundColor: c.hex }}
@@ -504,24 +506,24 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   {/* Icons */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         Icon
                       </label>
                     </div>
-                    <div className="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750">
+                    <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-750">
                       {AVAILABLE_ICONS.map((item) => (
                         <button
                           key={item.name}
                           type="button"
                           onClick={() => setIcon(item.name)}
-                          className={`p-2 rounded-xl border flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-110 active:scale-90 ${
+                          className={`p-2.5 rounded-xl border flex items-center justify-center transition-all duration-200 cursor-pointer hover:scale-105 active:scale-90 ${
                             icon === item.name
                               ? 'bg-emerald-500/20 border-emerald-500 text-emerald-600 dark:text-emerald-400 scale-105 shadow-xs font-bold'
                               : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                           }`}
                           title={item.label}
                         >
-                          <DynamicIcon name={item.name} className="w-4 h-4" />
+                          <DynamicIcon name={item.name} className="w-4.5 h-4.5" />
                         </button>
                       ))}
                     </div>
@@ -532,12 +534,12 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
           </div>
 
           {/* 3. Footer Navigation & Step Actions */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 mt-4">
+          <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 mt-4">
             {currentStep === 1 ? (
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer font-mono"
+                className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer"
               >
                 Cancel
               </button>
@@ -545,9 +547,9 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
               <button
                 type="button"
                 onClick={() => goToStep(1)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-all active:scale-95 cursor-pointer font-mono"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
                 <span>Back</span>
               </button>
             )}
@@ -561,14 +563,14 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                 disabled={!name.trim()}
                 aria-label="Next Step"
                 title="Next"
-                className={`py-3 px-5 rounded-2xl font-bold text-xs font-mono flex items-center justify-center gap-2 transition-all duration-200 shadow-md ${
+                className={`py-2.5 px-5 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all duration-200 shadow-sm ${
                   name.trim()
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 shadow-emerald-500/20 hover:scale-105 active:scale-95 cursor-pointer'
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-slate-950 shadow-emerald-500/20 active:scale-95 cursor-pointer font-bold'
                     : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                 }`}
               >
                 <span>Next</span>
-                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             )}
 
@@ -578,7 +580,7 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                   <button
                     type="button"
                     onClick={handleSaveAsNew}
-                    className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold font-mono transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+                    className="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                   >
                     Save as New
                   </button>
@@ -586,14 +588,11 @@ export const HabitFormModal: React.FC<HabitFormModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleFinalSubmit()}
-                  className="py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-sm font-mono shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer group relative overflow-hidden"
+                  className="py-2.5 px-5 sm:px-6 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/25 flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                 >
-                  {/* Sheen highlight animation */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-bar-sheen pointer-events-none" />
-                  
-                  <Sparkles className="w-4 h-4 fill-slate-950 text-slate-950 transition-transform group-hover:rotate-12" />
-                  <span className="tracking-wide">{initialHabit ? 'Save Changes' : 'Launch Habit'}</span>
-                  <ArrowRight className="w-4 h-4 stroke-[3] group-hover:translate-x-1 transition-transform" />
+                  <Sparkles className="w-3.5 h-3.5 fill-slate-950 text-slate-950" />
+                  <span>{initialHabit ? 'Save Changes' : 'Launch Habit'}</span>
+                  <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
                 </button>
               </div>
             )}

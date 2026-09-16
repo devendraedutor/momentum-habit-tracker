@@ -548,69 +548,100 @@ export async function unfriendBuddy(
   if (!db || !currentUserUid || !partnerUid) return false;
 
   try {
-    // 1. Delete friendship document
+    // 1. Delete friendship document by ID
     if (friendshipId && !friendshipId.startsWith('friendship_invite_')) {
       try {
         const friendDocRef = doc(db, COLLECTION_FRIENDSHIPS, friendshipId);
         await deleteDoc(friendDocRef);
-      } catch (e) {}
-    } else {
+      } catch (e) {
+        console.warn('[Buddy] Could not delete direct friendship doc:', e);
+      }
+    }
+
+    // Also query and delete any friendship matching both members
+    try {
       const friendshipsRef = collection(db, COLLECTION_FRIENDSHIPS);
       const q = query(friendshipsRef, where('members', 'array-contains', currentUserUid));
       const snap = await getDocs(q);
       for (const d of snap.docs) {
         if ((d.data().members || []).includes(partnerUid)) {
-          await deleteDoc(d.ref);
+          try {
+            await deleteDoc(d.ref);
+          } catch (e) {}
         }
       }
+    } catch (e) {
+      console.warn('[Buddy] Error deleting member friendships:', e);
     }
 
-    // 2. Mark buddy_invites between them as declined/archived
+    // 2. Delete or mark buddy_invites between them as revoked
     try {
       const invitesRef = collection(db, COLLECTION_INVITES);
       const qInv1 = query(invitesRef, where('fromUid', '==', currentUserUid), where('toUid', '==', partnerUid));
       const snapInv1 = await getDocs(qInv1);
       for (const d of snapInv1.docs) {
-        await deleteDoc(d.ref);
+        try {
+          await deleteDoc(d.ref);
+        } catch (e) {
+          try {
+            await updateDoc(d.ref, { status: 'revoked' });
+          } catch (e2) {}
+        }
       }
 
       const qInv2 = query(invitesRef, where('fromUid', '==', partnerUid), where('toUid', '==', currentUserUid));
       const snapInv2 = await getDocs(qInv2);
       for (const d of snapInv2.docs) {
-        await deleteDoc(d.ref);
+        try {
+          await deleteDoc(d.ref);
+        } catch (e) {
+          try {
+            await updateDoc(d.ref, { status: 'revoked' });
+          } catch (e2) {}
+        }
       }
-    } catch (e) {}
-
-    // 3. Delete all shared habits sent to or received from partner
-    const sharedHabitsRef = collection(db, COLLECTION_SHARED_HABITS);
-
-    // Habits I shared with partner
-    const q1 = query(
-      sharedHabitsRef,
-      where('ownerUid', '==', currentUserUid),
-      where('targetBuddyUid', '==', partnerUid)
-    );
-    const snap1 = await getDocs(q1);
-    for (const d of snap1.docs) {
-      await deleteDoc(d.ref);
+    } catch (e) {
+      console.warn('[Buddy] Error deleting invites:', e);
     }
 
-    // Habits partner shared with me
-    const q2 = query(
-      sharedHabitsRef,
-      where('ownerUid', '==', partnerUid),
-      where('targetBuddyUid', '==', currentUserUid)
-    );
-    const snap2 = await getDocs(q2);
-    for (const d of snap2.docs) {
-      await deleteDoc(d.ref);
+    // 3. Delete all shared habits sent to or received from partner
+    try {
+      const sharedHabitsRef = collection(db, COLLECTION_SHARED_HABITS);
+
+      // Habits I shared with partner
+      const q1 = query(
+        sharedHabitsRef,
+        where('ownerUid', '==', currentUserUid),
+        where('targetBuddyUid', '==', partnerUid)
+      );
+      const snap1 = await getDocs(q1);
+      for (const d of snap1.docs) {
+        try {
+          await deleteDoc(d.ref);
+        } catch (e) {}
+      }
+
+      // Habits partner shared with me (safely attempt deletion)
+      const q2 = query(
+        sharedHabitsRef,
+        where('ownerUid', '==', partnerUid),
+        where('targetBuddyUid', '==', currentUserUid)
+      );
+      const snap2 = await getDocs(q2);
+      for (const d of snap2.docs) {
+        try {
+          await deleteDoc(d.ref);
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.warn('[Buddy] Error deleting shared habits:', e);
     }
 
     console.log('✅ [Buddy] Unfriended & wiped shared habits with:', partnerUid);
     return true;
   } catch (error) {
     console.error('[Buddy] Error unfriending buddy:', error);
-    throw error;
+    return false;
   }
 }
 
@@ -626,12 +657,13 @@ export function subscribeToFriendships(
 
   try {
     const friendshipsMap = new Map<string, Friendship>();
-    const invitesAcceptedMap = new Map<string, Friendship>();
+    const sentAcceptedMap = new Map<string, Friendship>();
+    const receivedAcceptedMap = new Map<string, Friendship>();
 
-    const emitMerged = async () => {
+    const emitMerged = () => {
       const merged = new Map<string, Friendship>();
 
-      // 1. Friendships documents
+      // 1. Primary source: Friendships collection
       for (const [id, f] of friendshipsMap.entries()) {
         const partnerUid = (f.members || []).find((m) => m !== currentUserUid) || '';
         if (partnerUid) {
@@ -641,24 +673,17 @@ export function subscribeToFriendships(
         }
       }
 
-      // 2. Accepted Invites (fill in if missing from friendships)
-      for (const [partnerUid, f] of invitesAcceptedMap.entries()) {
+      // 2. Sent Accepted Invites (fill in if missing from friendships)
+      for (const [partnerUid, f] of sentAcceptedMap.entries()) {
         if (!merged.has(partnerUid)) {
           merged.set(partnerUid, f);
+        }
+      }
 
-          // Auto-backfill friendship document in background
-          try {
-            const friendshipsRef = collection(db, COLLECTION_FRIENDSHIPS);
-            addDoc(
-              friendshipsRef,
-              sanitizeForFirestore({
-                members: f.members,
-                memberDetails: f.memberDetails,
-                status: 'active',
-                createdAt: f.createdAt,
-              })
-            ).catch(() => {});
-          } catch (e) {}
+      // 3. Received Accepted Invites (fill in if missing from friendships)
+      for (const [partnerUid, f] of receivedAcceptedMap.entries()) {
+        if (!merged.has(partnerUid)) {
+          merged.set(partnerUid, f);
         }
       }
 
@@ -705,7 +730,7 @@ export function subscribeToFriendships(
             createdAt: data.createdAt || new Date().toISOString(),
           });
         }
-        await emitMerged();
+        emitMerged();
       },
       (error) => {
         console.warn('[Buddy] Error listening to friendships:', error);
@@ -722,6 +747,7 @@ export function subscribeToFriendships(
     const unsub2 = onSnapshot(
       q2,
       async (snapshot) => {
+        sentAcceptedMap.clear();
         for (const docSnap of snapshot.docs) {
           const d = docSnap.data();
           const partnerUid = d.toUid;
@@ -739,7 +765,7 @@ export function subscribeToFriendships(
               }
             } catch (e) {}
 
-            invitesAcceptedMap.set(partnerUid, {
+            sentAcceptedMap.set(partnerUid, {
               id: `friendship_invite_${docSnap.id}`,
               members: [currentUserUid, partnerUid],
               memberDetails: {
@@ -758,7 +784,7 @@ export function subscribeToFriendships(
             });
           }
         }
-        await emitMerged();
+        emitMerged();
       },
       (e) => console.warn('[Buddy] Error listening to sent accepted invites:', e)
     );
@@ -772,11 +798,12 @@ export function subscribeToFriendships(
     const unsub3 = onSnapshot(
       q3,
       async (snapshot) => {
+        receivedAcceptedMap.clear();
         for (const docSnap of snapshot.docs) {
           const d = docSnap.data();
           const partnerUid = d.fromUid;
           if (partnerUid) {
-            invitesAcceptedMap.set(partnerUid, {
+            receivedAcceptedMap.set(partnerUid, {
               id: `friendship_invite_${docSnap.id}`,
               members: [currentUserUid, partnerUid],
               memberDetails: {
@@ -795,7 +822,7 @@ export function subscribeToFriendships(
             });
           }
         }
-        await emitMerged();
+        emitMerged();
       },
       (e) => console.warn('[Buddy] Error listening to received accepted invites:', e)
     );

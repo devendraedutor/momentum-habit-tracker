@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import { AnimatePresence, useAnimate } from 'framer-motion';
+import { X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getLevelMeta } from '../config/ascensionMeta';
 import { DynamicIcon } from './DynamicIcon';
@@ -183,8 +184,18 @@ export const AscensionCeremonyModal: React.FC<AscensionCeremonyModalProps> = ({
           {/* 3. REVEALED CELEBRATION CARD (Pre-rendered in DOM, emerges on pop) */}
           <div
             id="celebration-card"
-            className="absolute z-10 w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-4 opacity-0 overflow-hidden"
+            className="absolute z-10 w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl border border-slate-100 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-4 opacity-0"
           >
+            {/* Floating Mac-style Close Button on Top-Right Corner */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute -top-3 -right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+              title="Close"
+              aria-label="Close"
+            >
+              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+            </button>
             {/* Atmospheric Ambient Glow */}
             <div
               className="absolute -top-16 inset-x-0 h-32 rounded-full blur-3xl opacity-25 pointer-events-none mx-auto w-3/4"
