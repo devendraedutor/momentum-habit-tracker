@@ -1204,19 +1204,31 @@ export function subscribeToAllSharedHabitsForUser(
     const qIn = query(sharedHabitsRef, where('targetBuddyUid', '==', currentUserUid));
     const qOut = query(sharedHabitsRef, where('ownerUid', '==', currentUserUid));
 
-    const unsubIn = onSnapshot(qIn, (snap) => {
-      incomingList = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SharedHabitRecord));
-      onUpdate({ incoming: incomingList, outgoing: outgoingList });
-    });
+    const unsubIn = onSnapshot(
+      qIn,
+      (snap) => {
+        incomingList = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SharedHabitRecord));
+        onUpdate({ incoming: incomingList, outgoing: outgoingList });
+      },
+      (error) => {
+        console.warn('[SharedHabits] Error listening to incoming shared habits:', error);
+      }
+    );
 
-    const unsubOut = onSnapshot(qOut, (snap) => {
-      outgoingList = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SharedHabitRecord));
-      onUpdate({ incoming: incomingList, outgoing: outgoingList });
-    });
+    const unsubOut = onSnapshot(
+      qOut,
+      (snap) => {
+        outgoingList = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SharedHabitRecord));
+        onUpdate({ incoming: incomingList, outgoing: outgoingList });
+      },
+      (error) => {
+        console.warn('[SharedHabits] Error listening to outgoing shared habits:', error);
+      }
+    );
 
     return () => {
-      unsubIn();
-      unsubOut();
+      if (unsubIn) unsubIn();
+      if (unsubOut) unsubOut();
     };
   } catch (error) {
     console.warn('[SharedHabits] Error subscribing to all shared habits:', error);

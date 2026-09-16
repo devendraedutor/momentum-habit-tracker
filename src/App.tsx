@@ -38,6 +38,7 @@ import { HabitLaunchCelebration } from './components/HabitLaunchCelebration';
 import { BuddyHubModal } from './components/buddies/BuddyHubModal';
 import { GranularShareModal } from './components/buddies/GranularShareModal';
 import { PartnershipDetailsModal } from './components/buddies/PartnershipDetailsModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import {
   syncHabitProgressToSharedHabits,
   saveHabitLogNote,
@@ -787,174 +788,177 @@ export function App() {
         />
       </main>
 
-      {/* Multi-Buddy Hub Modal */}
-      <BuddyHubModal
-        isOpen={isBuddyHubOpen}
-        onClose={() => setIsBuddyHubOpen(false)}
-        buddies={buddies}
-        onSearchBuddy={searchBuddy}
-        onSendInvite={sendBuddyInvite}
-        isSearching={isBuddySearching}
-        searchResult={buddySearchResult}
-        searchError={buddySearchError}
-        isInviteSending={isInviteSending}
-        onClearSearch={clearBuddySearch}
-        onOpenShareWizard={() => {
-          setIsBuddyHubOpen(false);
-          handleOpenShareWizard();
-        }}
-        onSelectBuddy={(b) => {
-          setIsBuddyHubOpen(false);
-          setSelectedBuddyForDetails(b);
-        }}
-        onUnfriendBuddy={unfriendBuddy}
-        pendingInvites={notifications.filter(
-          (n) => n.type === 'buddy_invite' && n.status === 'pending'
-        )}
-        onAcceptInvite={handleAcceptInvite}
-        onDeclineInvite={handleDeclineInvite}
-        isNotificationActionLoading={isNotificationActionLoading}
-      />
-
-      {/* Granular Habit Sharing Wizard Modal */}
-      <GranularShareModal
-        isOpen={isGranularShareModalOpen}
-        onClose={() => {
-          setIsGranularShareModalOpen(false);
-          setPreselectedBuddyUid(null);
-          clearBuddySearch();
-        }}
-        habits={habits}
-        buddies={buddies}
-        preselectedBuddyUid={preselectedBuddyUid}
-        onShareConfirmed={handleShareConfirmed}
-        onOpenBuddyHub={() => setIsBuddyHubOpen(true)}
-        onSearchBuddy={searchBuddy}
-        onSendInvite={sendBuddyInvite}
-        isSearching={isBuddySearching}
-        searchResult={buddySearchResult}
-        searchError={buddySearchError}
-        isInviteSending={isInviteSending}
-        onClearSearch={clearBuddySearch}
-      />
-
-      {/* Partnership Details View Modal (Tabs for Received vs Sent & Live Nudge) */}
-      <PartnershipDetailsModal
-        isOpen={!!selectedBuddyForDetails}
-        onClose={() => setSelectedBuddyForDetails(null)}
-        currentUserUid={firebaseUser?.uid || ''}
-        buddy={selectedBuddyForDetails}
-        nudgeCooldownRemaining={
-          selectedBuddyForDetails ? nudgeCooldowns[selectedBuddyForDetails.uid] || 0 : 0
-        }
-        onNudge={nudgeBuddy}
-        onUnfriend={unfriendBuddy}
-        onRevokeHabit={revokeHabit}
-        onOpenShareWizardForBuddy={(bUid) => {
-          setSelectedBuddyForDetails(null);
-          handleOpenShareWizard(bUid);
-        }}
-        onInspectSharedHabit={(record) => {
-          setInspectingSharedHabit(record);
-        }}
-      />
-
-      {/* Habit Create / Edit Modal (Mounts fresh instance with today's date) */}
-      {isHabitFormOpen && (
-        <HabitFormModal
-          key={editingHabit ? `edit-${editingHabit.id}` : 'new-habit-form'}
-          isOpen={isHabitFormOpen}
-          onClose={closeHabitForm}
-          onSave={handleSaveHabit}
-          initialHabit={editingHabit}
-          defaultStartDate={getTodayString()}
+      {/* Modal Dialogs Wrapped in Error Boundary */}
+      <ErrorBoundary fallbackTitle="Unable to display dialog">
+        {/* Multi-Buddy Hub Modal */}
+        <BuddyHubModal
+          isOpen={isBuddyHubOpen}
+          onClose={() => setIsBuddyHubOpen(false)}
+          buddies={buddies}
+          onSearchBuddy={searchBuddy}
+          onSendInvite={sendBuddyInvite}
+          isSearching={isBuddySearching}
+          searchResult={buddySearchResult}
+          searchError={buddySearchError}
+          isInviteSending={isInviteSending}
+          onClearSearch={clearBuddySearch}
+          onOpenShareWizard={() => {
+            setIsBuddyHubOpen(false);
+            handleOpenShareWizard();
+          }}
+          onSelectBuddy={(b) => {
+            setIsBuddyHubOpen(false);
+            setSelectedBuddyForDetails(b);
+          }}
+          onUnfriendBuddy={unfriendBuddy}
+          pendingInvites={notifications.filter(
+            (n) => n.type === 'buddy_invite' && n.status === 'pending'
+          )}
+          onAcceptInvite={handleAcceptInvite}
+          onDeclineInvite={handleDeclineInvite}
+          isNotificationActionLoading={isNotificationActionLoading}
         />
-      )}
 
-      {/* Single Habit Detail View (Own Habit) */}
-      <HabitDetailModal
-        habit={selectedDetailHabit}
-        isOpen={isDetailModalOpen}
-        onClose={closeDetailModal}
-        onCheckInDate={(hId, dStr, st) => handleCheckIn(hId, st, dStr)}
-        onSelectDate={handleSelectDate}
-        onEdit={openHabitForm}
-        onArchive={handleArchiveHabit}
-        onDelete={handleDeleteHabit}
-        activeDateStr={activeDateStr}
-        floorAtZero={settings.floorAtZero}
-        theme={settings.theme}
-      />
+        {/* Granular Habit Sharing Wizard Modal */}
+        <GranularShareModal
+          isOpen={isGranularShareModalOpen}
+          onClose={() => {
+            setIsGranularShareModalOpen(false);
+            setPreselectedBuddyUid(null);
+            clearBuddySearch();
+          }}
+          habits={habits}
+          buddies={buddies}
+          preselectedBuddyUid={preselectedBuddyUid}
+          onShareConfirmed={handleShareConfirmed}
+          onOpenBuddyHub={() => setIsBuddyHubOpen(true)}
+          onSearchBuddy={searchBuddy}
+          onSendInvite={sendBuddyInvite}
+          isSearching={isBuddySearching}
+          searchResult={buddySearchResult}
+          searchError={buddySearchError}
+          isInviteSending={isInviteSending}
+          onClearSearch={clearBuddySearch}
+        />
 
-      {/* Partner Shared Habit Detail View (Read-Only Analytics) */}
-      <HabitDetailModal
-        habit={inspectingHabitAsHabit}
-        isOpen={!!inspectingHabitAsHabit}
-        onClose={() => setInspectingSharedHabit(null)}
-        isReadOnly={true}
-        sharedByBuddyName={inspectingSharedHabit?.ownerName}
-        floorAtZero={settings.floorAtZero}
-        theme={settings.theme}
-      />
+        {/* Partnership Details View Modal (Tabs for Received vs Sent & Live Nudge) */}
+        <PartnershipDetailsModal
+          isOpen={!!selectedBuddyForDetails}
+          onClose={() => setSelectedBuddyForDetails(null)}
+          currentUserUid={firebaseUser?.uid || ''}
+          buddy={selectedBuddyForDetails}
+          nudgeCooldownRemaining={
+            selectedBuddyForDetails ? nudgeCooldowns[selectedBuddyForDetails.uid] || 0 : 0
+          }
+          onNudge={nudgeBuddy}
+          onUnfriend={unfriendBuddy}
+          onRevokeHabit={revokeHabit}
+          onOpenShareWizardForBuddy={(bUid) => {
+            setSelectedBuddyForDetails(null);
+            handleOpenShareWizard(bUid);
+          }}
+          onInspectSharedHabit={(record) => {
+            setInspectingSharedHabit(record);
+          }}
+        />
 
-      {/* Ascension Ceremony Modal (Level Up Achievement) */}
-      <AscensionCeremonyModal
-        habit={ascendHabit}
-        level={ascendLevel}
-        isOpen={!!ascendHabit}
-        onClose={closeAscendModal}
-      />
+        {/* Habit Create / Edit Modal (Mounts fresh instance with today's date) */}
+        {isHabitFormOpen && (
+          <HabitFormModal
+            key={editingHabit ? `edit-${editingHabit.id}` : 'new-habit-form'}
+            isOpen={isHabitFormOpen}
+            onClose={closeHabitForm}
+            onSave={handleSaveHabit}
+            initialHabit={editingHabit}
+            defaultStartDate={getTodayString()}
+          />
+        )}
 
-      {/* Gamified Jumbo Points 3-Habit Unlock Ceremony Modal */}
-      <JumboUnlockModal
-        isOpen={isJumboUnlockModalOpen}
-        onClose={closeJumboUnlockModal}
-        activeHabitsCount={habits.filter((h) => !h.archived).length}
-      />
+        {/* Single Habit Detail View (Own Habit) */}
+        <HabitDetailModal
+          habit={selectedDetailHabit}
+          isOpen={isDetailModalOpen}
+          onClose={closeDetailModal}
+          onCheckInDate={(hId, dStr, st) => handleCheckIn(hId, st, dStr)}
+          onSelectDate={handleSelectDate}
+          onEdit={openHabitForm}
+          onArchive={handleArchiveHabit}
+          onDelete={handleDeleteHabit}
+          activeDateStr={activeDateStr}
+          floorAtZero={settings.floorAtZero}
+          theme={settings.theme}
+        />
 
-      {/* Gamified Jumbo Points Vault & Analytics Modal */}
-      <JumboPointsVaultModal
-        isOpen={isJumboVaultOpen}
-        onClose={() => setIsJumboVaultOpen(false)}
-        habits={habits}
-        jumboDates={jumboDates}
-        onSelectDate={(dateStr) => {
-          setActiveDateStr(dateStr);
-          setIsJumboVaultOpen(false);
-        }}
-      />
+        {/* Partner Shared Habit Detail View (Read-Only Analytics) */}
+        <HabitDetailModal
+          habit={inspectingHabitAsHabit}
+          isOpen={!!inspectingHabitAsHabit}
+          onClose={() => setInspectingSharedHabit(null)}
+          isReadOnly={true}
+          sharedByBuddyName={inspectingSharedHabit?.ownerName}
+          floorAtZero={settings.floorAtZero}
+          theme={settings.theme}
+        />
 
-      {/* Dedicated Habit Directory & Management Modal (No Settings / Analytics clutter) */}
-      <HabitDirectoryModal
-        isOpen={isDirectoryOpen}
-        onClose={closeDirectory}
-        habits={habits}
-        onOpenNewHabit={handleOpenNewHabitFromDirectory}
-        onEditHabit={handleEditHabitFromDirectory}
-        onDeleteHabit={handleDeleteHabit}
-        onSelectHabitProfile={handleSelectHabitFromDirectory}
-        onOpenShareHabits={() => {
-          closeDirectory();
-          handleOpenShareWizard();
-        }}
-        floorAtZero={settings.floorAtZero}
-      />
+        {/* Ascension Ceremony Modal (Level Up Achievement) */}
+        <AscensionCeremonyModal
+          habit={ascendHabit}
+          level={ascendLevel}
+          isOpen={!!ascendHabit}
+          onClose={closeAscendModal}
+        />
 
-      {/* System Settings, Backups & Data Erasure Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={closeSettings}
-        habits={habits}
-        settings={settings}
-        tester={activeTester}
-        onLogout={handleLogout}
-        jumboDates={jumboDates}
-        onUpdateSettings={setSettings}
-        onRestoreHabits={setHabits}
-        onRestoreJumboDates={setJumboDates}
-        onClearHistoryOnly={handleClearHistoryOnly}
-        onFactoryReset={handleFactoryReset}
-      />
+        {/* Gamified Jumbo Points 3-Habit Unlock Ceremony Modal */}
+        <JumboUnlockModal
+          isOpen={isJumboUnlockModalOpen}
+          onClose={closeJumboUnlockModal}
+          activeHabitsCount={habits.filter((h) => !h.archived).length}
+        />
+
+        {/* Gamified Jumbo Points Vault & Analytics Modal */}
+        <JumboPointsVaultModal
+          isOpen={isJumboVaultOpen}
+          onClose={() => setIsJumboVaultOpen(false)}
+          habits={habits}
+          jumboDates={jumboDates}
+          onSelectDate={(dateStr) => {
+            setActiveDateStr(dateStr);
+            setIsJumboVaultOpen(false);
+          }}
+        />
+
+        {/* Dedicated Habit Directory & Management Modal (No Settings / Analytics clutter) */}
+        <HabitDirectoryModal
+          isOpen={isDirectoryOpen}
+          onClose={closeDirectory}
+          habits={habits}
+          onOpenNewHabit={handleOpenNewHabitFromDirectory}
+          onEditHabit={handleEditHabitFromDirectory}
+          onDeleteHabit={handleDeleteHabit}
+          onSelectHabitProfile={handleSelectHabitFromDirectory}
+          onOpenShareHabits={() => {
+            closeDirectory();
+            handleOpenShareWizard();
+          }}
+          floorAtZero={settings.floorAtZero}
+        />
+
+        {/* System Settings, Backups & Data Erasure Modal */}
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={closeSettings}
+          habits={habits}
+          settings={settings}
+          tester={activeTester}
+          onLogout={handleLogout}
+          jumboDates={jumboDates}
+          onUpdateSettings={setSettings}
+          onRestoreHabits={setHabits}
+          onRestoreJumboDates={setJumboDates}
+          onClearHistoryOnly={handleClearHistoryOnly}
+          onFactoryReset={handleFactoryReset}
+        />
+      </ErrorBoundary>
 
       {/* Distinct Habit Launch Shockwave & Energy Burst Celebration */}
       {habitCreatedCelebration && (

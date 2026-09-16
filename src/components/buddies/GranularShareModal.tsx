@@ -214,13 +214,19 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                 </div>
               ) : (
                 activeHabits.map((h) => {
-                  const isSelected = selectedHabitIds.has(h.id);
-                  const tier = getTierByLevel(h.currentLevel || 0);
+                  const habitId = h?.id || '';
+                  const isSelected = selectedHabitIds.has(habitId);
+                  const tier = getTierByLevel(h?.currentLevel || 0);
+                  const habitName = h?.name || (h as any)?.title || 'Untitled Habit';
+                  const habitCategory = h?.category || 'General';
+                  const habitColor = h?.color || '#10b981';
+                  const habitIcon = h?.icon || 'Sparkles';
+                  const streakCount = (h as any)?.currentStreak ?? (h?.overallStreak ?? 0);
 
                   return (
                     <div
-                      key={h.id}
-                      onClick={() => toggleHabit(h.id)}
+                      key={habitId}
+                      onClick={() => toggleHabit(habitId)}
                       className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                         isSelected
                           ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-600 shadow-xs'
@@ -243,33 +249,33 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                         <div
                           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-xs"
                           style={{
-                            backgroundColor: `${h.color}20`,
-                            color: h.color,
-                            border: `1px solid ${h.color}40`,
+                            backgroundColor: `${habitColor}20`,
+                            color: habitColor,
+                            border: `1px solid ${habitColor}40`,
                           }}
                         >
-                          <DynamicIcon name={h.icon} className="w-4.5 h-4.5" />
+                          <DynamicIcon name={habitIcon} className="w-4.5 h-4.5" />
                         </div>
 
                         {/* Name & Badges */}
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                            {h.name}
+                            {habitName}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                              {h.category}
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium capitalize">
+                              {habitCategory}
                             </span>
                             {tier && (
                               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
                                 <Crown className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
-                                <span>{h.currentLevel || 0}</span>
+                                <span>{h?.currentLevel || 0}</span>
                               </span>
                             )}
-                            {(h.overallStreak || 0) > 0 && (
+                            {streakCount > 0 && (
                               <span className="text-[10px] font-mono font-bold text-amber-500 flex items-center gap-0.5">
                                 <Flame className="w-2.5 h-2.5 fill-amber-500" />
-                                {h.overallStreak}d
+                                {streakCount}d
                               </span>
                             )}
                           </div>
@@ -385,7 +391,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                     <>
                       <Users className="w-8 h-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
                       <p className="text-sm font-bold text-slate-700 dark:text-slate-200 font-sans">
-                        No habit buddies yet
+                        No habit buddies yet. Add a buddy first!
                       </p>
                       <button
                         type="button"
