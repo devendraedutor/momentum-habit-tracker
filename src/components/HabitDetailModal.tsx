@@ -367,16 +367,6 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                   {isBreak ? <ShieldAlert className="w-3.5 h-3.5" /> : <Sprout className="w-3.5 h-3.5" />}
                   <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
                 </span>
-                {stats.achievedLevel > 0 && (
-                  <span className="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold font-mono flex items-center gap-1 shadow-xs">
-                    <Crown className="w-3.5 h-3.5 fill-amber-500" />
-                    <span>Level {stats.achievedLevel} Mastered</span>
-                  </span>
-                )}
-                <span className="text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-bold font-mono flex items-center gap-1 shadow-xs">
-                  <Target className="w-3.5 h-3.5 text-cyan-500" />
-                  <span>Sprint: Lv.{activeTier.level} ({activeTier.name})</span>
-                </span>
               </div>
             </div>
           </div>
@@ -405,9 +395,6 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Shared by {sharedByBuddyName || 'Partner'} • Live Analytics</span>
             </div>
-            <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-              Read-Only
-            </span>
           </div>
         ) : onToggleShare ? (
           <div className="px-4 sm:px-5 py-2 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
