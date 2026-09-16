@@ -179,7 +179,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
 
         <div className="flex items-baseline gap-0.5 justify-end font-mono">
           <span
-            className={`font-black text-sm sm:text-base tracking-tight transition-all duration-300 inline-block ${
+            className={`font-medium text-sm sm:text-base tracking-tight transition-all duration-300 inline-block ${
               isDone
                 ? 'text-slate-900 dark:text-slate-100'
                 : 'text-slate-400 dark:text-slate-500'
@@ -193,7 +193,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
           >
             {isDone ? animatedStreak : 0}
           </span>
-          <span className="text-xs sm:text-sm font-semibold text-slate-400 dark:text-slate-500">
+          <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-slate-500">
             /{targetDays} D
           </span>
         </div>
@@ -830,7 +830,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
           <button
             type="button"
             onClick={() => setIsDatePickerOpen(true)}
-            className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 font-mono whitespace-nowrap transition-colors cursor-pointer group"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-normal text-slate-700 dark:text-slate-200 font-mono whitespace-nowrap transition-colors cursor-pointer group"
             title="Click to jump to any date"
           >
             <Calendar className="w-4 h-4 text-cyan-500 flex-shrink-0 group-hover:scale-110 transition-transform" />
@@ -934,7 +934,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                       <div className="text-3xl font-black font-mono text-emerald-500 dark:text-emerald-400 leading-none">
                         {completedCount}/{totalHabitsCount}
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mt-1">
+                      <span className="text-[9px] font-normal uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mt-1">
                         ALL DONE
                       </span>
                     </>
@@ -945,7 +945,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                         <span className="text-slate-400 dark:text-slate-500 text-xl font-normal">/</span>
                         <span className="text-slate-400 dark:text-slate-500">{totalHabitsCount}</span>
                       </div>
-                      <span className="text-[9px] font-bold font-mono text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+                      <span className="text-[9px] font-normal font-mono text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
                         {percent}% DONE
                       </span>
                     </>
@@ -954,11 +954,11 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
               </div>
 
               {isPerfectDay && totalHabitsCount >= 3 && (
-                <div className="mt-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-black font-mono flex items-center gap-2 shadow-xs animate-bounce">
+                <div className="mt-2.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border border-amber-400/30 text-amber-900 dark:text-amber-300 text-xs font-normal font-mono flex items-center gap-2 shadow-xs animate-bounce">
                   <Gem className="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <span>+1 Jumbo Point Credited</span>
+                  <span className="font-normal">+1 Jumbo Point Credited</span>
                   <span className="w-1 h-1 rounded-full bg-amber-400/60" />
-                  <span className="text-amber-700 dark:text-amber-300 font-bold">Total: {jumboPointsCount}</span>
+                  <span className="text-amber-700 dark:text-amber-300 font-normal">Total: {jumboPointsCount}</span>
                 </div>
               )}
             </div>
