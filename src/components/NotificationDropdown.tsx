@@ -147,30 +147,37 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                       <UserCheck className="w-2.5 h-2.5" />
                     </span>
                   )}
-                  {item.type === 'buddy_checkin' && (
-                    <span
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center shadow-xs ${
-                        item.checkInStatus === 'Controlled'
-                          ? 'bg-cyan-500'
-                          : item.checkInStatus === 'Missed'
-                          ? 'bg-rose-500'
-                          : item.checkInStatus === 'Failed'
-                          ? 'bg-amber-500'
-                          : 'bg-emerald-500'
-                      }`}
-                      title={`Status: ${item.checkInStatus || 'Done'}`}
-                    >
-                      {item.checkInStatus === 'Controlled' ? (
-                        <Shield className="w-2.5 h-2.5 fill-white" />
-                      ) : item.checkInStatus === 'Missed' ? (
-                        <X className="w-2.5 h-2.5 stroke-[3]" />
-                      ) : item.checkInStatus === 'Failed' ? (
-                        <AlertTriangle className="w-2.5 h-2.5 fill-white" />
-                      ) : (
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      )}
-                    </span>
-                  )}
+                  {item.type === 'buddy_checkin' && (() => {
+                    const st = (item.checkInStatus || '').toLowerCase();
+                    const isControlled = st === 'controlled';
+                    const isMissed = st === 'missed';
+                    const isFailed = st === 'failed';
+
+                    return (
+                      <span
+                        className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center shadow-xs ${
+                          isControlled
+                            ? 'bg-cyan-500'
+                            : isMissed
+                            ? 'bg-rose-500'
+                            : isFailed
+                            ? 'bg-amber-500'
+                            : 'bg-emerald-500'
+                        }`}
+                        title={`Status: ${item.checkInStatus || 'Done'}`}
+                      >
+                        {isControlled ? (
+                          <Shield className="w-2.5 h-2.5 fill-white" />
+                        ) : isMissed ? (
+                          <X className="w-2.5 h-2.5 stroke-[3]" />
+                        ) : isFailed ? (
+                          <AlertTriangle className="w-2.5 h-2.5 fill-white" />
+                        ) : (
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        )}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Message Body */}

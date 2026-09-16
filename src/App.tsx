@@ -447,19 +447,26 @@ export function App() {
           return updatedJumboDates;
         });
 
-        // Real-time Cloud Sync for Granular Shared Habits & Real-time Buddy Notification
-        if (firebaseUser) {
-          const updatedHabit = nextHabits.find((h) => h.id === habitId);
-          if (updatedHabit) {
-            syncHabitProgressToSharedHabits(firebaseUser, updatedHabit, {
-              status,
-              dateStr: activeDateStr,
-            });
-          }
-        }
-
         return nextHabits;
       });
+
+      // Real-time Cloud Sync for Granular Shared Habits & Real-time Buddy Notification (Outside state updater)
+      if (firebaseUser) {
+        const targetHabit = habits.find((h) => h.id === habitId);
+        if (targetHabit) {
+          const updatedHabitForSync = {
+            ...targetHabit,
+            history: {
+              ...targetHabit.history,
+              [activeDateStr]: status,
+            },
+          };
+          syncHabitProgressToSharedHabits(firebaseUser, updatedHabitForSync, {
+            status,
+            dateStr: activeDateStr,
+          });
+        }
+      }
 
       if (levelUpInfo) {
         openAscendModal(
@@ -480,7 +487,7 @@ export function App() {
         });
       }
     },
-    [activeDateStr, settings, openAscendModal, firebaseUser]
+    [habits, activeDateStr, settings, openAscendModal, firebaseUser]
   );
 
   // Batch commit multiple modifications at once
@@ -529,22 +536,29 @@ export function App() {
           return updatedJumboDates;
         });
 
-        // Real-time Cloud Sync for Granular Shared Habits & Real-time Buddy Notification
-        if (firebaseUser) {
-          for (const h of nextHabits) {
-            if (updates[h.id]) {
-              syncHabitProgressToSharedHabits(firebaseUser, h, {
-                status: updates[h.id],
-                dateStr,
-              });
-            }
-          }
-        }
-
         return nextHabits;
       });
+
+      // Real-time Cloud Sync for Granular Shared Habits & Real-time Buddy Notification (Outside state updater)
+      if (firebaseUser) {
+        for (const h of habits) {
+          if (updates[h.id]) {
+            const updatedH = {
+              ...h,
+              history: {
+                ...h.history,
+                [dateStr]: updates[h.id],
+              },
+            };
+            syncHabitProgressToSharedHabits(firebaseUser, updatedH, {
+              status: updates[h.id],
+              dateStr,
+            });
+          }
+        }
+      }
     },
-    [firebaseUser]
+    [habits, firebaseUser]
   );
 
   // Granular Reset Options:

@@ -957,6 +957,8 @@ export async function syncHabitProgressToSharedHabits(
     const ownerEmail = typeof owner === 'object' && owner.email ? owner.email : '';
     const ownerPhoto = typeof owner === 'object' && owner.photoURL ? owner.photoURL : '';
 
+    const targetBuddyUids = new Set<string>();
+
     for (const d of snap.docs) {
       batch.update(d.ref, {
         habitTitle: habit.name,
@@ -970,68 +972,74 @@ export async function syncHabitProgressToSharedHabits(
         updatedAt: timestamp,
       });
 
-      // Send real-time check-in notification to the accountability buddy
-      if (checkInEvent && checkInEvent.status && checkInEvent.status !== 'none') {
-        const sharedData = d.data() as SharedHabitRecord;
-        const targetBuddyUid = sharedData.targetBuddyUid;
+      const sharedData = d.data() as SharedHabitRecord;
+      if (sharedData.targetBuddyUid && sharedData.targetBuddyUid !== ownerUid) {
+        targetBuddyUids.add(sharedData.targetBuddyUid);
+      }
+    }
 
-        if (targetBuddyUid && targetBuddyUid !== ownerUid) {
-          const buddyNotifsRef = collection(
-            db,
-            COLLECTION_USERS,
-            targetBuddyUid,
-            SUBCOLLECTION_NOTIFICATIONS
-          );
-          const newNotifRef = doc(buddyNotifsRef);
+    // Send real-time check-in notification to each unique accountability buddy
+    if (checkInEvent && checkInEvent.status && checkInEvent.status !== 'none') {
+      const rawStatus = checkInEvent.status.toLowerCase();
+      const isBreak = habit.type === 'BREAK';
 
-          const rawStatus = checkInEvent.status.toLowerCase();
-          const isBreak = habit.type === 'BREAK';
+      let displayStatus: 'Done' | 'Missed' | 'Controlled' | 'Failed' = 'Done';
+      let title = `✅ ${habit.name}: Done`;
+      let message = `${ownerName} completed "${habit.name}" today!`;
 
-          let displayStatus: 'Done' | 'Missed' | 'Controlled' | 'Failed' = 'Done';
-          let title = `✅ ${habit.name}: Done`;
-          let message = `${ownerName} completed "${habit.name}" today!`;
-
-          if (isBreak) {
-            if (rawStatus === 'done' || rawStatus === 'controlled') {
-              displayStatus = 'Controlled';
-              title = `🛡️ ${habit.name}: Controlled`;
-              message = `${ownerName} successfully controlled "${habit.name}" today!`;
-            } else {
-              displayStatus = 'Failed';
-              title = `⚠️ ${habit.name}: Failed`;
-              message = `${ownerName} slipped on "${habit.name}" today.`;
-            }
-          } else {
-            if (rawStatus === 'done') {
-              displayStatus = 'Done';
-              title = `✅ ${habit.name}: Done`;
-              message = `${ownerName} completed "${habit.name}" today!`;
-            } else {
-              displayStatus = 'Missed';
-              title = `❌ ${habit.name}: Missed`;
-              message = `${ownerName} missed "${habit.name}" today.`;
-            }
-          }
-
-          const notifPayload: AppNotification = {
-            id: newNotifRef.id,
-            type: 'buddy_checkin',
-            title,
-            message,
-            senderUid: ownerUid,
-            senderName: ownerName,
-            senderEmail: ownerEmail,
-            senderPhoto: ownerPhoto,
-            habitId: habit.id,
-            habitName: habit.name,
-            checkInStatus: displayStatus,
-            status: 'actioned',
-            read: false,
-            createdAt: timestamp,
-          };
-
-          batch.set(newNotifRef, sanitizeForFirestore(notifPayload));
+      if (isBreak) {
+        if (rawStatus === 'done' || rawStatus === 'controlled') {
+          displayStatus = 'Controlled';
+          title = `🛡️ ${habit.name}: Controlled`;
+          message = `${ownerName} successfully controlled "${habit.name}" today!`;
+        } else {
+          displayStatus = 'Failed';
+          title = `⚠️ ${habit.name}: Failed`;
+          message = `${ownerName} slipped on "${habit.name}" today.`;
         }
+      } else {
+        if (rawStatus === 'done') {
+          displayStatus = 'Done';
+          title = `✅ ${habit.name}: Done`;
+          message = `${ownerName} completed "${habit.name}" today!`;
+        } else {
+          displayStatus = 'Missed';
+          title = `❌ ${habit.name}: Missed`;
+          message = `${ownerName} missed "${habit.name}" today.`;
+        }
+      }
+
+      const targetDateStr = checkInEvent.dateStr || todayStr;
+
+      for (const targetBuddyUid of targetBuddyUids) {
+        // Deterministic document ID per habit, owner, target date ensures idempotency and zero duplicate rows
+        const notifDocId = `checkin_${habit.id}_${ownerUid}_${targetDateStr}`;
+        const notifDocRef = doc(
+          db,
+          COLLECTION_USERS,
+          targetBuddyUid,
+          SUBCOLLECTION_NOTIFICATIONS,
+          notifDocId
+        );
+
+        const notifPayload: AppNotification = {
+          id: notifDocId,
+          type: 'buddy_checkin',
+          title,
+          message,
+          senderUid: ownerUid,
+          senderName: ownerName,
+          senderEmail: ownerEmail,
+          senderPhoto: ownerPhoto,
+          habitId: habit.id,
+          habitName: habit.name,
+          checkInStatus: displayStatus,
+          status: 'actioned',
+          read: false,
+          createdAt: timestamp,
+        };
+
+        batch.set(notifDocRef, sanitizeForFirestore(notifPayload), { merge: true });
       }
     }
     await batch.commit();
