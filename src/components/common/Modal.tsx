@@ -84,28 +84,24 @@ export const Modal: React.FC<ModalProps> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
           onClick={closeOnBackdropClick ? onClose : undefined}
-          className="fixed inset-0 z-50 bg-slate-950/45 dark:bg-black/60 backdrop-blur-[3px] flex items-center justify-center p-4 selection:bg-emerald-500/20"
+          className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 selection:bg-emerald-500/20 animate-fade-in"
         >
           <motion.div
             key="modal-card"
-            initial={{ opacity: 0, scale: 0.96, y: 6 }}
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 4 }}
-            transition={{
-              type: 'spring',
-              damping: 26,
-              stiffness: 340,
-              mass: 0.8,
-            }}
+            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ duration: 0.18 }}
             onClick={(e) => e.stopPropagation()}
-            className={`relative w-full ${maxWidth} bg-white dark:bg-slate-900 rounded-[24px] shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col overflow-visible ${className}`}
+            className={`relative w-full ${maxWidth} bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-750 flex flex-col overflow-visible ${className}`}
           >
             {/* Signature Floating Mac-Style Close Button */}
             {!hideCloseButton && (
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute -top-3.5 -right-3.5 w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition-transform hover:scale-105 active:scale-95 z-20 cursor-pointer"
+                className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-750 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 z-30 cursor-pointer"
+                title="Close"
                 aria-label="Close"
               >
                 <X className="w-4 h-4 stroke-[2.5]" />
