@@ -59,7 +59,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
   isInviteSending = false,
   onClearSearch,
 }) => {
-  const activeHabits = habits.filter((h) => !h.archived);
+  const activeHabits = (habits || []).filter((h) => h && !h.archived);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedHabitIds, setSelectedHabitIds] = useState<Set<string>>(new Set());
@@ -80,7 +80,6 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
       setShowSearchForm(false);
       setShareScope('starting');
       onClearSearch?.();
-      // All habits and buddies deselected by default
       setSelectedHabitIds(new Set());
 
       if (preselectedBuddyUid) {
@@ -89,7 +88,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
         setSelectedBuddyUids(new Set());
       }
     }
-  }, [isOpen, activeHabits.length, buddies.length, preselectedBuddyUid]);
+  }, [isOpen, activeHabits.length, (buddies || []).length, preselectedBuddyUid]);
 
   if (!isOpen) return null;
 
@@ -146,12 +145,12 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
       if (success) {
         onClose();
       } else {
-        setSubmitError('Unable to share habits. Please check your network or Firestore rules.');
+        setSubmitError('Unable to share habits. Please check your network connection.');
       }
     } catch (err: any) {
       console.error('[GranularShare] Error submitting habits:', err);
       if (err?.code === 'permission-denied') {
-        setSubmitError('Firestore permission denied. Please ensure your Firestore Security Rules allow writes to the shared_habits collection.');
+        setSubmitError('Firestore permission denied. Please verify your Firestore rules.');
       } else {
         setSubmitError(err?.message || 'Error sharing habits. Please try again.');
       }
@@ -168,10 +167,10 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in selection:bg-emerald-500/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in selection:bg-emerald-500/20">
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-750 relative z-10 flex flex-col max-h-[85vh] animate-scale-in"
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-750 relative z-10 flex flex-col max-h-[88vh] animate-scale-in"
       >
         {/* Floating Mac-style Close Button on Top-Right Corner */}
         <button
@@ -184,21 +183,21 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
           <X className="w-4 h-4 stroke-[2.5]" />
         </button>
 
-        {/* Header: Dynamic Icon & Title for Step 1 (Select Habits) / Step 2 (Select Buddies) */}
-        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-              {step === 1 ? <ListChecks className="w-4.5 h-4.5" /> : <Users className="w-4.5 h-4.5" />}
+        {/* Header */}
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+              {step === 1 ? <ListChecks className="w-5 h-5" /> : <Users className="w-5 h-5" />}
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
                 {step === 1 ? 'Select Habits' : 'Select Buddies'}
               </h2>
-              <p className="text-[11px] text-slate-400 font-mono">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {step === 1
                   ? isDirectBuddyFlow
                     ? 'Choose habits to commit with partner'
-                    : 'Step 1 of 2: Pick habits to share'
+                    : 'Step 1 of 2: Pick habits to commit'
                   : 'Step 2 of 2: Pick accountability partners'}
               </p>
             </div>
@@ -208,9 +207,9 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
         {/* STEP 1: Select Habits */}
         {step === 1 && (
           <div className="flex-1 flex flex-col min-h-0 pt-3">
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 my-1 max-h-[50vh]">
+            <div className="flex-1 overflow-y-auto space-y-2.5 pr-1.5 my-1 max-h-[48vh]">
               {activeHabits.length === 0 ? (
-                <div className="text-center py-10 text-slate-400">
+                <div className="text-center py-12 text-slate-400">
                   <p className="text-sm font-medium">No active habits available to share.</p>
                 </div>
               ) : (
@@ -222,13 +221,13 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                     <div
                       key={h.id}
                       onClick={() => toggleHabit(h.id)}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                         isSelected
-                          ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/80 shadow-xs'
-                          : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/80'
+                          ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-600 shadow-xs'
+                          : 'bg-slate-50/80 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         {/* Checkbox */}
                         <div className="flex-shrink-0">
                           {isSelected ? (
@@ -249,26 +248,26 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                             border: `1px solid ${h.color}40`,
                           }}
                         >
-                          <DynamicIcon name={h.icon} className="w-4 h-4" />
+                          <DynamicIcon name={h.icon} className="w-4.5 h-4.5" />
                         </div>
 
                         {/* Name & Badges */}
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                             {h.name}
                           </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[11px] text-slate-400 font-medium">
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                               {h.category}
                             </span>
                             {tier && (
-                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-1">
                                 <Crown className="w-2.5 h-2.5 fill-amber-400 text-amber-500" />
                                 <span>{h.currentLevel || 0}</span>
                               </span>
                             )}
                             {(h.overallStreak || 0) > 0 && (
-                              <span className="text-[10px] font-mono font-semibold text-amber-500 flex items-center gap-0.5">
+                              <span className="text-[10px] font-mono font-bold text-amber-500 flex items-center gap-0.5">
                                 <Flame className="w-2.5 h-2.5 fill-amber-500" />
                                 {h.overallStreak}d
                               </span>
@@ -282,9 +281,9 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
               )}
             </div>
 
-            {/* Share Data Starting Point Selector - Only visible when at least 1 habit is selected */}
+            {/* Share Data Starting Point Selector */}
             {selectedHabitIds.size > 0 && (
-              <div className="mt-3 p-3 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-scale-in">
+              <div className="mt-3 p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-scale-in">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
                     <Clock className="w-4 h-4" />
@@ -294,7 +293,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                       Share Data From
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                      {shareScope === 'starting' ? 'Full history from creation' : 'Progress tracked from today onwards'}
+                      {shareScope === 'starting' ? 'Full history from beginning' : 'Tracked from today onward'}
                     </p>
                   </div>
                 </div>
@@ -305,8 +304,8 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                     onClick={() => setShareScope('starting')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       shareScope === 'starting'
-                        ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {shareScope === 'starting' && <Check className="w-3 h-3 stroke-[3]" />}
@@ -317,8 +316,8 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                     onClick={() => setShareScope('today')}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       shareScope === 'today'
-                        ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/50 dark:hover:bg-slate-700'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {shareScope === 'today' && <Check className="w-3 h-3 stroke-[3]" />}
@@ -337,8 +336,8 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
             )}
 
             {/* Footer Step 1: Selected Count + Next/Commit Button */}
-            <div className="pt-3.5 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-              <span className="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">
+            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+              <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">
                 {selectedHabitIds.size === 0
                   ? 'Select habits to commit'
                   : `${selectedHabitIds.size} habit${selectedHabitIds.size > 1 ? 's' : ''} selected`}
@@ -349,7 +348,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting || selectedHabitIds.size === 0}
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
@@ -365,10 +364,10 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   type="button"
                   onClick={() => setStep(2)}
                   disabled={selectedHabitIds.size === 0}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   title="Next: Select Buddies"
                 >
-                  <span>Next</span>
+                  <span>Next: Choose Buddies</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               )}
@@ -379,9 +378,9 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
         {/* STEP 2: Select Buddies */}
         {step === 2 && (
           <div className="flex-1 flex flex-col min-h-0 pt-3">
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 my-1 max-h-[50vh]">
-              {buddies.length === 0 ? (
-                <div className="p-6 sm:p-8 rounded-3xl bg-slate-50/40 dark:bg-slate-800/20 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center space-y-3.5 my-auto">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1.5 my-1 max-h-[48vh]">
+              {(buddies || []).length === 0 ? (
+                <div className="p-6 sm:p-8 rounded-3xl bg-slate-50/60 dark:bg-slate-800/20 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center space-y-3.5 my-auto">
                   {!showSearchForm ? (
                     <>
                       <Users className="w-8 h-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
@@ -526,16 +525,16 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   )}
                 </div>
               ) : (
-                buddies.map((buddy) => {
+                (buddies || []).map((buddy) => {
                   const isSelected = selectedBuddyUids.has(buddy.uid);
 
                   return (
                     <div
                       key={buddy.uid}
                       onClick={() => toggleBuddy(buddy.uid)}
-                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 select-none ${
                         isSelected
-                          ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/80 shadow-xs'
+                          ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-600 shadow-xs'
                           : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100/80'
                       }`}
                     >
@@ -560,13 +559,13 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-sm flex items-center justify-center font-mono flex-shrink-0">
-                            {buddy.displayName.charAt(0).toUpperCase()}
+                            {(buddy.displayName || 'B').charAt(0).toUpperCase()}
                           </div>
                         )}
 
-                        {/* Name Only (No email) */}
+                        {/* Name Only */}
                         <p className="text-sm font-bold text-slate-900 dark:text-white truncate flex-1">
-                          {buddy.displayName}
+                          {buddy.displayName || 'Flux Buddy'}
                         </p>
                       </div>
                     </div>
@@ -584,13 +583,13 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
             )}
 
             {/* Footer Step 2: Back button + Live Yellowish Commit Button */}
-            <div className="pt-3.5 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-750 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-750 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
               </button>
 
@@ -598,14 +597,14 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting || selectedBuddyUids.size === 0}
-                className="px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <Handshake className="w-4 h-4" />
-                    <span>Commit</span>
+                    <span>Commit ({selectedBuddyUids.size})</span>
                   </>
                 )}
               </button>

@@ -80,9 +80,10 @@ export const PartnershipDetailsModal: React.FC<PartnershipDetailsModalProps> = (
 
   if (!isOpen || !buddy) return null;
 
-  const buddyFirstName = buddy.displayName?.trim()
-    ? buddy.displayName.trim().split(' ')[0] || buddy.displayName.trim()
-    : '';
+  const buddyDisplayName = buddy?.displayName || '';
+  const buddyFirstName = typeof buddyDisplayName === 'string' && buddyDisplayName.trim()
+    ? buddyDisplayName.trim().split(' ')[0] || buddyDisplayName.trim()
+    : 'Buddy';
   const firstName = buddyFirstName || 'Buddy';
 
   const formatCooldown = (seconds: number) => {
