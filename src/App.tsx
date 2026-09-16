@@ -937,7 +937,7 @@ export function App() {
           onDeleteHabit={handleDeleteHabit}
           onSelectHabitProfile={handleSelectHabitFromDirectory}
           onOpenShareHabits={() => {
-            closeDirectory();
+            setIsDirectoryOpen(false);
             handleOpenShareWizard();
           }}
           floorAtZero={settings.floorAtZero}
