@@ -120,7 +120,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
     <>
       <div
         onClick={() => onOpenDetail(h)}
-        className={`p-3 pb-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border flex flex-col justify-between transition-all shadow-xs dark:shadow-md dark:shadow-black/20 cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
+        className={`p-3 pb-3 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border flex flex-col justify-between transition-all shadow-xs dark:shadow-md dark:shadow-black/20 cursor-pointer group active:scale-[0.99] relative overflow-hidden ${
           isGoalConquered
             ? 'border-amber-500/40 dark:border-amber-400/40'
             : isMissed
@@ -252,35 +252,43 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
         {isMissed && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="mt-2.5 pt-2 border-t border-rose-500/15 dark:border-rose-500/20 flex items-center justify-between gap-2 text-xs relative z-10 animate-fade-in"
+            className="mt-1.5 pt-1.5 pb-0.5 border-t border-rose-100/60 dark:border-rose-900/30 flex items-center justify-between gap-2 text-[11px] relative z-10 animate-fade-in"
           >
             {savedNote ? (
               <>
-                <div className="flex items-center gap-1.5 min-w-0 flex-1 text-slate-600 dark:text-slate-300 font-sans italic truncate">
-                  <FileText className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
-                  <span className="truncate" title={savedNote}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNoteInput(savedNote);
+                    setNoteModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 min-w-0 flex-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-sans italic truncate text-left cursor-pointer group/note"
+                  title="Click to edit reflection note"
+                >
+                  <FileText className="w-3 h-3 text-rose-400 opacity-80 flex-shrink-0 group-hover/note:opacity-100" />
+                  <span className="truncate">
                     “{savedNote}”
                   </span>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
+                </button>
+                <div className="flex items-center gap-0.5 flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => {
                       setNoteInput(savedNote);
                       setNoteModalOpen(true);
                     }}
-                    className="p-1 rounded-lg text-slate-400 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
+                    className="p-1 rounded-md text-slate-400 hover:text-cyan-500 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
                     title="Edit reflection note"
                   >
-                    <Pencil className="w-3 h-3" />
+                    <Pencil className="w-2.5 h-2.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => onSaveHabitNote?.(h.id, activeDateStr, '')}
-                    className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                    className="p-1 rounded-md text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                     title="Delete reflection note"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </>
@@ -291,13 +299,11 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
                   setNoteInput('');
                   setNoteModalOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-medium py-0.5 px-1.5 -ml-1 rounded-lg hover:bg-rose-500/10 transition-all cursor-pointer group/btn"
+                className="inline-flex items-center text-[11px] font-medium text-rose-500/80 hover:text-rose-600 dark:text-rose-400/85 px-1.5 py-0.5 rounded-md hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                 title="Add reflection note for this missed habit"
               >
-                <FileText className="w-3.5 h-3.5 text-rose-400 group-hover/btn:scale-110 transition-transform" />
-                <span className="text-slate-600 dark:text-slate-300 group-hover/btn:text-rose-600 dark:group-hover/btn:text-rose-300 transition-colors font-medium">
-                  Add Note?
-                </span>
+                <FileText className="w-3 h-3 mr-1 text-rose-400 opacity-80" />
+                <span>Add Note?</span>
               </button>
             )}
           </div>
