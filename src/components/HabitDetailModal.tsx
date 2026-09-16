@@ -10,7 +10,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import type { ChartOptions, TooltipItem, ScriptableContext } from 'chart.js';
+import type { ChartOptions, ScriptableContext } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import type { Habit, ChartTimeRange, CheckInStatus } from '../types/habit';
 import {
@@ -244,35 +244,57 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
           display: false,
         },
         tooltip: {
-          backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.98)',
-          titleColor: isDark ? '#f8fafc' : '#0f172a',
-          bodyColor: isDark ? '#94a3b8' : '#475569',
-          borderColor: isDark ? 'rgba(51, 65, 85, 0.7)' : 'rgba(226, 232, 240, 0.9)',
-          borderWidth: 1,
-          padding: 12,
-          cornerRadius: 14,
-          displayColors: false,
-          callbacks: {
-            title: (items: TooltipItem<'line'>[]) => {
-              const item = items[0];
-              const point = trajectory[item.dataIndex];
-              return point ? formatDisplayDate(point.date, true) : item.label;
-            },
-            label: (item: TooltipItem<'line'>) => {
-              const point = trajectory[item.dataIndex];
-              const isBreak = habit?.type === 'BREAK';
-              const habitNote = point?.date ? habit?.notes?.[point.date] : undefined;
-              if (habitNote) {
-                return `📝 “${habitNote}”`;
-              }
-              const statusLabel =
-                point?.status === 'done'
-                  ? (isBreak ? 'Controlled (+1 XP)' : 'Done (+1 XP)')
-                  : point?.status === 'missed'
-                  ? (isBreak ? 'Failed (-1 XP)' : 'Missed (-1 XP)')
-                  : 'Untracked';
-              return `Status: ${statusLabel}`;
-            },
+          enabled: false,
+          external: (context) => {
+            const { chart, tooltip } = context;
+            const parent = chart.canvas.parentNode;
+            if (!parent) return;
+
+            let tooltipEl = parent.querySelector('.chartjs-custom-tooltip') as HTMLDivElement | null;
+            if (!tooltipEl) {
+              tooltipEl = document.createElement('div');
+              tooltipEl.className =
+                'chartjs-custom-tooltip pointer-events-none absolute transition-all duration-75 ease-out z-50';
+              parent.appendChild(tooltipEl);
+            }
+
+            if (tooltip.opacity === 0) {
+              tooltipEl.style.opacity = '0';
+              return;
+            }
+
+            const dataIndex = tooltip.dataPoints?.[0]?.dataIndex;
+            const point = dataIndex !== undefined ? trajectory[dataIndex] : null;
+            const habitNote = point?.date ? habit?.notes?.[point.date] : undefined;
+            const isMissed = point?.status === 'missed';
+
+            // Only show hover tooltip on missed/failed days that have notes
+            if (!isMissed || !habitNote) {
+              tooltipEl.style.opacity = '0';
+              return;
+            }
+
+            const dateFormatted = point ? formatDisplayDate(point.date, true) : '';
+
+            tooltipEl.innerHTML = `
+              <div class="bg-white/98 dark:bg-slate-900/98 backdrop-blur-md border border-slate-200 dark:border-slate-750 shadow-xl rounded-2xl p-2.5 sm:p-3 text-left min-w-[130px] max-w-[220px]">
+                <div class="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono leading-tight">
+                  ${dateFormatted}
+                </div>
+                <div class="text-xs text-slate-600 dark:text-slate-300 mt-1 font-sans italic flex items-start gap-1">
+                  <span class="leading-snug">📝 “${habitNote}”</span>
+                </div>
+              </div>
+              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-slate-200 dark:border-t-slate-750"></div>
+              <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-[2px] border-4 border-transparent border-t-white dark:border-t-slate-900"></div>
+            `;
+
+            const { offsetLeft: positionX, offsetTop: positionY } = chart.canvas;
+
+            tooltipEl.style.opacity = '1';
+            tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+            tooltipEl.style.top = positionY + tooltip.caretY - 10 + 'px';
+            tooltipEl.style.transform = 'translate(-50%, -100%)';
           },
         },
       },
@@ -520,7 +542,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
             </div>
 
             {/* Line Chart Canvas */}
-            <div className="h-52 w-full">
+            <div className="h-52 w-full relative">
               <Line data={chartData} options={chartOptions} />
             </div>
           </div>
