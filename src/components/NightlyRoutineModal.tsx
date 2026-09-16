@@ -4,6 +4,7 @@ import { getTodayString, calculateHabitStats } from '../lib/momentum';
 import { DynamicIcon } from './DynamicIcon';
 import { Check, X, ArrowLeft, ArrowRight, Sparkles, Moon, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { Modal } from './common/Modal';
 
 interface NightlyRoutineModalProps {
   isOpen: boolean;
@@ -104,34 +105,31 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
 
   const currentStats = currentHabit ? calculateHabitStats(currentHabit, floorAtZero) : null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-2xl glass-card bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 relative border border-slate-200 dark:border-slate-700/80 shadow-2xl">
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
-          title="Close"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="flex items-center justify-between relative z-10 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
-              <Moon className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight">60-Second Daily Routine</h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Rapid friction-free daily check-in</p>
-            </div>
-          </div>
+  const headerCustom = (
+    <div className="flex items-center justify-between relative z-10 pb-4 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex items-center gap-3">
+        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
+          <Moon className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight">60-Second Daily Routine</h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Rapid friction-free daily check-in</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="max-w-2xl"
+      headerCustom={headerCustom}
+      className="p-6 sm:p-8"
+      bodyClassName="p-0"
+    >
+      <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="my-5 relative z-10">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5 font-mono">
@@ -293,7 +291,6 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
             </button>
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 };

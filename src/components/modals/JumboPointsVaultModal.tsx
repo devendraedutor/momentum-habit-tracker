@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import type { Habit } from '../../types/habit';
 import { DynamicIcon } from '../DynamicIcon';
+import { Modal } from '../common/Modal';
 import {
   useJumboAnalytics,
   type DayJumboStatus,
@@ -62,31 +63,17 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
   const stepWeeks = historyRange === '90d' ? 13 : historyRange === '60d' ? 9 : 4;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in select-none">
-      {/* Backdrop Click Dismiss */}
-      <div className="fixed inset-0" onClick={onClose} />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.97, y: 10 }}
-        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className="relative z-10 w-[92vw] max-w-5xl h-[88vh] max-h-[920px] mx-auto p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
-      >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
-          title="Close Vault"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        {/* Ambient Top Glow */}
-        <div className="absolute -top-24 -left-24 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="w-[92vw] max-w-5xl"
+      hideHeader
+      className="h-[88vh] max-h-[920px] p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] select-none"
+      bodyClassName="p-0 flex-1 flex flex-col min-h-0"
+    >
+      {/* Ambient Top Glow */}
+      <div className="absolute -top-24 -left-24 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* 1. TOP ROW: PURE IDENTITY */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 relative z-10 flex-shrink-0">
@@ -587,7 +574,6 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
             </section>
           </div>
         )}
-      </motion.div>
-    </div>
+    </Modal>
   );
 };

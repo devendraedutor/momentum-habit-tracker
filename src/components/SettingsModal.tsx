@@ -3,7 +3,6 @@ import type { Habit, UserSettings } from '../types/habit';
 import type { Tester } from '../config/testers';
 import { exportBackupData, importBackupData } from '../lib/storage';
 import {
-  X,
   Download,
   Upload,
   Volume2,
@@ -18,6 +17,7 @@ import {
   Trash2,
   LogOut,
 } from 'lucide-react';
+import { Modal } from './common/Modal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -90,42 +90,35 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     e.target.value = '';
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div
-        className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl flex flex-col relative animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
-          title="Close"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xs">
-              <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight">
-                Settings & System
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Preferences, audio feedback, backups & data reset
-              </p>
-            </div>
-          </div>
+  const headerCustom = (
+    <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 flex-shrink-0">
+      <div className="flex items-center gap-3">
+        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-xs">
+          <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight">
+            Settings & System
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Preferences, audio feedback, backups & data reset
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="max-w-2xl"
+      headerCustom={headerCustom}
+      className="max-h-[90vh]"
+      bodyClassName="p-0 overflow-y-auto flex-1 flex flex-col"
+    >
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
           {/* Section 0: Active Tester Profile */}
           {tester && (
             <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-indigo-500/10 border border-cyan-500/20 flex items-center justify-between gap-3">
@@ -433,7 +426,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 };

@@ -2,7 +2,6 @@ import React from 'react';
 import type { Habit } from '../types/habit';
 import { sound } from '../lib/audio';
 import {
-  X,
   Trophy,
   Crown,
   Sparkles,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { getTierByLevel } from '../config/progression';
+import { Modal } from './common/Modal';
 
 interface MilestoneAscensionModalProps {
   habit: Habit | null;
@@ -49,22 +49,17 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 relative border border-amber-500/30 shadow-2xl animate-scale-in">
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
-          title="Close"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        {/* Ambient Top Glow */}
-        <div className="absolute -top-24 -left-24 w-60 h-60 bg-amber-500/25 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -top-24 -right-24 w-60 h-60 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="max-w-lg"
+      hideHeader
+      className="p-6 sm:p-7 border border-amber-500/30"
+      bodyClassName="p-0"
+    >
+      {/* Ambient Top Glow */}
+      <div className="absolute -top-24 -left-24 w-60 h-60 bg-amber-500/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 -right-24 w-60 h-60 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
 
         {/* Celebration Header */}
         <div className="flex flex-col items-center text-center relative z-10 pt-2 pb-4">
@@ -164,7 +159,6 @@ export const MilestoneAscensionModal: React.FC<MilestoneAscensionModalProps> = (
           <span className="tracking-wide">Claim Reward & Start Level {nextTier.level}</span>
           <ArrowRight className="w-4 h-4 stroke-[3] group-hover:translate-x-1 transition-transform" />
         </button>
-      </div>
-    </div>
+    </Modal>
   );
 };

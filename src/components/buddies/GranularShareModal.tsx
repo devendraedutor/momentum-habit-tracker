@@ -21,6 +21,7 @@ import type { BuddyMemberSummary } from '../../types/buddy';
 import type { SearchedUser } from '../../lib/firestoreService';
 import { DynamicIcon } from '../DynamicIcon';
 import { getTierByLevel } from '../../config/progression';
+import { Modal } from '../common/Modal';
 
 interface GranularShareModalProps {
   isOpen: boolean;
@@ -160,43 +161,38 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 selection:bg-emerald-500/20">
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
-      >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
-        <button
-          type="button"
-          onClick={() => {
-            setEmailInput('');
-            setInviteSuccessMessage(null);
-            onClearSearch?.();
-            onClose();
-          }}
-          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
-          title="Close"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4 stroke-[2.5]" />
-        </button>
+  const handleModalClose = () => {
+    setEmailInput('');
+    setInviteSuccessMessage(null);
+    onClearSearch?.();
+    onClose();
+  };
 
-        {/* Header: Dynamic Icon & Title for Step 1 (Select Habits) / Step 2 (Select Buddies) */}
-        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-              {step === 1 ? <ListChecks className="w-4.5 h-4.5" /> : <Users className="w-4.5 h-4.5" />}
-            </div>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-              {step === 1 ? 'Select Habits' : 'Select Buddies'}
-            </h2>
-          </div>
+  const headerCustom = (
+    <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+      <div className="flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          {step === 1 ? <ListChecks className="w-4.5 h-4.5" /> : <Users className="w-4.5 h-4.5" />}
         </div>
+        <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+          {step === 1 ? 'Select Habits' : 'Select Buddies'}
+        </h2>
+      </div>
+    </div>
+  );
 
-        {/* STEP 1: Select Habits */}
-        {step === 1 && (
-          <div className="flex-1 flex flex-col min-h-0 pt-3">
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleModalClose}
+      maxWidth="max-w-lg"
+      headerCustom={headerCustom}
+      className="max-h-[85vh] p-5 sm:p-6"
+      bodyClassName="p-0 flex-1 flex flex-col min-h-0"
+    >
+      {/* STEP 1: Select Habits */}
+      {step === 1 && (
+        <div className="flex-1 flex flex-col min-h-0 pt-3">
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 my-1 max-h-[50vh]">
               {activeHabits.map((h) => {
                 const isSelected = selectedHabitIds.has(h.id);
@@ -589,7 +585,6 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 };
