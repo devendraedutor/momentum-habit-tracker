@@ -70,7 +70,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
 }) => {
   const currentStatus = h.history?.[activeDateStr];
   const isBreak = h.type === 'BREAK';
-  const isDone = currentStatus === 'done';
+  const isDone = currentStatus === 'done' || currentStatus === 'controlled';
   const isMissed = currentStatus === 'missed' || currentStatus === 'failed';
   const savedNote = h.notes?.[activeDateStr] || '';
   const stats = calculateHabitStats(h, floorAtZero, activeDateStr);
@@ -231,7 +231,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onCheckIn(h.id, isDone ? 'missed' : 'done', activeDateStr);
+                onCheckIn(h.id, isDone ? (isBreak ? 'failed' : 'missed') : (isBreak ? 'controlled' : 'done'), activeDateStr);
               }}
               className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-90 shadow-xs cursor-pointer ${
                 isDone
@@ -743,7 +743,7 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
       <div className="mt-4 relative z-10">
         <div className="grid grid-cols-2 gap-3">
           <button
-            onClick={() => onCheckIn && onCheckIn('missed')}
+            onClick={() => onCheckIn && onCheckIn(isBreak ? 'failed' : 'missed')}
             disabled={!isInteractive || !!isCharging || isDeckLocked}
             className={`flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl border font-bold text-sm transition-all duration-150 active:scale-95 cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:pointer-events-none ${
               isFailed
@@ -762,7 +762,7 @@ const HabitCardContent: React.FC<HabitCardContentProps> = ({
           </button>
 
           <button
-            onClick={() => onCheckIn && onCheckIn('done')}
+            onClick={() => onCheckIn && onCheckIn(isBreak ? 'controlled' : 'done')}
             disabled={!isInteractive || !!isCharging || isDeckLocked}
             className={`flex flex-col items-center justify-center p-3.5 sm:p-4 rounded-2xl border font-bold text-sm transition-all duration-150 active:scale-95 shadow-sm cursor-pointer min-h-[68px] sm:min-h-[76px] disabled:pointer-events-none ${
               isSuccessCharging
@@ -817,7 +817,13 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   const isLogged = useCallback(
     (h: Habit) => {
       const st = h.history?.[activeDateStr];
-      return st === 'done' || st === 'missed';
+      return (
+        st === 'done' ||
+        st === 'missed' ||
+        st === 'controlled' ||
+        st === 'failed' ||
+        st === 'skipped'
+      );
     },
     [activeDateStr]
   );
@@ -845,7 +851,10 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
   const [chargePhase, setChargePhase] = useState<'idle' | 'charging' | 'incremented' | 'failed'>('idle');
 
   const totalHabitsCount = activeHabits.length;
-  const completedCount = activeHabits.filter((h) => h.history?.[activeDateStr] === 'done').length;
+  const completedCount = activeHabits.filter((h) => {
+    const st = h.history?.[activeDateStr];
+    return st === 'done' || st === 'controlled';
+  }).length;
   const isAllDone = totalHabitsCount > 0 && unloggedHabits.length === 0;
   const isPerfectDay = completedCount === totalHabitsCount && totalHabitsCount > 0;
   const percent = totalHabitsCount > 0 ? Math.round((completedCount / totalHabitsCount) * 100) : 0;
@@ -894,11 +903,13 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
     (status: CheckInStatus) => {
       if (!currentCard || chargingHabitId || isDeckLocked) return;
 
+      const isSuccess = status === 'done' || status === 'controlled';
+
       // 1. Lock Deck immediately
       setIsDeckLocked(true);
       setAnimationMode('checkin');
 
-      if (status === 'done') {
+      if (isSuccess) {
         setChargingHabitId(currentCard.id);
 
         // 2. Local Progress Fill: Animate target goal bar from current to +1
@@ -913,7 +924,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
 
         // 4. Celebration Exit: After floating delta animation completes (~500ms), commit check-in
         const exitTimer = setTimeout(() => {
-          onCheckIn(currentCard.id, 'done', activeDateStr);
+          onCheckIn(currentCard.id, status, activeDateStr);
           setChargingHabitId(null);
           setChargePhase('idle');
 
