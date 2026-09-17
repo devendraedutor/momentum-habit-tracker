@@ -918,9 +918,13 @@ export async function shareHabitsWithBuddies(
       let sharedStreak = habit.overallStreak || 0;
 
       if (shareScope === 'today') {
-        if (todayStatus) {
-          sharedHistory[todayStr] = todayStatus;
+        const filteredHistory: Record<string, CheckInStatus> = {};
+        for (const [dateKey, val] of Object.entries(habit.history || {})) {
+          if (dateKey >= todayStr) {
+            filteredHistory[dateKey] = val;
+          }
         }
+        sharedHistory = filteredHistory;
         sharedStreak = isDone ? 1 : 0;
       } else {
         sharedHistory = habit.history || {};
