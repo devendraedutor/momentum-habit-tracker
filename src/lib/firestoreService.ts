@@ -955,6 +955,8 @@ export async function shareHabitsWithBuddies(
           completedToday: isDone,
           cadence: habit.type || 'BUILD',
           currentLevel: habit.currentLevel || 0,
+          levelProgress: habit.levelProgress || 0,
+          targetGoalDays: habit.targetGoalDays || 21,
           history: sharedHistory,
           shareScope: shareScope,
           shareStartDate: resolvedShareStart,
@@ -1057,6 +1059,8 @@ export async function syncHabitProgressToSharedHabits(
         streak: habit.overallStreak || 0,
         completedToday: isDone,
         currentLevel: habit.currentLevel || 0,
+        levelProgress: habit.levelProgress || 0,
+        targetGoalDays: habit.targetGoalDays || 21,
         history: historyToSync,
         updatedAt: timestamp,
       });

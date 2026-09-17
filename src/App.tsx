@@ -19,7 +19,11 @@ import {
 } from './config/testers';
 import { sound } from './lib/audio';
 import { getTodayString } from './lib/momentum';
-import { evaluateCheckInProgression, LEVEL_REQUIREMENTS } from './config/progression';
+import {
+  evaluateCheckInProgression,
+  recalculateHabitProgressionFromHistory,
+  LEVEL_REQUIREMENTS,
+} from './config/progression';
 import { Navbar } from './components/Navbar';
 import { useFirebaseAuth } from './hooks/useFirebaseAuth';
 import { useNotifications } from './hooks/useNotifications';
@@ -171,7 +175,9 @@ export function App() {
       inspectingSharedHabit.habitType ||
       (inspectingSharedHabit.cadence === 'BREAK' ? 'BREAK' : 'BUILD');
 
-    return {
+    const historyRecord = (inspectingSharedHabit.history as Record<string, CheckInStatus>) || {};
+
+    const tempHabit: Habit = {
       id: inspectingSharedHabit.habitId,
       name: inspectingSharedHabit.habitTitle,
       description: '',
@@ -179,16 +185,36 @@ export function App() {
       icon: inspectingSharedHabit.habitIcon || 'Sparkles',
       color: inspectingSharedHabit.habitColor || '#10b981',
       type: habitType,
-      currentLevel: inspectingSharedHabit.currentLevel || 0,
-      levelProgress: 0,
-      targetGoalDays: 21,
+      currentLevel: inspectingSharedHabit.currentLevel ?? 0,
+      levelProgress: inspectingSharedHabit.levelProgress ?? 0,
+      targetGoalDays: inspectingSharedHabit.targetGoalDays ?? 21,
       currentTier: (inspectingSharedHabit.currentLevel || 0) + 1,
       tierStartStreak: 0,
       milestonesCompleted: inspectingSharedHabit.currentLevel || 0,
       startDate: resolvedStartDate,
       createdAt: inspectingSharedHabit.createdAt || resolvedStartDate,
       archived: false,
-      history: (inspectingSharedHabit.history as Record<string, CheckInStatus>) || {},
+      history: historyRecord,
+    };
+
+    const prog = recalculateHabitProgressionFromHistory(tempHabit);
+    const resolvedLevel = inspectingSharedHabit.currentLevel !== undefined
+      ? inspectingSharedHabit.currentLevel
+      : prog.currentLevel;
+    const resolvedLevelProgress = inspectingSharedHabit.levelProgress !== undefined
+      ? inspectingSharedHabit.levelProgress
+      : prog.levelProgress;
+    const resolvedTarget = inspectingSharedHabit.targetGoalDays !== undefined
+      ? inspectingSharedHabit.targetGoalDays
+      : prog.targetGoalDays;
+
+    return {
+      ...tempHabit,
+      currentLevel: resolvedLevel,
+      levelProgress: resolvedLevelProgress,
+      targetGoalDays: resolvedTarget,
+      currentTier: resolvedLevel + 1,
+      milestonesCompleted: resolvedLevel,
     };
   }, [inspectingSharedHabit]);
 
