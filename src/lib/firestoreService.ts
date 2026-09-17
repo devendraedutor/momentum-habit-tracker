@@ -934,6 +934,9 @@ export async function shareHabitsWithBuddies(
         const docId = `${safeHabitId}_${safeBuddyUid}`;
         const sharedDocRef = doc(db, COLLECTION_SHARED_HABITS, docId);
 
+        const habitStartDate = habit.startDate || (habit.createdAt ? habit.createdAt.split('T')[0] : todayStr);
+        const resolvedShareStart = shareScope === 'today' ? todayStr : habitStartDate;
+
         const payload: SharedHabitRecord = {
           id: docId,
           habitId: habit.id,
@@ -945,13 +948,16 @@ export async function shareHabitsWithBuddies(
           habitIcon: habit.icon || 'Sparkles',
           habitColor: habit.color || '#10b981',
           habitCategory: habit.category || 'General',
+          habitType: habit.type || 'BUILD',
+          startDate: resolvedShareStart,
+          createdAt: habit.createdAt || timestamp,
           streak: sharedStreak,
           completedToday: isDone,
           cadence: habit.type || 'BUILD',
           currentLevel: habit.currentLevel || 0,
           history: sharedHistory,
           shareScope: shareScope,
-          shareStartDate: shareScope === 'today' ? todayStr : (habit.createdAt?.split('T')[0] || todayStr),
+          shareStartDate: resolvedShareStart,
           updatedAt: timestamp,
         };
 
@@ -1046,6 +1052,8 @@ export async function syncHabitProgressToSharedHabits(
         habitIcon: habit.icon,
         habitColor: habit.color,
         habitCategory: habit.category,
+        habitType: habit.type || 'BUILD',
+        startDate: habit.startDate || (habit.createdAt ? habit.createdAt.split('T')[0] : todayStr),
         streak: habit.overallStreak || 0,
         completedToday: isDone,
         currentLevel: habit.currentLevel || 0,

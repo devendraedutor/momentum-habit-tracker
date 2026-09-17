@@ -96,11 +96,16 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   const trajectory = useMemo(() => {
     if (!habit) return [];
     const full = calculateHabitTrajectory(habit, timeRange, floorAtZero);
-    // Strict start date alignment: Trajectory strictly begins on the exact date tracking started
-    const resolvedStartDate = (habit.startDate || habit.createdAt || '').split('T')[0];
+    // Strict start date alignment: Trajectory begins on the earliest date of start date, creation, or actual check-in history
+    const historyKeys = Object.keys(habit.history || {}).sort();
+    const earliestHistory = historyKeys.length > 0 ? historyKeys[0] : undefined;
+    let resolvedStartDate = (habit.startDate || habit.createdAt || earliestHistory || '').split('T')[0];
+    if (earliestHistory && earliestHistory < resolvedStartDate) {
+      resolvedStartDate = earliestHistory;
+    }
     if (!resolvedStartDate) return full;
 
-    // Filter out fake historical dates prior to habit's creation
+    // Filter out fake historical dates prior to habit's true inception
     const filtered = full.filter((p) => p.date >= resolvedStartDate);
     return filtered.length > 0 ? filtered : full;
   }, [habit, timeRange, floorAtZero]);
@@ -334,7 +339,13 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   const isBreak = habit.type === 'BREAK';
   const activeTier = getTierByLevel(stats.activeTierLevel);
   const targetDays = stats.targetGoalDays;
-  const startDateFormatted = formatDisplayDate(habit.startDate || habit.createdAt, true);
+  const historyDates = Object.keys(habit.history || {}).sort();
+  const earliestHistDate = historyDates.length > 0 ? historyDates[0] : undefined;
+  let effectiveStartDate = habit.startDate || habit.createdAt || earliestHistDate || todayIso;
+  if (earliestHistDate && effectiveStartDate && earliestHistDate < effectiveStartDate) {
+    effectiveStartDate = earliestHistDate;
+  }
+  const startDateFormatted = formatDisplayDate(effectiveStartDate, true);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">

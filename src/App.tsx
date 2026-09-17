@@ -151,6 +151,26 @@ export function App() {
   // Helper converting inspectingSharedHabit into a read-only Habit object
   const inspectingHabitAsHabit = useMemo<Habit | null>(() => {
     if (!inspectingSharedHabit) return null;
+
+    // Resolve earliest history date to ensure graphs show full shared check-in history
+    const historyKeys = Object.keys(inspectingSharedHabit.history || {}).sort();
+    const earliestHistory = historyKeys.length > 0 ? historyKeys[0] : undefined;
+
+    let resolvedStartDate =
+      inspectingSharedHabit.startDate ||
+      inspectingSharedHabit.shareStartDate ||
+      earliestHistory ||
+      (inspectingSharedHabit.createdAt ? inspectingSharedHabit.createdAt.split('T')[0] : getTodayString());
+
+    // If earliest recorded history is prior to nominal start date, respect the history
+    if (earliestHistory && earliestHistory < resolvedStartDate) {
+      resolvedStartDate = earliestHistory;
+    }
+
+    const habitType: 'BUILD' | 'BREAK' =
+      inspectingSharedHabit.habitType ||
+      (inspectingSharedHabit.cadence === 'BREAK' ? 'BREAK' : 'BUILD');
+
     return {
       id: inspectingSharedHabit.habitId,
       name: inspectingSharedHabit.habitTitle,
@@ -158,15 +178,15 @@ export function App() {
       category: inspectingSharedHabit.habitCategory || 'Shared',
       icon: inspectingSharedHabit.habitIcon || 'Sparkles',
       color: inspectingSharedHabit.habitColor || '#10b981',
-      type: 'BUILD',
+      type: habitType,
       currentLevel: inspectingSharedHabit.currentLevel || 0,
       levelProgress: 0,
       targetGoalDays: 21,
       currentTier: (inspectingSharedHabit.currentLevel || 0) + 1,
       tierStartStreak: 0,
       milestonesCompleted: inspectingSharedHabit.currentLevel || 0,
-      startDate: getTodayString(),
-      createdAt: getTodayString(),
+      startDate: resolvedStartDate,
+      createdAt: inspectingSharedHabit.createdAt || resolvedStartDate,
       archived: false,
       history: (inspectingSharedHabit.history as Record<string, CheckInStatus>) || {},
     };

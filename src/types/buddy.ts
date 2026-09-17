@@ -60,6 +60,9 @@ export interface SharedHabitRecord {
   habitIcon: string;
   habitColor: string;
   habitCategory: string;
+  habitType?: 'BUILD' | 'BREAK';
+  startDate?: string;
+  createdAt?: string;
   streak: number;
   completedToday: boolean;
   cadence: string;
