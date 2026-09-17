@@ -74,57 +74,60 @@ export const HabitDirectoryModal: React.FC<HabitDirectoryModalProps> = ({
               <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Habit Directory
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {activeHabits.length} active habit{activeHabits.length === 1 ? '' : 's'} tracked
-              </p>
+              {activeHabits.length > 0 && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  {activeHabits.length} active habit{activeHabits.length === 1 ? '' : 's'} tracked
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {onOpenShareHabits && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  onOpenShareHabits();
-                }}
-                className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                title="Commit Habits with Buddy"
-              >
-                <Handshake className="w-4 h-4" />
-                <span>Commit</span>
-              </button>
-            )}
+          {activeHabits.length > 0 && (
+            <div className="flex items-center gap-2">
+              {onOpenShareHabits && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onOpenShareHabits();
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                  title="Commit Habits with Buddy"
+                >
+                  <Handshake className="w-4 h-4" />
+                  <span>Commit</span>
+                </button>
+              )}
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                onOpenNewHabit();
-              }}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
-              title="Add New Habit"
-              aria-label="Add New Habit"
-            >
-              <Plus className="w-4.5 h-4.5 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
-            </button>
-          </div>
-        </div>
-
-        {/* Habit List */}
-        <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1 max-h-[52vh]">
-          {activeHabits.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <p className="text-sm font-medium">No habits found.</p>
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   onOpenNewHabit();
                 }}
-                className="mt-4 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-all active:scale-[0.98] shadow-xs cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
+                title="Add New Habit"
+                aria-label="Add New Habit"
               >
-                + Create First Habit
+                <Plus className="w-4.5 h-4.5 text-emerald-500 dark:text-emerald-400 stroke-[3] group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Habit List */}
+        <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1 max-h-[52vh]">
+          {activeHabits.length === 0 ? (
+            <div className="text-center py-10 flex flex-col items-center justify-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenNewHabit();
+                }}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-all active:scale-[0.98] shadow-xs cursor-pointer"
+              >
+                + Add First Habit
               </button>
             </div>
           ) : (
