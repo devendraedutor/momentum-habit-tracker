@@ -478,12 +478,24 @@ export function App() {
   const handleCheckIn = useCallback(
     (habitId: string, status: CheckInStatus, dateStr?: string) => {
       const targetDate = dateStr || activeDateStr;
+      const todayStr = getTodayString();
+      const isPast = targetDate < todayStr;
       let levelUpInfo: { habit: Habit; unlockedLevel: number } | null = null;
+      let checkInAllowed = true;
 
       setHabits((prev) => {
+        const targetHabit = prev.find((h) => h.id === habitId);
+        if (!targetHabit) return prev;
+        const prevStatus = targetHabit.history[targetDate] || 'none';
+
+        // Past dates check-ins: Can only check in if unlogged; cannot modify/toggle an already-logged past date
+        if (isPast && prevStatus !== 'none') {
+          checkInAllowed = false;
+          return prev;
+        }
+
         const nextHabits = prev.map((h) => {
           if (h.id !== habitId) return h;
-          const prevStatus = h.history[targetDate] || 'none';
           const newHistory = { ...h.history };
           if (status === 'none' || !status) {
             delete newHistory[targetDate];
@@ -540,6 +552,8 @@ export function App() {
         return nextHabits;
       });
 
+      if (!checkInAllowed) return;
+
       // Real-time Cloud Sync for Granular Shared Habits & Real-time Buddy Notification (Outside state updater)
       if (firebaseUser) {
         const targetHabit = habits.find((h) => h.id === habitId);
@@ -548,12 +562,12 @@ export function App() {
             ...targetHabit,
             history: {
               ...targetHabit.history,
-              [activeDateStr]: status,
+              [targetDate]: status,
             },
           };
           syncHabitProgressToSharedHabits(firebaseUser, updatedHabitForSync, {
             status,
-            dateStr: activeDateStr,
+            dateStr: targetDate,
           });
         }
       }
@@ -586,11 +600,20 @@ export function App() {
   // Batch commit multiple modifications at once
   const handleBatchSave = useCallback(
     (updates: Record<string, CheckInStatus>, dateStr: string) => {
+      const todayStr = getTodayString();
+      const isPast = dateStr < todayStr;
+
       setHabits((prev) => {
         const nextHabits = prev.map((h) => {
           const newStatus = updates[h.id];
           if (!newStatus) return h;
           const prevStatus = h.history[dateStr] || 'none';
+
+          // Disallow modifying already-logged past check-ins
+          if (isPast && prevStatus !== 'none') {
+            return h;
+          }
+
           const newHistory = { ...h.history };
           if (newStatus === 'none') {
             delete newHistory[dateStr];
@@ -624,11 +647,12 @@ export function App() {
         setJumboDates((prevJumbo) => {
           const { updatedJumboDates, wasAwarded } = reconcileJumboDate(dateStr, activeOnly, prevJumbo);
           if (wasAwarded) {
+            if (settings.soundEffects) sound.playMilestone();
             confetti({
               particleCount: 80,
               spread: 90,
               origin: { y: 0.5 },
-              colors: ['#f59e0b', '#fbbf24', '#10b981'],
+              colors: ['#f59e0b', '#fbbf24', '#10b981', '#06b6d4'],
             });
           }
           return updatedJumboDates;

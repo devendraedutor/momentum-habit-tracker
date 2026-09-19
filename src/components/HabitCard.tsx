@@ -233,14 +233,16 @@ export const HabitCard: React.FC<HabitCardProps> = ({
               )}
             </div>
 
-            <button
-              onClick={() => onUndo(habit.id)}
-              className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs"
-              title="Undo today's check-in"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Undo</span>
-            </button>
+            {activeDateStr >= todayStr && (
+              <button
+                onClick={() => onUndo(habit.id)}
+                className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs"
+                title="Undo today's check-in"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Undo</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2.5">

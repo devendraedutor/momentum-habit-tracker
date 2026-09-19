@@ -227,25 +227,50 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCheckIn(h.id, isDone ? (isBreak ? 'failed' : 'missed') : (isBreak ? 'controlled' : 'done'), activeDateStr);
-              }}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-90 shadow-xs cursor-pointer ${
-                isDone
-                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50 dark:bg-emerald-500/25 dark:border-emerald-400/50'
-                  : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50 dark:bg-rose-500/25 dark:border-rose-400/50'
-              }`}
-              title={isDone ? 'Marked Done. Click to toggle to Missed.' : 'Marked Missed. Click to toggle to Done.'}
-            >
-              {isDone ? (
-                <Check className="w-4 h-4 stroke-[2.5]" />
-              ) : (
-                <X className="w-4 h-4 stroke-[2.5]" />
-              )}
-            </button>
+            {activeDateStr < getTodayString() ? (
+              <div
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border shadow-xs select-none cursor-default ${
+                  isDone
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 dark:bg-emerald-500/25 dark:border-emerald-400/50'
+                    : 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/30 dark:bg-rose-500/25 dark:border-rose-400/50'
+                }`}
+                title={
+                  isDone
+                    ? (isBreak ? 'Controlled (Past check-in locked)' : 'Done (Past check-in locked)')
+                    : (isBreak ? 'Failed (Past check-in locked)' : 'Missed (Past check-in locked)')
+                }
+              >
+                {isDone ? (
+                  <Check className="w-4 h-4 stroke-[2.5]" />
+                ) : (
+                  <X className="w-4 h-4 stroke-[2.5]" />
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCheckIn(h.id, isDone ? (isBreak ? 'failed' : 'missed') : (isBreak ? 'controlled' : 'done'), activeDateStr);
+                }}
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border transition-all duration-200 active:scale-90 shadow-xs cursor-pointer ${
+                  isDone
+                    ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border-emerald-500/30 hover:border-emerald-500/50 dark:bg-emerald-500/25 dark:border-emerald-400/50'
+                    : 'bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-300 border-rose-500/30 hover:border-rose-500/50 dark:bg-rose-500/25 dark:border-rose-400/50'
+                }`}
+                title={
+                  isDone
+                    ? (isBreak ? 'Marked Controlled. Click to toggle to Failed.' : 'Marked Done. Click to toggle to Missed.')
+                    : (isBreak ? 'Marked Failed. Click to toggle to Controlled.' : 'Marked Missed. Click to toggle to Done.')
+                }
+              >
+                {isDone ? (
+                  <Check className="w-4 h-4 stroke-[2.5]" />
+                ) : (
+                  <X className="w-4 h-4 stroke-[2.5]" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
