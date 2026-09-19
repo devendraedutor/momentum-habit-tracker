@@ -242,10 +242,11 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
               const pt = rawPoints[idx];
               if (!pt) return '';
               let changeStr = '';
+              const isBreakHabit = currentHabit?.type === 'BREAK';
               if (pt.delta > 0) {
-                changeStr = `\n🟢 Change: +${pt.delta} XP (Done)`;
+                changeStr = `\n🟢 Change: +${pt.delta} XP (${isBreakHabit ? 'Controlled' : 'Done'})`;
               } else if (pt.delta < 0) {
-                changeStr = `\n🔴 Change: ${pt.delta} XP (Missed / Skipped)`;
+                changeStr = `\n🔴 Change: ${pt.delta} XP (${isBreakHabit ? 'Failed' : 'Missed / Skipped'})`;
               } else {
                 changeStr = `\n⚪ Change: 0 XP (Unlogged / Flat)`;
               }

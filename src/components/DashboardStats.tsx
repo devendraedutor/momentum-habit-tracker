@@ -48,7 +48,8 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
       totalDoneAllTime += stats.totalDone;
       totalMissedAllTime += stats.totalMissed;
 
-      if (habit.history[todayStr] === 'done') todayCompleted++;
+      const todaySt = habit.history[todayStr];
+      if (todaySt === 'done' || todaySt === 'controlled') todayCompleted++;
     });
 
     const totalLogged = totalDoneAllTime + totalMissedAllTime;

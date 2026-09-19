@@ -153,9 +153,9 @@ export function calculateHabitTrajectory(
     const status = habit.history[date] || 'none';
     let delta = 0;
 
-    if (status === 'done') {
+    if (status === 'done' || status === 'controlled') {
       delta = 1;
-    } else if (status === 'missed') {
+    } else if (status === 'missed' || status === 'failed') {
       delta = -1;
     }
 
@@ -245,11 +245,11 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false, asOfDateS
 
     if (pt.score > highestScore) highestScore = pt.score;
     if (pt.score < lowestScore) lowestScore = pt.score;
-    if (pt.status === 'done') {
+    if (pt.status === 'done' || pt.status === 'controlled') {
       totalDone++;
       tempStreak++;
       if (tempStreak > bestStreak) bestStreak = tempStreak;
-    } else if (pt.status === 'missed') {
+    } else if (pt.status === 'missed' || pt.status === 'failed') {
       totalMissed++;
       tempStreak = 0;
     }
@@ -273,10 +273,10 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false, asOfDateS
         continue;
       }
 
-      if (status === 'done') {
+      if (status === 'done' || status === 'controlled') {
         currentStreak++;
-      } else if (status === 'missed') {
-        break; // missed breaks streak
+      } else if (status === 'missed' || status === 'failed') {
+        break; // missed/failed breaks streak
       } else {
         break; // unlogged past day breaks streak
       }

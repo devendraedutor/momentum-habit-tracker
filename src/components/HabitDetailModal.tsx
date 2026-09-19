@@ -96,7 +96,10 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   const trajectory = useMemo(() => {
     if (!habit) return [];
     const full = calculateHabitTrajectory(habit, timeRange, floorAtZero);
-    // Strict start date alignment: Trajectory begins on the earliest date of start date, creation, or actual check-in history
+    if (timeRange !== 'all') {
+      return full;
+    }
+    // Strict start date alignment for 'all' range: Trajectory begins on earliest start date or check-in history
     const historyKeys = Object.keys(habit.history || {}).sort();
     const earliestHistory = historyKeys.length > 0 ? historyKeys[0] : undefined;
     let resolvedStartDate = (habit.startDate || habit.createdAt || earliestHistory || '').split('T')[0];
@@ -162,8 +165,8 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
       const isToday = dStr === todayIso;
       const isActiveDate = !!activeDateStr && dStr === activeDateStr;
 
-      if (status === 'done') doneCount++;
-      if (status === 'missed') missedCount++;
+      if (status === 'done' || status === 'controlled') doneCount++;
+      if (status === 'missed' || status === 'failed') missedCount++;
 
       return {
         dateStr: dStr,
@@ -196,16 +199,16 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
     const labels = trajectory.map((p) => p.displayDate);
     const dataPoints = trajectory.map((p) => p.score);
 
-    // Dynamic point nodes: Emerald on climb/done (+1 XP), Crimson on drop/missed (-1 XP)
+    // Dynamic point nodes: Emerald on climb/done/controlled (+1 XP), Crimson on drop/missed/failed (-1 XP)
     const pointBgColors = trajectory.map((p) => {
-      if (p.status === 'done') return '#10b981';
-      if (p.status === 'missed') return '#f43f5e';
+      if (p.status === 'done' || p.status === 'controlled') return '#10b981';
+      if (p.status === 'missed' || p.status === 'failed') return '#f43f5e';
       return isDark ? '#334155' : '#cbd5e1';
     });
 
     const pointBorderColors = trajectory.map((p) => {
-      if (p.status === 'done') return isDark ? '#064e3b' : '#a7f3d0';
-      if (p.status === 'missed') return isDark ? '#881337' : '#fecdd3';
+      if (p.status === 'done' || p.status === 'controlled') return isDark ? '#064e3b' : '#a7f3d0';
+      if (p.status === 'missed' || p.status === 'failed') return isDark ? '#881337' : '#fecdd3';
       return isDark ? '#0f172a' : '#ffffff';
     });
 
@@ -270,25 +273,26 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
 
             const dataIndex = tooltip.dataPoints?.[0]?.dataIndex;
             const point = dataIndex !== undefined ? trajectory[dataIndex] : null;
-            const habitNote = point?.date ? habit?.notes?.[point.date] : undefined;
-            const isMissed = point?.status === 'missed';
-
-            // Only show hover tooltip on missed/failed days that have notes
-            if (!isMissed || !habitNote) {
+            if (!point) {
               tooltipEl.style.opacity = '0';
               return;
             }
 
-            const dateFormatted = point ? formatDisplayDate(point.date, true) : '';
+            const habitNote = point.date ? (habit?.notes?.[point.date] || reflections?.[point.date]) : undefined;
+            const dateFormatted = formatDisplayDate(point.date, true);
 
             tooltipEl.innerHTML = `
-              <div class="bg-white/98 dark:bg-slate-900/98 backdrop-blur-md border border-slate-200 dark:border-slate-750 shadow-xl rounded-2xl p-2.5 sm:p-3 text-left min-w-[130px] max-w-[220px]">
+              <div class="bg-white/98 dark:bg-slate-900/98 backdrop-blur-md border border-slate-200 dark:border-slate-750 shadow-xl rounded-2xl p-2.5 sm:p-3 text-left min-w-[120px] max-w-[220px]">
                 <div class="text-xs font-bold text-slate-900 dark:text-slate-100 font-mono leading-tight">
                   ${dateFormatted}
                 </div>
-                <div class="text-xs text-slate-600 dark:text-slate-300 mt-1 font-sans italic flex items-start gap-1">
-                  <span class="leading-snug">📝 “${habitNote}”</span>
-                </div>
+                ${
+                  habitNote
+                    ? `<div class="text-xs text-slate-600 dark:text-slate-300 mt-1.5 font-sans italic flex items-start gap-1">
+                        <span class="leading-snug">📝 “${habitNote}”</span>
+                      </div>`
+                    : ''
+                }
               </div>
               <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-px border-4 border-transparent border-t-slate-200 dark:border-t-slate-750"></div>
               <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-[2px] border-4 border-transparent border-t-white dark:border-t-slate-900"></div>
@@ -641,8 +645,8 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
             {/* Weekly Calendar Tiles Grid */}
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {matrixDays.map((d) => {
-                const isDone = d.status === 'done';
-                const isMissed = d.status === 'missed';
+                const isDone = d.status === 'done' || d.status === 'controlled';
+                const isMissed = d.status === 'missed' || d.status === 'failed';
 
                 let cardStyle =
                   'bg-white dark:bg-slate-850 border-slate-200/80 dark:border-slate-700 text-slate-400 hover:border-cyan-500/60 dark:hover:border-cyan-500/60';
@@ -659,7 +663,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                   cardStyle += ' ring-2 ring-cyan-500 border-cyan-500 shadow-xs';
                 }
 
-                const habitNote = habit.notes?.[d.dateStr];
+                const habitNote = habit.notes?.[d.dateStr] || reflections?.[d.dateStr];
                 const shouldShowTooltip = isMissed && !!habitNote;
 
                 return (

@@ -32,8 +32,8 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ habits, 
 
       activeHabits.forEach((h) => {
         const s = h.history[dateStr];
-        if (s === 'done') doneCount++;
-        if (s === 'missed') missedCount++;
+        if (s === 'done' || s === 'controlled') doneCount++;
+        if (s === 'missed' || s === 'failed') missedCount++;
       });
 
       const netScore = doneCount - missedCount;

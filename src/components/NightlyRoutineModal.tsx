@@ -38,10 +38,18 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
 
   const currentHabit = activeHabits[currentIndex];
   const todayStatus = currentHabit ? currentHabit.history[todayStr] : undefined;
-  const isLogged = todayStatus === 'done' || todayStatus === 'missed';
+  const isSuccess = todayStatus === 'done' || todayStatus === 'controlled';
+  const isFailed = todayStatus === 'missed' || todayStatus === 'failed';
+  const isLogged = isSuccess || isFailed;
 
-  const totalCompleted = activeHabits.filter((h) => h.history[todayStr] === 'done').length;
-  const totalMissed = activeHabits.filter((h) => h.history[todayStr] === 'missed').length;
+  const totalCompleted = activeHabits.filter((h) => {
+    const s = h.history[todayStr];
+    return s === 'done' || s === 'controlled';
+  }).length;
+  const totalMissed = activeHabits.filter((h) => {
+    const s = h.history[todayStr];
+    return s === 'missed' || s === 'failed';
+  }).length;
   const totalLogged = totalCompleted + totalMissed;
   const allDone = activeHabits.length > 0 && totalLogged === activeHabits.length;
 
@@ -55,8 +63,12 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
     });
   }, [confettiEnabled]);
 
-  const handleAction = useCallback((status: CheckInStatus) => {
+  const handleAction = useCallback((actionType: 'done' | 'missed') => {
     if (!currentHabit) return;
+    const isBreak = currentHabit.type === 'BREAK';
+    const status: CheckInStatus = actionType === 'done' 
+      ? (isBreak ? 'controlled' : 'done') 
+      : (isBreak ? 'failed' : 'missed');
     onCheckIn(currentHabit.id, status);
 
     setTimeout(() => {
@@ -103,6 +115,7 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
   if (!isOpen) return null;
 
   const currentStats = currentHabit ? calculateHabitStats(currentHabit, floorAtZero) : null;
+  const isCurrentBreak = currentHabit?.type === 'BREAK';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-fade-in">
@@ -165,9 +178,20 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
               <DynamicIcon name={currentHabit.icon} className="w-8 h-8" />
             </div>
 
-            <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 mb-2">
-              {currentHabit.category}
-            </span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                {currentHabit.category}
+              </span>
+              {isCurrentBreak ? (
+                <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                  Break Habit
+                </span>
+              ) : (
+                <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  Build Habit
+                </span>
+              )}
+            </div>
 
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{currentHabit.name}</h3>
 
@@ -195,13 +219,13 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
               {isLogged ? (
                 <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-3">
                   <div className="flex items-center gap-2">
-                    {todayStatus === 'done' ? (
+                    {isSuccess ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold text-sm border border-emerald-500/40">
-                        <Check className="w-4 h-4 stroke-[3]" /> Completed Today (+1)
+                        <Check className="w-4 h-4 stroke-[3]" /> {isCurrentBreak ? 'Controlled Today (+1)' : 'Completed Today (+1)'}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-700 dark:text-rose-400 font-semibold text-sm border border-rose-500/40">
-                        <X className="w-4 h-4 stroke-[3]" /> Missed / Skipped (-1)
+                        <X className="w-4 h-4 stroke-[3]" /> {isCurrentBreak ? 'Slipped Today (-1)' : 'Missed / Skipped (-1)'}
                       </span>
                     )}
                   </div>
@@ -221,7 +245,7 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
                     <div className="w-10 h-10 rounded-full bg-emerald-500/20 group-hover:bg-white/20 flex items-center justify-center mb-1">
                       <Check className="w-5 h-5 stroke-[3]" />
                     </div>
-                    <span className="font-bold text-sm">Done Today (+1)</span>
+                    <span className="font-bold text-sm">{isCurrentBreak ? 'Controlled (+1)' : 'Done Today (+1)'}</span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 group-hover:text-white dark:group-hover:text-slate-900 mt-0.5 font-mono">Press 'D' or '1'</span>
                   </button>
 
@@ -232,7 +256,7 @@ export const NightlyRoutineModal: React.FC<NightlyRoutineModalProps> = ({
                     <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 group-hover:bg-rose-100 dark:group-hover:bg-rose-900/30 flex items-center justify-center mb-1">
                       <X className="w-5 h-5 stroke-[2.5]" />
                     </div>
-                    <span className="font-bold text-sm">Missed (-1)</span>
+                    <span className="font-bold text-sm">{isCurrentBreak ? 'Gave In (-1)' : 'Missed (-1)'}</span>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 group-hover:text-rose-500 dark:group-hover:text-rose-400/80 mt-0.5 font-mono">Press 'M' or '2'</span>
                   </button>
                 </div>

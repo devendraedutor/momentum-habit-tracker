@@ -31,7 +31,9 @@ export const HabitCard: React.FC<HabitCardProps> = ({
 
   const todayStr = getTodayString();
   const todayStatus = habit.history[todayStr] || 'none';
-  const isLoggedToday = todayStatus === 'done' || todayStatus === 'missed';
+  const isSuccessToday = todayStatus === 'done' || todayStatus === 'controlled';
+  const isFailToday = todayStatus === 'missed' || todayStatus === 'failed';
+  const isLoggedToday = isSuccessToday || isFailToday;
 
   const stats = calculateHabitStats(habit, floorAtZero, activeDateStr);
   const recentPoints = calculateHabitTrajectory(habit, '7d', floorAtZero);
@@ -72,9 +74,9 @@ export const HabitCard: React.FC<HabitCardProps> = ({
   return (
     <div
       className={`w-full app-card app-card-hover rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all ${
-        todayStatus === 'done'
+        isSuccessToday
           ? 'ring-1 ring-emerald-500/50 bg-emerald-50/20 dark:bg-slate-800'
-          : todayStatus === 'missed'
+          : isFailToday
           ? 'ring-1 ring-rose-500/50 bg-rose-50/20 dark:bg-slate-800'
           : ''
       }`}
@@ -204,13 +206,15 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         {isLoggedToday ? (
           <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xl p-2.5">
             <div className="flex items-center gap-2">
-              {todayStatus === 'done' ? (
+              {isSuccessToday ? (
                 <>
                   <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/30">
                     <Check className="w-3.5 h-3.5 stroke-[3]" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Done Today</div>
+                    <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      {habit.type === 'BREAK' ? 'Controlled Today' : 'Done Today'}
+                    </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">+1 Flux XP added</div>
                   </div>
                 </>
@@ -220,7 +224,9 @@ export const HabitCard: React.FC<HabitCardProps> = ({
                     <X className="w-3.5 h-3.5 stroke-[3]" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-rose-600 dark:text-rose-400">Missed Today</div>
+                    <div className="text-xs font-bold text-rose-600 dark:text-rose-400">
+                      {habit.type === 'BREAK' ? 'Slipped Today' : 'Missed Today'}
+                    </div>
                     <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">-1 Flux XP penalty</div>
                   </div>
                 </>
@@ -239,19 +245,19 @@ export const HabitCard: React.FC<HabitCardProps> = ({
         ) : (
           <div className="grid grid-cols-2 gap-2.5">
             <button
-              onClick={() => onCheckIn(habit.id, 'done')}
+              onClick={() => onCheckIn(habit.id, habit.type === 'BREAK' ? 'controlled' : 'done')}
               className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-700 dark:text-emerald-300 hover:text-white dark:hover:text-slate-950 border border-emerald-500/30 dark:bg-emerald-500/25 dark:border-emerald-400/50 font-semibold text-xs transition-all active:scale-[0.98]"
             >
               <Check className="w-4 h-4 stroke-[2.5]" />
-              <span>Done (+1)</span>
+              <span>{habit.type === 'BREAK' ? 'Avoided (+1)' : 'Done (+1)'}</span>
             </button>
 
             <button
-              onClick={() => onCheckIn(habit.id, 'missed')}
+              onClick={() => onCheckIn(habit.id, habit.type === 'BREAK' ? 'failed' : 'missed')}
               className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 font-medium text-xs transition-all active:scale-[0.98]"
             >
               <X className="w-4 h-4 stroke-[2]" />
-              <span>Missed (-1)</span>
+              <span>{habit.type === 'BREAK' ? 'Gave In (-1)' : 'Missed (-1)'}</span>
             </button>
           </div>
         )}

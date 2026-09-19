@@ -492,10 +492,15 @@ export function App() {
           }
 
           // Evaluate isolated multi-tier sprint progression with two-way rollback support
+          const isSuccess = status === 'done' || status === 'controlled';
+          const isFail = status === 'missed' || status === 'failed';
+          const wasSuccess = prevStatus === 'done' || prevStatus === 'controlled';
+          const wasFail = prevStatus === 'missed' || prevStatus === 'failed';
+
           const prog = evaluateCheckInProgression(
             h,
-            status === 'done' ? 'done' : status === 'missed' ? 'missed' : 'none',
-            prevStatus === 'done' ? 'done' : prevStatus === 'missed' ? 'missed' : 'none'
+            isSuccess ? 'done' : isFail ? 'missed' : 'none',
+            wasSuccess ? 'done' : wasFail ? 'missed' : 'none'
           );
 
           const updatedHabit: Habit = {
@@ -553,17 +558,20 @@ export function App() {
         }
       }
 
+      const isSuccessCheckIn = status === 'done' || status === 'controlled';
+      const isMissedCheckIn = status === 'missed' || status === 'failed';
+
       if (levelUpInfo) {
         openAscendModal(
           (levelUpInfo as { habit: Habit; unlockedLevel: number }).habit,
           (levelUpInfo as { habit: Habit; unlockedLevel: number }).unlockedLevel
         );
       } else if (settings.soundEffects) {
-        if (status === 'done') sound.playDone();
-        else if (status === 'missed') sound.playMissed();
+        if (isSuccessCheckIn) sound.playDone();
+        else if (isMissedCheckIn) sound.playMissed();
       }
 
-      if (status === 'done' && settings.confetti && !levelUpInfo) {
+      if (isSuccessCheckIn && settings.confetti && !levelUpInfo) {
         confetti({
           particleCount: 35,
           spread: 50,
@@ -590,10 +598,15 @@ export function App() {
             newHistory[dateStr] = newStatus;
           }
 
+          const isSuccess = newStatus === 'done' || newStatus === 'controlled';
+          const isFail = newStatus === 'missed' || newStatus === 'failed';
+          const wasSuccess = prevStatus === 'done' || prevStatus === 'controlled';
+          const wasFail = prevStatus === 'missed' || prevStatus === 'failed';
+
           const prog = evaluateCheckInProgression(
             h,
-            newStatus === 'done' ? 'done' : newStatus === 'missed' ? 'missed' : 'none',
-            prevStatus === 'done' ? 'done' : prevStatus === 'missed' ? 'missed' : 'none'
+            isSuccess ? 'done' : isFail ? 'missed' : 'none',
+            wasSuccess ? 'done' : wasFail ? 'missed' : 'none'
           );
 
           return {
