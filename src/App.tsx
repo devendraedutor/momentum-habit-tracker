@@ -195,6 +195,7 @@ export function App() {
       createdAt: inspectingSharedHabit.createdAt || resolvedStartDate,
       archived: false,
       history: historyRecord,
+      notes: inspectingSharedHabit.notes || {},
     };
 
     const prog = recalculateHabitProgressionFromHistory(tempHabit);
@@ -228,9 +229,10 @@ export function App() {
     async (
       selectedHabits: Habit[],
       targetBuddyUids: string[],
-      shareScope?: 'starting' | 'today'
+      shareScope?: 'starting' | 'today',
+      shareReflections?: boolean
     ) => {
-      const ok = await shareHabits(selectedHabits, targetBuddyUids, shareScope);
+      const ok = await shareHabits(selectedHabits, targetBuddyUids, shareScope, shareReflections);
       if (ok) {
         setIsGranularShareModalOpen(false);
       }
@@ -291,8 +293,10 @@ export function App() {
   // Handle saving a habit-specific miss reflection note
   const handleSaveHabitNote = useCallback(
     (habitId: string, dateStr: string, note: string) => {
-      setHabits((prev) =>
-        prev.map((h) => {
+      let updatedHabitForSync: Habit | null = null;
+
+      setHabits((prev) => {
+        const next = prev.map((h) => {
           if (h.id !== habitId) return h;
           const currentNotes = { ...(h.notes || {}) };
           if (note.trim()) {
@@ -300,19 +304,25 @@ export function App() {
           } else {
             delete currentNotes[dateStr];
           }
-          return {
+          const updated = {
             ...h,
             notes: currentNotes,
             updatedAt: new Date().toISOString(),
           };
-        })
-      );
+          updatedHabitForSync = updated;
+          return updated;
+        });
+        return next;
+      });
 
       if (firebaseUser?.uid) {
         saveHabitLogNote(firebaseUser.uid, habitId, dateStr, note, 'missed');
+        if (updatedHabitForSync) {
+          syncHabitProgressToSharedHabits(firebaseUser, updatedHabitForSync);
+        }
       }
     },
-    [firebaseUser?.uid]
+    [firebaseUser]
   );
 
   // Sync active detail habit if updated

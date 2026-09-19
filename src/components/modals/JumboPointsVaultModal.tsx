@@ -71,13 +71,13 @@ export const JumboPointsVaultModal: React.FC<JumboPointsVaultModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 10 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className="relative z-10 w-[92vw] max-w-5xl h-[88vh] max-h-[920px] mx-auto p-6 sm:p-8 bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
+        className="relative z-10 w-[94vw] max-w-5xl h-[88vh] max-h-[920px] mx-auto p-4 sm:p-8 bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col"
       >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        {/* Floating Mac-style Close Button on Top-Right Corner (Safe Inset on Mobile) */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          className="absolute top-3.5 right-3.5 sm:-top-3 sm:-right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
           title="Close Vault"
           aria-label="Close"
         >

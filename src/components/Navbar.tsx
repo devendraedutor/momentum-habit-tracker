@@ -97,13 +97,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Header Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 flex-shrink-0">
           {/* 1. Gamified Jumbo Point Badge (Unlocked at >= 3 habits) */}
           {activeHabitsCount >= 3 && (
             <button
               type="button"
               onClick={onOpenJumboVault}
-              className={`relative h-9 sm:h-10 px-2.5 sm:px-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 flex items-center gap-1.5 font-mono shadow-xs select-none cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-amber-500/60 dark:hover:border-amber-400/70 hover:shadow-amber-500/20 animate-fade-in group ${
+              className={`relative h-8.5 sm:h-10 px-2 sm:px-3 rounded-xl bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/15 border text-amber-700 dark:bg-amber-500/15 dark:text-amber-300 flex items-center gap-1 sm:gap-1.5 font-mono shadow-xs select-none cursor-pointer transition-all hover:scale-105 active:scale-95 hover:border-amber-500/60 dark:hover:border-amber-400/70 hover:shadow-amber-500/20 animate-fade-in group ${
                 hasPendingBacklog
                   ? 'border-amber-500 dark:border-amber-400 ring-2 ring-amber-500/70 dark:ring-amber-400/80 ring-offset-2 ring-offset-white dark:ring-offset-slate-900 animate-pulse'
                   : 'border-amber-500/35 dark:border-amber-400/40'
@@ -116,8 +116,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               aria-label="Open Jumbo Points Vault"
             >
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-400/0 via-amber-300/20 to-amber-400/0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-              <Gem className="w-4 h-4 fill-amber-400 text-amber-500 group-hover:scale-110 transition-transform flex-shrink-0" />
-              <span className="text-xs font-black font-mono">
+              <Gem className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-400 text-amber-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+              <span className="text-[11px] sm:text-xs font-black font-mono">
                 {jumboPointsCount}
               </span>
               {hasPendingBacklog && (
@@ -132,7 +132,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsNotificationsOpen((prev) => !prev)}
-                className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+                className="relative w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
                 title={`Notifications (${unreadCount} unread)`}
                 aria-label="Open Notifications"
               >
@@ -163,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={onOpenBuddyModal}
-              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+              className="relative w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
               title="Pair with Accountability Buddy"
               aria-label="Pair with Buddy"
             >
@@ -174,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* 4. New Habit Action Button */}
           <button
             onClick={onOpenNewHabit}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
+            className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center group"
             title="Add New Habit"
             aria-label="Add New Habit"
           >
@@ -184,7 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* 5. Habit Directory Button */}
           <button
             onClick={onOpenDirectory}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
+            className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center"
             title="Habit Directory & Management"
             aria-label="Habit Directory & Management"
           >
@@ -197,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center overflow-hidden"
+                className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 shadow-xs transition-all active:scale-90 hover:scale-105 cursor-pointer flex items-center justify-center overflow-hidden"
                 title={user.displayName || user.email || 'Profile'}
                 aria-label="Profile and Settings"
               >

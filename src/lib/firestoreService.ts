@@ -898,7 +898,8 @@ export async function shareHabitsWithBuddies(
   habits: Habit[],
   targetBuddyUids: string[],
   owner: { uid: string; displayName?: string | null; photoURL?: string | null },
-  shareScope: 'starting' | 'today' = 'starting'
+  shareScope: 'starting' | 'today' = 'starting',
+  shareReflections: boolean = true
 ): Promise<boolean> {
   if (!db || !owner.uid || habits.length === 0 || targetBuddyUids.length === 0) {
     return false;
@@ -929,6 +930,22 @@ export async function shareHabitsWithBuddies(
       } else {
         sharedHistory = habit.history || {};
         sharedStreak = habit.overallStreak || 0;
+      }
+
+      // Filter reflection notes based on shareReflections & shareScope:
+      let sharedNotes: Record<string, string> = {};
+      if (shareReflections) {
+        if (shareScope === 'today') {
+          const filteredNotes: Record<string, string> = {};
+          for (const [dateKey, noteText] of Object.entries(habit.notes || {})) {
+            if (dateKey >= todayStr && noteText) {
+              filteredNotes[dateKey] = noteText;
+            }
+          }
+          sharedNotes = filteredNotes;
+        } else {
+          sharedNotes = habit.notes || {};
+        }
       }
 
       for (const buddyUid of targetBuddyUids) {
@@ -962,7 +979,9 @@ export async function shareHabitsWithBuddies(
           levelProgress: habit.levelProgress || 0,
           targetGoalDays: habit.targetGoalDays || 21,
           history: sharedHistory,
+          notes: sharedNotes,
           shareScope: shareScope,
+          shareReflections: shareReflections,
           shareStartDate: resolvedShareStart,
           updatedAt: timestamp,
         };
@@ -973,7 +992,7 @@ export async function shareHabitsWithBuddies(
 
     await batch.commit();
     console.log(
-      `✅ [SharedHabits] Shared ${habits.length} habits with ${targetBuddyUids.length} buddies (${shareScope}).`
+      `✅ [SharedHabits] Shared ${habits.length} habits with ${targetBuddyUids.length} buddies (${shareScope}, reflections: ${shareReflections}).`
     );
     return true;
   } catch (error) {
@@ -1040,6 +1059,7 @@ export async function syncHabitProgressToSharedHabits(
     for (const d of snap.docs) {
       const sharedData = d.data() as SharedHabitRecord;
       const shareScope = sharedData.shareScope || 'starting';
+      const shareReflections = sharedData.shareReflections !== false;
       const shareStartDate = sharedData.shareStartDate;
 
       let historyToSync = habit.history || {};
@@ -1051,6 +1071,21 @@ export async function syncHabitProgressToSharedHabits(
           }
         }
         historyToSync = filteredHistory;
+      }
+
+      let notesToSync: Record<string, string> = {};
+      if (shareReflections) {
+        if (shareScope === 'today' && shareStartDate) {
+          const filteredNotes: Record<string, string> = {};
+          for (const [dateKey, noteText] of Object.entries(habit.notes || {})) {
+            if (dateKey >= shareStartDate && noteText) {
+              filteredNotes[dateKey] = noteText;
+            }
+          }
+          notesToSync = filteredNotes;
+        } else {
+          notesToSync = habit.notes || {};
+        }
       }
 
       batch.update(d.ref, {
@@ -1066,6 +1101,7 @@ export async function syncHabitProgressToSharedHabits(
         levelProgress: habit.levelProgress || 0,
         targetGoalDays: habit.targetGoalDays || 21,
         history: historyToSync,
+        notes: notesToSync,
         updatedAt: timestamp,
       });
 
@@ -1178,11 +1214,20 @@ export function subscribeToBuddySharedHabits(
             habitIcon: data.habitIcon || 'Sparkles',
             habitColor: data.habitColor || '#10b981',
             habitCategory: data.habitCategory || 'General',
+            habitType: data.habitType || (data.cadence === 'BREAK' ? 'BREAK' : 'BUILD'),
+            startDate: data.startDate,
+            createdAt: data.createdAt,
             streak: Number(data.streak) || 0,
             completedToday: Boolean(data.completedToday),
             cadence: data.cadence || 'BUILD',
             currentLevel: Number(data.currentLevel) || 0,
+            levelProgress: Number(data.levelProgress) || 0,
+            targetGoalDays: Number(data.targetGoalDays) || 21,
             history: data.history || {},
+            notes: data.notes || {},
+            shareScope: data.shareScope,
+            shareReflections: data.shareReflections,
+            shareStartDate: data.shareStartDate,
             updatedAt: data.updatedAt || new Date().toISOString(),
           };
         });
@@ -1232,11 +1277,20 @@ export function subscribeToMySharedHabitsWithBuddy(
             habitIcon: data.habitIcon || 'Sparkles',
             habitColor: data.habitColor || '#10b981',
             habitCategory: data.habitCategory || 'General',
+            habitType: data.habitType || (data.cadence === 'BREAK' ? 'BREAK' : 'BUILD'),
+            startDate: data.startDate,
+            createdAt: data.createdAt,
             streak: Number(data.streak) || 0,
             completedToday: Boolean(data.completedToday),
             cadence: data.cadence || 'BUILD',
             currentLevel: Number(data.currentLevel) || 0,
+            levelProgress: Number(data.levelProgress) || 0,
+            targetGoalDays: Number(data.targetGoalDays) || 21,
             history: data.history || {},
+            notes: data.notes || {},
+            shareScope: data.shareScope,
+            shareReflections: data.shareReflections,
+            shareStartDate: data.shareStartDate,
             updatedAt: data.updatedAt || new Date().toISOString(),
           };
         });

@@ -16,6 +16,9 @@ import {
   UserCheck,
   Clock,
   UserPlus,
+  History,
+  Calendar,
+  FileText,
 } from 'lucide-react';
 import type { Habit } from '../../types/habit';
 import type { BuddyMemberSummary } from '../../types/buddy';
@@ -32,7 +35,8 @@ interface GranularShareModalProps {
   onShareConfirmed: (
     selectedHabits: Habit[],
     targetBuddyUids: string[],
-    shareScope?: 'starting' | 'today'
+    shareScope?: 'starting' | 'today',
+    shareReflections?: boolean
   ) => Promise<boolean>;
   onOpenBuddyHub?: () => void;
   onSearchBuddy?: (email: string) => Promise<void>;
@@ -66,6 +70,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
   const [selectedHabitIds, setSelectedHabitIds] = useState<Set<string>>(new Set());
   const [selectedBuddyUids, setSelectedBuddyUids] = useState<Set<string>>(new Set());
   const [shareScope, setShareScope] = useState<'starting' | 'today'>('starting');
+  const [shareReflections, setShareReflections] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [emailInput, setEmailInput] = useState('');
@@ -80,6 +85,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
       setInviteSuccessMessage(null);
       setShowSearchForm(false);
       setShareScope('starting');
+      setShareReflections(true);
       setSelectedHabitIds(new Set());
 
       if (preselectedBuddyUid) {
@@ -141,7 +147,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
 
     try {
       const chosenHabits = activeHabits.filter((h) => selectedHabitIds.has(h.id));
-      const success = await onShareConfirmed(chosenHabits, targetBuddyUids, shareScope);
+      const success = await onShareConfirmed(chosenHabits, targetBuddyUids, shareScope, shareReflections);
       if (success) {
         onClose();
       } else {
@@ -170,13 +176,13 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md">
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[540px] max-h-[88vh] bg-white dark:bg-slate-900 rounded-[24px] shadow-2xl border border-slate-100 dark:border-slate-800 p-6 sm:p-7 relative z-10 flex flex-col"
+        className="w-full max-w-[540px] max-h-[88vh] bg-white dark:bg-slate-900 rounded-[24px] shadow-2xl border border-slate-100 dark:border-slate-800 p-4 sm:p-7 relative z-10 flex flex-col"
       >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        {/* Floating Mac-style Close Button on Top-Right Corner (Safe Inset on Mobile) */}
         <button
           type="button"
           onClick={handleModalClose}
-          className="absolute -top-3.5 -right-3.5 w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition-transform hover:scale-105 active:scale-95 z-20"
+          className="absolute top-3.5 right-3.5 sm:-top-3.5 sm:-right-3.5 w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-md flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-white transition-transform hover:scale-105 active:scale-95 z-20 cursor-pointer"
           title="Close"
           aria-label="Close"
         >
@@ -184,7 +190,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
         </button>
 
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
               {step === 1 ? <ListChecks className="w-4.5 h-4.5" /> : <Users className="w-4.5 h-4.5" />}
@@ -280,7 +286,7 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
               )}
             </div>
 
-            {/* Share Data Starting Point Selector with Smooth Animated Transition */}
+            {/* Share Configuration Options with Smooth Animated Transition */}
             <AnimatePresence initial={false}>
               {selectedHabitIds.size > 0 && (
                 <motion.div
@@ -290,39 +296,92 @@ export const GranularShareModal: React.FC<GranularShareModalProps> = ({
                   transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden flex-shrink-0"
                 >
-                  <div className="p-2.5 sm:p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-750 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">
-                        Share Data From
-                      </p>
-                      <p className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">
-                        {shareScope === 'starting' ? 'Full history' : 'Starting today'}
-                      </p>
+                  <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-750 p-1 divide-y divide-slate-200/60 dark:divide-slate-750 shadow-xs">
+                    {/* Row 1: Timeline Scope */}
+                    <div className="p-2.5 sm:p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                          <History className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                            History Scope
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">
+                            {shareScope === 'starting' ? 'From habit creation' : 'Starting from today'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-200/80 dark:bg-slate-900 p-0.5 rounded-xl flex items-center gap-0.5 border border-slate-200/80 dark:border-slate-700/80 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setShareScope('starting')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 ${
+                            shareScope === 'starting'
+                              ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs border border-slate-200/60 dark:border-slate-700'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'
+                          }`}
+                        >
+                          <History className="w-3.5 h-3.5" />
+                          <span>All-Time</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShareScope('today')}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 ${
+                            shareScope === 'today'
+                              ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 font-bold shadow-xs border border-slate-200/60 dark:border-slate-700'
+                              : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'
+                          }`}
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>Today</span>
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="bg-slate-100 dark:bg-slate-800/70 p-1 rounded-xl flex items-center gap-1 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setShareScope('starting')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                          shareScope === 'starting'
-                            ? 'bg-emerald-500 text-white font-medium shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                    {/* Row 2: Reflection Notes Switch */}
+                    <div
+                      onClick={() => setShareReflections((prev) => !prev)}
+                      className="p-2.5 sm:p-3 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-100/50 dark:hover:bg-slate-750/30 transition-colors rounded-b-xl"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                            Reflection Notes
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5">
+                            {shareReflections ? 'Notes visible in buddy charts' : 'Keep personal reflections private'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Premium Tactile Switch Key */}
+                      <div
+                        role="switch"
+                        aria-checked={shareReflections}
+                        className={`w-12 h-7 rounded-full p-1 transition-all duration-200 ease-out flex items-center cursor-pointer shadow-inner flex-shrink-0 ${
+                          shareReflections
+                            ? 'bg-gradient-to-r from-emerald-500 to-emerald-400 shadow-emerald-500/20 justify-end'
+                            : 'bg-slate-300 dark:bg-slate-700 justify-start'
                         }`}
                       >
-                        From Starting
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShareScope('today')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                          shareScope === 'today'
-                            ? 'bg-emerald-500 text-white font-medium shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
-                        }`}
-                      >
-                        Today
-                      </button>
+                        <motion.div
+                          layout
+                          transition={{ type: 'spring', stiffness: 600, damping: 35 }}
+                          className="w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center"
+                        >
+                          {shareReflections ? (
+                            <Check className="w-3 h-3 text-emerald-600 stroke-[3.5]" />
+                          ) : (
+                            <X className="w-3 h-3 text-slate-400 stroke-[3.5]" />
+                          )}
+                        </motion.div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

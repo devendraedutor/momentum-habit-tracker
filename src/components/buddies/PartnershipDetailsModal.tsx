@@ -134,20 +134,20 @@ export const PartnershipDetailsModal: React.FC<PartnershipDetailsModalProps> = (
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 selection:bg-emerald-500/20 cursor-default"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 selection:bg-emerald-500/20 cursor-default"
     >
       <div
         onClick={(e) => {
           e.stopPropagation();
           setShowMoreMenu(false);
         }}
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 flex flex-col max-h-[88vh] animate-in zoom-in-95 duration-200"
       >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        {/* Floating Mac-style Close Button on Top-Right Corner (Safe Inset on Mobile) */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          className="absolute top-3.5 right-3.5 sm:-top-3 sm:-right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
           title="Close"
           aria-label="Close"
         >
@@ -155,7 +155,7 @@ export const PartnershipDetailsModal: React.FC<PartnershipDetailsModalProps> = (
         </button>
 
         {/* Clean Header: Avatar + Name + Nudge & Three-Dots More Options */}
-        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-3 sm:pb-3.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5 min-w-0">
             {buddy.photoURL ? (
               <img

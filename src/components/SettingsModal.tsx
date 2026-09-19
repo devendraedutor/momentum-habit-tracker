@@ -96,11 +96,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl flex flex-col relative animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        {/* Floating Mac-style Close Button on Top-Right Corner (Safe Inset on Mobile) */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          className="absolute top-3.5 right-3.5 sm:-top-3 sm:-right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
           title="Close"
           aria-label="Close"
         >

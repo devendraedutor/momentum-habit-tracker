@@ -357,11 +357,11 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
         className="w-full max-w-3xl max-h-[92vh] bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-750 shadow-2xl flex flex-col animate-scale-in relative"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        {/* Floating Mac-style Close Button on Top-Right Corner (Safe Inset on Mobile) */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          className="absolute top-3.5 right-3.5 sm:-top-3 sm:-right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
           title="Close"
           aria-label="Close modal"
         >
@@ -375,43 +375,43 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
         />
 
         {/* 1. Header Identity Strip (Sticky with permanent accessibility) */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 sm:gap-4 flex-shrink-0 relative z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-t-3xl">
+        <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 flex-shrink-0 relative z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-t-3xl">
           {/* Left Side: Icon + Top: Habit Name, Down: Build/Break Tag */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-8 sm:pr-0">
             <div
-              className="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform bg-slate-100 dark:bg-slate-850"
+              className="w-10 h-10 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform bg-slate-100 dark:bg-slate-850"
               style={{
                 backgroundColor: `${habitColor}22`,
                 color: habitColor,
                 border: `1.5px solid ${habitColor}45`,
               }}
             >
-              <DynamicIcon name={habit.icon} className="w-6 h-6" />
+              <DynamicIcon name={habit.icon} className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
 
             <div className="min-w-0 flex flex-col justify-center">
               {/* Top: Habit Name */}
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight truncate leading-tight">
+                <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-white font-mono tracking-tight truncate leading-tight">
                   {habit.name}
                 </h2>
                 {isReadOnly && (
-                  <span className="text-xs sm:text-sm font-normal text-slate-500 dark:text-slate-400 font-sans">
+                  <span className="text-[11px] sm:text-sm font-normal text-slate-500 dark:text-slate-400 font-sans">
                     ({sharedByBuddyName ? `${sharedByBuddyName.split(' ')[0]}'s Habit` : "Partner's Habit"})
                   </span>
                 )}
               </div>
 
               {/* Down: Build/Break Habit Tag */}
-              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5 mt-1 sm:mt-1.5 flex-wrap">
                 <span
-                  className={`text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold uppercase font-mono flex items-center gap-1 border ${
+                  className={`text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full font-bold uppercase font-mono flex items-center gap-1 border ${
                     isBreak
                       ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 dark:bg-rose-500/20 dark:border-rose-500/40'
                       : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 dark:bg-emerald-500/20 dark:border-emerald-500/40'
                   }`}
                 >
-                  {isBreak ? <ShieldAlert className="w-3.5 h-3.5" /> : <Sprout className="w-3.5 h-3.5" />}
+                  {isBreak ? <ShieldAlert className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <Sprout className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
                   <span>{isBreak ? 'Break Habit' : 'Build Habit'}</span>
                 </span>
               </div>
@@ -419,16 +419,16 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
           </div>
 
           {/* Right Side: Top: Category, Down: Started Date */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="text-right flex flex-col items-end justify-center">
-              {/* Top: Habit Category */}
-              <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-200 font-sans leading-tight">
+          <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/60">
+            <div className="text-left sm:text-right flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center w-full sm:w-auto gap-2">
+              {/* Habit Category */}
+              <span className="text-xs sm:text-base font-bold text-slate-800 dark:text-slate-200 font-sans leading-tight px-2 py-0.5 sm:p-0 rounded-lg sm:rounded-none bg-slate-100 dark:bg-slate-800 sm:bg-transparent sm:dark:bg-transparent">
                 {habit.category}
               </span>
 
-              {/* Down: Started Date */}
-              <span className="font-mono text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1 leading-tight">
-                <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+              {/* Started Date */}
+              <span className="font-mono text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 leading-tight">
+                <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-500" />
                 <span>Started {startDateFormatted}</span>
               </span>
             </div>
@@ -634,16 +634,16 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
             </div>
 
             {/* Weekday Column Headers */}
-            <div className="grid grid-cols-7 gap-1.5 mb-1.5 text-center">
+            <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1 sm:mb-1.5 text-center">
               {WEEKDAY_NAMES.map((name) => (
-                <div key={name} className="text-[10px] font-bold text-slate-400 uppercase font-mono tracking-wider py-1">
+                <div key={name} className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase font-mono tracking-wider py-0.5 sm:py-1">
                   {name}
                 </div>
               ))}
             </div>
 
             {/* Weekly Calendar Tiles Grid */}
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {matrixDays.map((d) => {
                 const isDone = d.status === 'done' || d.status === 'controlled';
                 const isMissed = d.status === 'missed' || d.status === 'failed';
@@ -676,32 +676,32 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                           onClose();
                         }
                       }}
-                      className={`w-full p-1.5 sm:p-2 rounded-2xl border flex flex-col items-center justify-between min-h-[48px] sm:min-h-[52px] transition-all select-none text-center relative ${
+                      className={`w-full p-1 sm:p-2 rounded-xl sm:rounded-2xl border flex flex-col items-center justify-between min-h-[44px] sm:min-h-[52px] transition-all select-none text-center relative ${
                         isReadOnly ? 'cursor-default' : 'cursor-pointer hover:scale-[1.03] active:scale-95'
                       } ${cardStyle}`}
                     >
                       {/* Top Day / Month Tag + Reflection Dot */}
-                      <div className="flex items-center justify-between w-full px-0.5 text-[9px] font-mono leading-none">
+                      <div className="flex items-center justify-between w-full px-0.5 text-[8px] sm:text-[9px] font-mono leading-none">
                         <span className="font-bold opacity-80">{d.dayNum}</span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5 sm:gap-1">
                           {habitNote && (
                             <span
                               className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_5px_rgba(244,63,94,0.9)] inline-block"
                             />
                           )}
-                          <span className="text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>
+                          <span className="text-[7px] sm:text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>
                         </div>
                       </div>
 
                       {/* Center Icon Badge */}
                       <div className="my-auto flex items-center justify-center">
                         {isDone ? (
-                          <div className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-xs">
-                            <Check className="w-3 h-3 stroke-[3]" />
+                          <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-xs">
+                            <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                           </div>
                         ) : isMissed ? (
-                          <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-xs">
-                            <X className="w-3 h-3 stroke-[3]" />
+                          <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-xs">
+                            <X className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[3]" />
                           </div>
                         ) : null}
                       </div>

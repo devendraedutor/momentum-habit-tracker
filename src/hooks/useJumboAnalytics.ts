@@ -139,24 +139,26 @@ export const useJumboAnalytics = (
             color: habit.color,
             status: 'Failed',
           });
-          if (habitRuinedDates[habit.id]) {
+          if (habitsActiveOnDate.length >= 3 && habitRuinedDates[habit.id]) {
             habitRuinedDates[habit.id].push(dateKey);
           }
         }
       });
 
-      const isPerfect =
-        jumboSet.has(dateKey) ||
-        (habitsActiveOnDate.length > 0 &&
-          completedHabitsCount === habitsActiveOnDate.length &&
-          failedHabits.length === 0);
+      const isJumboEligible = habitsActiveOnDate.length >= 3;
 
-      const isBroken = !isPerfect && failedHabits.length > 0;
+      const isPerfect =
+        isJumboEligible &&
+        (jumboSet.has(dateKey) ||
+          (completedHabitsCount === habitsActiveOnDate.length &&
+            failedHabits.length === 0));
+
+      const isBroken = isJumboEligible && !isPerfect && failedHabits.length > 0;
       const isIncomplete =
+        isJumboEligible &&
         !isPerfect &&
         !isBroken &&
         !isFuture &&
-        habitsActiveOnDate.length > 0 &&
         completedHabitsCount < habitsActiveOnDate.length;
 
       if (isPerfect) conqueredCount++;

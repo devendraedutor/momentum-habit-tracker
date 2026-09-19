@@ -300,6 +300,7 @@ export interface PendingAuditItem {
 
 /**
  * Collects all historical dates up to yesterday where active habits remain unlogged or pending.
+ * Note: Only audits dates where user had >= 3 active habits (Jumbo eligible days).
  */
 export function getHistoricalPendingBacklog(habits: Habit[]): PendingAuditItem[] {
   const backlog: PendingAuditItem[] = [];
@@ -310,7 +311,7 @@ export function getHistoricalPendingBacklog(habits: Habit[]): PendingAuditItem[]
   const yesterdayKey = formatDate(yesterday);
 
   const activeHabits = habits.filter((h) => !h.archived);
-  if (activeHabits.length === 0) return [];
+  if (activeHabits.length < 3) return [];
 
   let earliestDate = todayKey;
   activeHabits.forEach((h) => {
@@ -331,7 +332,8 @@ export function getHistoricalPendingBacklog(habits: Habit[]): PendingAuditItem[]
       return sDate <= dateKey;
     });
 
-    if (habitsActiveOnDate.length === 0) return;
+    // Only dates where user had at least 3 active habits are eligible for Jumbo Point audits
+    if (habitsActiveOnDate.length < 3) return;
 
     const pendingHabitsOnDate: { id: string; name: string; icon: string; color?: string }[] = [];
 
@@ -361,11 +363,11 @@ export function getHistoricalPendingBacklog(habits: Habit[]): PendingAuditItem[]
 
 /**
  * Pure mathematical recalculation of all valid Jumbo Points across full recorded history.
- * Rule: A date earns a Jumbo Point iff >= 1 habit was active AND every active habit is 'done' or 'controlled'.
+ * Rule: A date earns a Jumbo Point iff >= 3 habits were active on that specific date AND every active habit was 'done' or 'controlled'.
  */
 export function recalculateAllJumboPoints(habits: Habit[]): string[] {
   const activeHabits = habits.filter((h) => !h.archived);
-  if (activeHabits.length === 0) return [];
+  if (activeHabits.length < 3) return [];
 
   const todayKey = getTodayString();
   let earliestDate = todayKey;
@@ -389,7 +391,8 @@ export function recalculateAllJumboPoints(habits: Habit[]): string[] {
       return sDate <= dateKey;
     });
 
-    if (habitsActiveOnDate.length === 0) return;
+    // Strictly require >= 3 active habits on this specific date
+    if (habitsActiveOnDate.length < 3) return;
 
     const allPassed = habitsActiveOnDate.every((h) => {
       const st = h.history?.[dateKey];
@@ -406,23 +409,27 @@ export function recalculateAllJumboPoints(habits: Habit[]): string[] {
 
 /**
  * Reconciles Jumbo Points for a given date based on current active habits.
+ * Rule: Must have >= 3 active habits on dateStr AND all completed.
  */
 export function reconcileJumboDate(
   dateStr: string,
   activeHabits: Habit[],
   existingJumboDates: string[]
 ): { updatedJumboDates: string[]; isJumboNow: boolean; wasAwarded: boolean } {
-  const applicableHabits = activeHabits.filter(
-    (h) => !h.archived && (!h.startDate || h.startDate <= dateStr)
-  );
+  const todayKey = getTodayString();
+  const applicableHabits = activeHabits.filter((h) => {
+    const sDate = h.startDate || (h.createdAt ? h.createdAt.split('T')[0] : todayKey);
+    return !h.archived && sDate <= dateStr;
+  });
 
-  if (applicableHabits.length === 0) {
+  // User must have at least 3 active habits on this date to earn a Jumbo Point
+  if (applicableHabits.length < 3) {
     const updatedJumboDates = existingJumboDates.filter((d) => d !== dateStr);
     return { updatedJumboDates, isJumboNow: false, wasAwarded: false };
   }
 
   const allDone = applicableHabits.every((h) => {
-    const st = h.history[dateStr];
+    const st = h.history?.[dateStr];
     return st === 'done' || st === 'controlled';
   });
   const alreadyHad = existingJumboDates.includes(dateStr);

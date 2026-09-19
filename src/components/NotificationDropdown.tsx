@@ -71,7 +71,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   return (
     <div
       ref={containerRef}
-      className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 z-50 animate-in fade-in zoom-in-95 duration-150 selection:bg-emerald-500/20"
+      className="fixed inset-x-3 sm:inset-x-auto sm:absolute sm:right-0 sm:top-full top-16 mt-2 max-w-sm sm:w-96 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3 z-50 animate-in fade-in zoom-in-95 duration-150 selection:bg-emerald-500/20 mx-auto sm:mx-0"
     >
       {/* Dropdown Header */}
       <div className="flex items-center justify-between px-2 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-2">

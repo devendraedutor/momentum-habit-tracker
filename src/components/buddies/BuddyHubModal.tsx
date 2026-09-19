@@ -108,20 +108,20 @@ export const BuddyHubModal: React.FC<BuddyHubModalProps> = ({
   return (
     <div
       onClick={handleClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 selection:bg-emerald-500/20 cursor-default"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 selection:bg-emerald-500/20 cursor-default"
     >
       <div
         onClick={(e) => {
           e.stopPropagation();
           if (showPendingList) setShowPendingList(false);
         }}
-        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative z-10 flex flex-col max-h-[88vh] animate-in zoom-in-95 duration-200"
       >
-        {/* Floating Mac-style Close Button on Top-Right Corner */}
+        {/* Floating Mac-style Close Button on Top-Right Corner (Safe Inset on Mobile) */}
         <button
           type="button"
           onClick={handleClose}
-          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+          className="absolute top-3.5 right-3.5 sm:-top-3 sm:-right-3 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
           title="Close"
           aria-label="Close"
         >
@@ -129,7 +129,7 @@ export const BuddyHubModal: React.FC<BuddyHubModalProps> = ({
         </button>
 
         {/* Minimal Header with Request (N) Button & Dropdown */}
-        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between pb-3 sm:pb-3.5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <Users className="w-4.5 h-4.5" />
@@ -163,7 +163,7 @@ export const BuddyHubModal: React.FC<BuddyHubModalProps> = ({
                 {showPendingList && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150"
+                    className="fixed inset-x-3 sm:inset-x-auto sm:absolute sm:right-0 sm:top-full top-20 mt-2 max-w-sm sm:w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150 mx-auto sm:mx-0"
                   >
                     <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
                       {pendingInvites.map((invite) => (

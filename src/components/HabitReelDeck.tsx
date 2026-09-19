@@ -378,11 +378,11 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
                   onClick={(e) => e.stopPropagation()}
                   className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 rounded-3xl shadow-2xl p-5 overflow-visible relative"
                 >
-                  {/* Floating Mac-style Close Button on Top-Right Corner */}
+                  {/* Floating Mac-style Close Button on Top-Right Corner (Safe Inset on Mobile) */}
                   <button
                     type="button"
                     onClick={() => setNoteModalOpen(false)}
-                    className="absolute -top-3 -right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-750 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
+                    className="absolute top-3.5 right-3.5 sm:-top-3 sm:-right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white border border-slate-200 dark:border-slate-750 shadow-md flex items-center justify-center transition active:scale-90 hover:scale-105 cursor-pointer z-30"
                     title="Close"
                     aria-label="Close"
                   >
@@ -1292,7 +1292,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     type="button"
                     onClick={handlePrevCard}
                     disabled={!!chargingHabitId || isDeckLocked}
-                    className="absolute -left-3.5 sm:-left-5 top-1/2 -translate-y-1/2 z-40 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-850/95 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md sm:shadow-lg backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 hover:scale-110 active:scale-90 transition-all cursor-pointer disabled:opacity-30 disabled:pointer-events-none group"
+                    className="absolute -left-2 sm:-left-5 top-1/2 -translate-y-1/2 z-40 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-850/95 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md sm:shadow-lg backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 hover:scale-110 active:scale-90 transition-all cursor-pointer disabled:opacity-30 disabled:pointer-events-none group"
                     title="Bring back previous card from right"
                     aria-label="Previous Card"
                   >
@@ -1379,7 +1379,7 @@ export const HabitReelDeck: React.FC<HabitReelDeckProps> = ({
                     type="button"
                     onClick={handleNextCard}
                     disabled={!!chargingHabitId || isDeckLocked}
-                    className="absolute -right-3.5 sm:-right-5 top-1/2 -translate-y-1/2 z-40 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-850/95 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md sm:shadow-lg backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 hover:scale-110 active:scale-90 transition-all cursor-pointer disabled:opacity-30 disabled:pointer-events-none group"
+                    className="absolute -right-2 sm:-right-5 top-1/2 -translate-y-1/2 z-40 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 dark:bg-slate-850/95 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md sm:shadow-lg backdrop-blur-md flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 hover:scale-110 active:scale-90 transition-all cursor-pointer disabled:opacity-30 disabled:pointer-events-none group"
                     title="Swipe card towards right"
                     aria-label="Next Card"
                   >
