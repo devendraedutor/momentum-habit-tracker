@@ -26,6 +26,7 @@ export interface Habit {
   milestonesCompleted?: number; // Number of conquered milestones
   previousTargets?: number[]; // History of conquered targets
   bonusXP?: number; // Accumulated milestone clear bonus XP
+  initialScore?: number; // Starting baseline score when shared from a specific date
   startDate?: string; // Date (YYYY-MM-DD) from which tracking begins
   createdAt: string;
   archived?: boolean;

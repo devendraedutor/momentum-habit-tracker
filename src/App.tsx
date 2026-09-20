@@ -196,6 +196,7 @@ export function App() {
       archived: false,
       history: historyRecord,
       notes: inspectingSharedHabit.notes || {},
+      initialScore: inspectingSharedHabit.initialScore || 0,
     };
 
     const prog = recalculateHabitProgressionFromHistory(tempHabit);

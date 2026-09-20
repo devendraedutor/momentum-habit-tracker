@@ -69,6 +69,7 @@ export interface SharedHabitRecord {
   currentLevel?: number;
   levelProgress?: number;
   targetGoalDays?: number;
+  initialScore?: number;
   history?: Record<string, string>;
   notes?: Record<string, string>;
   shareScope?: 'starting' | 'today';

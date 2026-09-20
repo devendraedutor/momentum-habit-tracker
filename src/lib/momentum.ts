@@ -146,7 +146,7 @@ export function calculateHabitTrajectory(
   const simulationStart = earliestCreatedOrLogged < startDateStr ? earliestCreatedOrLogged : startDateStr;
   const allSimulationDates = getDateRange(simulationStart, endDateStr);
 
-  let runningScore = 0;
+  let runningScore = habit.initialScore || 0;
   const fullTimeSeries = new Map<string, { score: number; delta: number; status: CheckInStatus }>();
 
   for (const date of allSimulationDates) {
@@ -174,7 +174,7 @@ export function calculateHabitTrajectory(
   const visibleDates = getDateRange(startDateStr, endDateStr);
   return visibleDates.map((date) => {
     const point = fullTimeSeries.get(date) || {
-      score: runningScore,
+      score: habit.initialScore || 0,
       delta: 0,
       status: 'none' as CheckInStatus,
     };

@@ -958,6 +958,16 @@ export async function shareHabitsWithBuddies(
         const habitStartDate = habit.startDate || (habit.createdAt ? habit.createdAt.split('T')[0] : todayStr);
         const resolvedShareStart = shareScope === 'today' ? todayStr : habitStartDate;
 
+        let baselineScore = habit.bonusXP || 0;
+        if (shareScope === 'today') {
+          for (const [d, status] of Object.entries(habit.history || {})) {
+            if (d < resolvedShareStart) {
+              if (status === 'done' || status === 'controlled') baselineScore += 1;
+              else if (status === 'missed' || status === 'failed') baselineScore -= 1;
+            }
+          }
+        }
+
         const payload: SharedHabitRecord = {
           id: docId,
           habitId: habit.id,
@@ -978,6 +988,7 @@ export async function shareHabitsWithBuddies(
           currentLevel: habit.currentLevel || 0,
           levelProgress: habit.levelProgress || 0,
           targetGoalDays: habit.targetGoalDays || 21,
+          initialScore: shareScope === 'today' ? baselineScore : (habit.initialScore || 0),
           history: sharedHistory,
           notes: sharedNotes,
           shareScope: shareScope,
@@ -1088,6 +1099,16 @@ export async function syncHabitProgressToSharedHabits(
         }
       }
 
+      let baselineScore = habit.bonusXP || 0;
+      if (shareScope === 'today' && shareStartDate) {
+        for (const [d, status] of Object.entries(habit.history || {})) {
+          if (d < shareStartDate) {
+            if (status === 'done' || status === 'controlled') baselineScore += 1;
+            else if (status === 'missed' || status === 'failed') baselineScore -= 1;
+          }
+        }
+      }
+
       batch.update(d.ref, {
         habitTitle: habit.name,
         habitIcon: habit.icon,
@@ -1100,6 +1121,7 @@ export async function syncHabitProgressToSharedHabits(
         currentLevel: habit.currentLevel || 0,
         levelProgress: habit.levelProgress || 0,
         targetGoalDays: habit.targetGoalDays || 21,
+        initialScore: shareScope === 'today' ? baselineScore : (habit.initialScore || 0),
         history: historyToSync,
         notes: notesToSync,
         updatedAt: timestamp,
@@ -1223,6 +1245,7 @@ export function subscribeToBuddySharedHabits(
             currentLevel: Number(data.currentLevel) || 0,
             levelProgress: Number(data.levelProgress) || 0,
             targetGoalDays: Number(data.targetGoalDays) || 21,
+            initialScore: Number(data.initialScore) || 0,
             history: data.history || {},
             notes: data.notes || {},
             shareScope: data.shareScope,
@@ -1286,6 +1309,7 @@ export function subscribeToMySharedHabitsWithBuddy(
             currentLevel: Number(data.currentLevel) || 0,
             levelProgress: Number(data.levelProgress) || 0,
             targetGoalDays: Number(data.targetGoalDays) || 21,
+            initialScore: Number(data.initialScore) || 0,
             history: data.history || {},
             notes: data.notes || {},
             shareScope: data.shareScope,
