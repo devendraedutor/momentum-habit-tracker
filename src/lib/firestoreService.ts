@@ -987,6 +987,7 @@ export async function shareHabitsWithBuddies(
           currentLevel: habit.currentLevel || 0,
           levelProgress: habit.levelProgress || 0,
           targetGoalDays: habit.targetGoalDays || 21,
+          currentScore: stats.currentScore,
           initialScore: shareScope === 'today' ? baselineScore : (habit.initialScore || 0),
           history: sharedHistory,
           notes: sharedNotes,
@@ -1100,11 +1101,12 @@ export async function syncHabitProgressToSharedHabits(
 
       const stats = calculateHabitStats(habit, false);
       let baselineScore = stats.currentScore;
-      if (shareScope === 'today' && shareStartDate) {
-        const todayStatus = habit.history?.[shareStartDate];
+      if (shareScope === 'today') {
+        const startKey = shareStartDate || todayStr;
+        const startStatus = habit.history?.[startKey];
         let todayDelta = 0;
-        if (todayStatus === 'done' || todayStatus === 'controlled') todayDelta = 1;
-        else if (todayStatus === 'missed' || todayStatus === 'failed') todayDelta = -1;
+        if (startStatus === 'done' || startStatus === 'controlled') todayDelta = 1;
+        else if (startStatus === 'missed' || startStatus === 'failed') todayDelta = -1;
         baselineScore = stats.currentScore - todayDelta;
       }
 
@@ -1120,6 +1122,7 @@ export async function syncHabitProgressToSharedHabits(
         currentLevel: habit.currentLevel || 0,
         levelProgress: habit.levelProgress || 0,
         targetGoalDays: habit.targetGoalDays || 21,
+        currentScore: stats.currentScore,
         initialScore: shareScope === 'today' ? baselineScore : (habit.initialScore || 0),
         history: historyToSync,
         notes: notesToSync,
@@ -1244,7 +1247,8 @@ export function subscribeToBuddySharedHabits(
             currentLevel: Number(data.currentLevel) || 0,
             levelProgress: Number(data.levelProgress) || 0,
             targetGoalDays: Number(data.targetGoalDays) || 21,
-            initialScore: Number(data.initialScore) || 0,
+            currentScore: data.currentScore !== undefined ? Number(data.currentScore) : undefined,
+            initialScore: data.initialScore !== undefined ? Number(data.initialScore) : 0,
             history: data.history || {},
             notes: data.notes || {},
             shareScope: data.shareScope,
@@ -1308,7 +1312,8 @@ export function subscribeToMySharedHabitsWithBuddy(
             currentLevel: Number(data.currentLevel) || 0,
             levelProgress: Number(data.levelProgress) || 0,
             targetGoalDays: Number(data.targetGoalDays) || 21,
-            initialScore: Number(data.initialScore) || 0,
+            currentScore: data.currentScore !== undefined ? Number(data.currentScore) : undefined,
+            initialScore: data.initialScore !== undefined ? Number(data.initialScore) : 0,
             history: data.history || {},
             notes: data.notes || {},
             shareScope: data.shareScope,

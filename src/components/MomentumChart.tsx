@@ -76,12 +76,12 @@ export const MomentumChart: React.FC<MomentumChartProps> = ({
     if (currentHabit) {
       const stats = calculateHabitStats(currentHabit, floorAtZero);
       return {
-        totalXP: stats.currentScore,
+        totalXP: currentHabit.currentScore !== undefined ? currentHabit.currentScore : stats.currentScore,
         totalDone: stats.totalDone,
         totalMissed: stats.totalMissed,
         totalCheckedIn: stats.totalDone + stats.totalMissed,
-        streak: stats.currentStreak,
-        targetDays: stats.targetGoalDays || 21,
+        streak: currentHabit.overallStreak !== undefined ? currentHabit.overallStreak : stats.currentStreak,
+        targetDays: currentHabit.targetGoalDays || stats.targetGoalDays || 21,
         targetDaysRemaining: stats.goalDaysRemaining,
       };
     } else {

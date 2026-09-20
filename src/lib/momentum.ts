@@ -146,7 +146,17 @@ export function calculateHabitTrajectory(
   const simulationStart = earliestCreatedOrLogged < startDateStr ? earliestCreatedOrLogged : startDateStr;
   const allSimulationDates = getDateRange(simulationStart, endDateStr);
 
-  let runningScore = habit.initialScore || 0;
+  let effectiveInitialScore = habit.initialScore !== undefined ? habit.initialScore : 0;
+  if (habit.currentScore !== undefined && (habit.initialScore === undefined || habit.initialScore === 0)) {
+    let totalDeltas = 0;
+    for (const st of Object.values(habit.history || {})) {
+      if (st === 'done' || st === 'controlled') totalDeltas += 1;
+      else if (st === 'missed' || st === 'failed') totalDeltas -= 1;
+    }
+    effectiveInitialScore = habit.currentScore - totalDeltas - (habit.bonusXP || 0);
+  }
+
+  let runningScore = effectiveInitialScore;
   const fullTimeSeries = new Map<string, { score: number; delta: number; status: CheckInStatus }>();
 
   for (const date of allSimulationDates) {
@@ -174,7 +184,7 @@ export function calculateHabitTrajectory(
   const visibleDates = getDateRange(startDateStr, endDateStr);
   return visibleDates.map((date) => {
     const point = fullTimeSeries.get(date) || {
-      score: habit.initialScore || 0,
+      score: effectiveInitialScore,
       delta: 0,
       status: 'none' as CheckInStatus,
     };
@@ -255,9 +265,12 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false, asOfDateS
     }
   });
 
-  const baseScore = trajectory.length > 0 ? trajectory[trajectory.length - 1].score : 0;
-  const currentScore = baseScore + (habit.bonusXP || 0);
+  const baseScore = trajectory.length > 0 ? trajectory[trajectory.length - 1].score : (habit.currentScore ?? 0);
+  const currentScore = habit.currentScore !== undefined && (habit.initialScore === undefined || habit.initialScore === 0) && Object.keys(habit.history || {}).length <= 1
+    ? habit.currentScore
+    : baseScore + (habit.bonusXP || 0);
   if (currentScore > highestScore) highestScore = currentScore;
+  if (currentScore < lowestScore) lowestScore = currentScore;
 
   // Calculate active streak backwards from targetEnd (supports retroactive multi-day check-ins)
   let currentStreak = 0;

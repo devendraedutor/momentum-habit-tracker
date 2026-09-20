@@ -91,8 +91,10 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
   const stats = useMemo(() => {
     if (!habit) return null;
     const calculated = calculateHabitStats(habit, floorAtZero);
+    const resolvedCurrentScore = habit.currentScore !== undefined ? habit.currentScore : calculated.currentScore;
     return {
       ...calculated,
+      currentScore: resolvedCurrentScore,
       currentStreak: habit.overallStreak !== undefined ? habit.overallStreak : calculated.currentStreak,
       activeTierLevel: (habit.currentLevel ?? 0) + 1,
       achievedLevel: habit.currentLevel ?? 0,

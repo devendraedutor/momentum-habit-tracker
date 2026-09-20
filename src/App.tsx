@@ -197,7 +197,8 @@ export function App() {
       archived: false,
       history: historyRecord,
       notes: inspectingSharedHabit.notes || {},
-      initialScore: inspectingSharedHabit.initialScore || 0,
+      initialScore: inspectingSharedHabit.initialScore,
+      currentScore: inspectingSharedHabit.currentScore,
     };
 
     const prog = recalculateHabitProgressionFromHistory(tempHabit);
@@ -218,6 +219,7 @@ export function App() {
       targetGoalDays: resolvedTarget,
       currentTier: resolvedLevel + 1,
       milestonesCompleted: resolvedLevel,
+      currentScore: inspectingSharedHabit.currentScore,
     };
   }, [inspectingSharedHabit]);
 
