@@ -187,6 +187,7 @@ export function App() {
       type: habitType,
       currentLevel: inspectingSharedHabit.currentLevel ?? 0,
       levelProgress: inspectingSharedHabit.levelProgress ?? 0,
+      overallStreak: inspectingSharedHabit.streak ?? 0,
       targetGoalDays: inspectingSharedHabit.targetGoalDays ?? 21,
       currentTier: (inspectingSharedHabit.currentLevel || 0) + 1,
       tierStartStreak: 0,

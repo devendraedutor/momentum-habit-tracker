@@ -90,16 +90,21 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
 
   const stats = useMemo(() => {
     if (!habit) return null;
-    return calculateHabitStats(habit, floorAtZero);
+    const calculated = calculateHabitStats(habit, floorAtZero);
+    return {
+      ...calculated,
+      currentStreak: habit.overallStreak !== undefined ? habit.overallStreak : calculated.currentStreak,
+      activeTierLevel: (habit.currentLevel ?? 0) + 1,
+      achievedLevel: habit.currentLevel ?? 0,
+      targetGoalDays: habit.targetGoalDays ?? calculated.targetGoalDays,
+    };
   }, [habit, floorAtZero]);
 
   const trajectory = useMemo(() => {
     if (!habit) return [];
     const full = calculateHabitTrajectory(habit, timeRange, floorAtZero);
-    if (timeRange !== 'all') {
-      return full;
-    }
-    // Strict start date alignment for 'all' range: Trajectory begins on earliest start date or check-in history
+
+    // Strict start date alignment: Trajectory begins on earliest start date or check-in history
     const historyKeys = Object.keys(habit.history || {}).sort();
     const earliestHistory = historyKeys.length > 0 ? historyKeys[0] : undefined;
     let resolvedStartDate = (habit.startDate || habit.createdAt || earliestHistory || '').split('T')[0];
@@ -108,7 +113,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
     }
     if (!resolvedStartDate) return full;
 
-    // Filter out fake historical dates prior to habit's true inception
+    // Filter out dates prior to habit's true inception / sharing start date
     const filtered = full.filter((p) => p.date >= resolvedStartDate);
     return filtered.length > 0 ? filtered : full;
   }, [habit, timeRange, floorAtZero]);

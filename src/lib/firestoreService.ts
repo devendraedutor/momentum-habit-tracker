@@ -20,7 +20,7 @@ import type {
   Friendship,
   SharedHabitRecord,
 } from '../types/buddy';
-import { getTodayString } from './momentum';
+import { getTodayString, calculateHabitStats } from './momentum';
 
 export interface UserCloudData {
   uid?: string;
@@ -958,14 +958,13 @@ export async function shareHabitsWithBuddies(
         const habitStartDate = habit.startDate || (habit.createdAt ? habit.createdAt.split('T')[0] : todayStr);
         const resolvedShareStart = shareScope === 'today' ? todayStr : habitStartDate;
 
-        let baselineScore = habit.bonusXP || 0;
+        const stats = calculateHabitStats(habit, false);
+        let baselineScore = stats.currentScore;
         if (shareScope === 'today') {
-          for (const [d, status] of Object.entries(habit.history || {})) {
-            if (d < resolvedShareStart) {
-              if (status === 'done' || status === 'controlled') baselineScore += 1;
-              else if (status === 'missed' || status === 'failed') baselineScore -= 1;
-            }
-          }
+          let todayDelta = 0;
+          if (todayStatus === 'done' || todayStatus === 'controlled') todayDelta = 1;
+          else if (todayStatus === 'missed' || todayStatus === 'failed') todayDelta = -1;
+          baselineScore = stats.currentScore - todayDelta;
         }
 
         const payload: SharedHabitRecord = {
@@ -1099,14 +1098,14 @@ export async function syncHabitProgressToSharedHabits(
         }
       }
 
-      let baselineScore = habit.bonusXP || 0;
+      const stats = calculateHabitStats(habit, false);
+      let baselineScore = stats.currentScore;
       if (shareScope === 'today' && shareStartDate) {
-        for (const [d, status] of Object.entries(habit.history || {})) {
-          if (d < shareStartDate) {
-            if (status === 'done' || status === 'controlled') baselineScore += 1;
-            else if (status === 'missed' || status === 'failed') baselineScore -= 1;
-          }
-        }
+        const todayStatus = habit.history?.[shareStartDate];
+        let todayDelta = 0;
+        if (todayStatus === 'done' || todayStatus === 'controlled') todayDelta = 1;
+        else if (todayStatus === 'missed' || todayStatus === 'failed') todayDelta = -1;
+        baselineScore = stats.currentScore - todayDelta;
       }
 
       batch.update(d.ref, {
