@@ -671,7 +671,7 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                 }
 
                 const habitNote = habit.notes?.[d.dateStr] || reflections?.[d.dateStr];
-                const shouldShowTooltip = isMissed && !!habitNote;
+                const shouldShowTooltip = !!habitNote;
 
                 return (
                   <div key={d.dateStr} className="relative group/tile flex flex-col">
@@ -693,7 +693,11 @@ export const HabitDetailModal: React.FC<HabitDetailModalProps> = ({
                         <div className="flex items-center gap-0.5 sm:gap-1">
                           {habitNote && (
                             <span
-                              className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_5px_rgba(244,63,94,0.9)] inline-block"
+                              className={`w-1.5 h-1.5 rounded-full inline-block ${
+                                isDone
+                                  ? 'bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.9)]'
+                                  : 'bg-rose-400 shadow-[0_0_5px_rgba(244,63,94,0.9)]'
+                              }`}
                             />
                           )}
                           <span className="text-[7px] sm:text-[8px] opacity-60 uppercase font-semibold">{d.monthShort}</span>

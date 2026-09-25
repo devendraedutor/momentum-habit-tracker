@@ -1525,7 +1525,7 @@ export async function saveHabitLogNote(
   habitId: string,
   dateKey: string,
   note: string,
-  status: CheckInStatus = 'missed'
+  status: CheckInStatus = 'done'
 ): Promise<boolean> {
   if (!db || !userId || !habitId || !dateKey) return false;
 

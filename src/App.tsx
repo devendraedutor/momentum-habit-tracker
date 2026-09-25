@@ -320,13 +320,15 @@ export function App() {
       });
 
       if (firebaseUser?.uid) {
-        saveHabitLogNote(firebaseUser.uid, habitId, dateStr, note, 'missed');
+        const targetHabit = habits.find((item) => item.id === habitId);
+        const currentStatus = targetHabit?.history?.[dateStr] || (targetHabit?.type === 'BREAK' ? 'controlled' : 'done');
+        saveHabitLogNote(firebaseUser.uid, habitId, dateStr, note, currentStatus);
         if (updatedHabitForSync) {
           syncHabitProgressToSharedHabits(firebaseUser, updatedHabitForSync);
         }
       }
     },
-    [firebaseUser]
+    [firebaseUser, habits]
   );
 
   // Sync active detail habit if updated

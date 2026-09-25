@@ -274,8 +274,8 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
           </div>
         </div>
 
-        {/* Habit-Specific Miss Reflection Section (Only when habit is missed/failed) */}
-        {isMissed && (
+        {/* Habit-Specific Reflection Section (Supported for all check-ins: Done/Controlled and Missed/Failed) */}
+        {((isDone || isMissed) || Boolean(savedNote)) && (
           <div
             onClick={(e) => e.stopPropagation()}
             className="mt-1.5 pt-1.5 pb-0.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 text-[11px] relative z-10 animate-fade-in"
@@ -291,7 +291,11 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
                   className="flex items-center gap-1.5 min-w-0 flex-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-sans italic truncate text-left cursor-pointer group/note"
                   title="Click to edit reflection note"
                 >
-                  <FileText className="w-3 h-3 text-slate-400 dark:text-slate-500 flex-shrink-0 group-hover/note:text-slate-600 dark:group-hover/note:text-slate-300 transition-colors" />
+                  <FileText className={`w-3 h-3 flex-shrink-0 transition-colors ${
+                    isDone
+                      ? 'text-emerald-500/70 dark:text-emerald-400/70 group-hover/note:text-emerald-600 dark:group-hover/note:text-emerald-300'
+                      : 'text-slate-400 dark:text-slate-500 group-hover/note:text-slate-600 dark:group-hover/note:text-slate-300'
+                  }`} />
                   <span className="truncate">
                     “{savedNote}”
                   </span>
@@ -326,7 +330,7 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
                   setNoteModalOpen(true);
                 }}
                 className="inline-flex items-center text-[11px] font-medium text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 px-1.5 py-0.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                title="Add reflection note for this missed habit"
+                title={`Add reflection note for ${h.name}`}
               >
                 <FileText className="w-3 h-3 mr-1 text-slate-400 dark:text-slate-500" />
                 <span>Add Note?</span>
@@ -420,7 +424,15 @@ const DailySummaryHabitRow: React.FC<DailySummaryHabitRowProps> = ({
                           handleCommitNote();
                         }
                       }}
-                      placeholder={`What got in the way of ${h.name}? (e.g., worked late, low energy)`}
+                      placeholder={
+                        isDone
+                          ? (isBreak
+                              ? `How did you control ${h.name}? (e.g., stayed mindful, avoided triggers)`
+                              : `How did ${h.name} go? (e.g., felt energizing, completed 20 mins)`)
+                          : (isBreak
+                              ? `What triggered ${h.name}? (e.g., stressed, late night)`
+                              : `What got in the way of ${h.name}? (e.g., worked late, low energy)`)
+                      }
                       maxLength={140}
                       rows={3}
                       autoFocus
