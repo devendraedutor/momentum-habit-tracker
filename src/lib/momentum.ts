@@ -147,7 +147,7 @@ export function calculateHabitTrajectory(
   const allSimulationDates = getDateRange(simulationStart, endDateStr);
 
   let effectiveInitialScore = habit.initialScore !== undefined ? habit.initialScore : 0;
-  if (habit.currentScore !== undefined && (habit.initialScore === undefined || habit.initialScore === 0)) {
+  if (habit.currentScore !== undefined) {
     let totalDeltas = 0;
     for (const st of Object.values(habit.history || {})) {
       if (st === 'done' || st === 'controlled') totalDeltas += 1;
@@ -266,7 +266,7 @@ export function calculateHabitStats(habit: Habit, floorAtZero = false, asOfDateS
   });
 
   const baseScore = trajectory.length > 0 ? trajectory[trajectory.length - 1].score : (habit.currentScore ?? 0);
-  const currentScore = habit.currentScore !== undefined && (habit.initialScore === undefined || habit.initialScore === 0) && Object.keys(habit.history || {}).length <= 1
+  const currentScore = habit.currentScore !== undefined
     ? habit.currentScore
     : baseScore + (habit.bonusXP || 0);
   if (currentScore > highestScore) highestScore = currentScore;

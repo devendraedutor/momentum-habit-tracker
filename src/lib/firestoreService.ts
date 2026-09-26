@@ -961,10 +961,12 @@ export async function shareHabitsWithBuddies(
         const stats = calculateHabitStats(habit, false);
         let baselineScore = stats.currentScore;
         if (shareScope === 'today') {
-          let todayDelta = 0;
-          if (todayStatus === 'done' || todayStatus === 'controlled') todayDelta = 1;
-          else if (todayStatus === 'missed' || todayStatus === 'failed') todayDelta = -1;
-          baselineScore = stats.currentScore - todayDelta;
+          let totalSharedDeltas = 0;
+          for (const st of Object.values(sharedHistory)) {
+            if (st === 'done' || st === 'controlled') totalSharedDeltas += 1;
+            else if (st === 'missed' || st === 'failed') totalSharedDeltas -= 1;
+          }
+          baselineScore = stats.currentScore - totalSharedDeltas;
         }
 
         const payload: SharedHabitRecord = {
@@ -1102,13 +1104,18 @@ export async function syncHabitProgressToSharedHabits(
       const stats = calculateHabitStats(habit, false);
       let baselineScore = stats.currentScore;
       if (shareScope === 'today') {
-        const startKey = shareStartDate || todayStr;
-        const startStatus = habit.history?.[startKey];
-        let todayDelta = 0;
-        if (startStatus === 'done' || startStatus === 'controlled') todayDelta = 1;
-        else if (startStatus === 'missed' || startStatus === 'failed') todayDelta = -1;
-        baselineScore = stats.currentScore - todayDelta;
+        let totalSharedDeltas = 0;
+        for (const st of Object.values(historyToSync)) {
+          if (st === 'done' || st === 'controlled') totalSharedDeltas += 1;
+          else if (st === 'missed' || st === 'failed') totalSharedDeltas -= 1;
+        }
+        baselineScore = stats.currentScore - totalSharedDeltas;
       }
+
+      const resolvedStartDate =
+        shareScope === 'today' && shareStartDate
+          ? shareStartDate
+          : (habit.startDate || (habit.createdAt ? habit.createdAt.split('T')[0] : todayStr));
 
       batch.update(d.ref, {
         habitTitle: habit.name,
@@ -1116,7 +1123,7 @@ export async function syncHabitProgressToSharedHabits(
         habitColor: habit.color,
         habitCategory: habit.category,
         habitType: habit.type || 'BUILD',
-        startDate: habit.startDate || (habit.createdAt ? habit.createdAt.split('T')[0] : todayStr),
+        startDate: resolvedStartDate,
         streak: habit.overallStreak || 0,
         completedToday: isDone,
         currentLevel: habit.currentLevel || 0,

@@ -160,14 +160,16 @@ export function App() {
     const historyKeys = Object.keys(inspectingSharedHabit.history || {}).sort();
     const earliestHistory = historyKeys.length > 0 ? historyKeys[0] : undefined;
 
-    let resolvedStartDate =
-      inspectingSharedHabit.startDate ||
-      inspectingSharedHabit.shareStartDate ||
-      earliestHistory ||
-      (inspectingSharedHabit.createdAt ? inspectingSharedHabit.createdAt.split('T')[0] : getTodayString());
+    const isShareScopeToday = inspectingSharedHabit.shareScope === 'today' && Boolean(inspectingSharedHabit.shareStartDate);
+    let resolvedStartDate = isShareScopeToday
+      ? inspectingSharedHabit.shareStartDate!
+      : (inspectingSharedHabit.startDate ||
+         inspectingSharedHabit.shareStartDate ||
+         earliestHistory ||
+         (inspectingSharedHabit.createdAt ? inspectingSharedHabit.createdAt.split('T')[0] : getTodayString()));
 
-    // If earliest recorded history is prior to nominal start date, respect the history
-    if (earliestHistory && earliestHistory < resolvedStartDate) {
+    // If earliest recorded history is prior to nominal start date, respect the history (only for full history scope)
+    if (!isShareScopeToday && earliestHistory && earliestHistory < resolvedStartDate) {
       resolvedStartDate = earliestHistory;
     }
 
